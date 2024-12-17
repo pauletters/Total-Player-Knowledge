@@ -7,9 +7,11 @@ import {
   from,
 } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { onError } from '@apollo/client/link/error';
+import { useEffect } from 'react';
 import Navbar from './components/Navbar';
+import AuthService from './utils/auth';
 
 // Construct our main GraphQL API endpoint
 // This is the entry point for our application
@@ -65,6 +67,14 @@ const client = new ApolloClient({
 });
 
 function App() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (AuthService.loggedIn()) {
+      navigate('/create-character');
+    }
+  }, [navigate]);
+  
   return (
     <ApolloProvider client={client}>
       <Navbar />
