@@ -3,29 +3,53 @@ import { Link } from 'react-router-dom';
 import { Navbar, Nav, Container, Modal, Tab } from 'react-bootstrap';
 import SignUpForm from './SignupForm';
 import LoginForm from './LoginForm';
+import AuthService from '../utils/auth'
+import tpkLogo from '../assets/tpkLogo.png';
 
 
 const AppNavbar = () => {
   // set modal display state
   const [showModal, setShowModal] = useState(false);
 
+  // check if user is logged in
+  const isLoggedIn = AuthService.loggedIn();
+
   return (
     <>
       <Navbar bg='dark' variant='dark' expand='lg'>
         <Container fluid>
-          <Navbar.Brand as={Link} to='/' className='navLinkHome'>
-          TPK LOGO 
+          <Navbar.Brand as={Link} to='/about' className='navbar-brand'>
+            <img
+              src={tpkLogo}
+              alt='TPK logo'
+              className="d-inline-block align-top"
+            />
           </Navbar.Brand>
           <Navbar.Toggle aria-controls='navbar' />
           <Navbar.Collapse id='navbar' className='d-flex flex-row-reverse'>
-            <Nav className='ml-auto d-flex'>
-             {(
-            <Nav.Link onClick={() => setShowModal(true)} className='navAuthLink'>Login/Sign Up</Nav.Link>
+            <Nav className='ml-auto d-flex align-items-center'>
+            <Nav.Link as={Link} to='/about' className='navLink'>
+                About
+              </Nav.Link>
+              {isLoggedIn ? (
+                <>
+                <Nav.Link as={Link} to='/my-characters' className='nav-link'>
+                  My Characters
+                </Nav.Link>
+                <Nav.Link onClick={AuthService.logout} className='nav-link nav-logout'>
+                  Logout
+                </Nav.Link>
+                </>
+              ) : (
+                <Nav.Link onClick={() => setShowModal(true)} className='nav-link nav-auth-link'>
+                  Login/Sign Up
+                </Nav.Link>
               )}
             </Nav>
           </Navbar.Collapse>
         </Container>
       </Navbar>
+
       {/* set modal data up */}
       <Modal
         size='lg'
