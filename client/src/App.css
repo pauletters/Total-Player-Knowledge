@@ -1,0 +1,40 @@
+@import './styles/navbar.css';
+@import './styles/main.css';
+@import './styles/auth.css';
+@import './styles/usermenu.css';
+
+/* About page specific styles */
+.about-page .hero-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.about-page .hero-section::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient((to bottom, #3a3a3a, #2c2c2c), transparent);
+  z-index: 1;
+}
+
+.about-page .hero-content {
+  position: relative;
+  z-index: 2;
+}
+
+/* Create Character page styles */
+.create-character-page {
+  padding: 2rem;
+}
+
+.create-character-title {
+  color: var(--dark-gray);
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 2.5rem;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+}

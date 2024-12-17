@@ -1,0 +1,49 @@
+.navbar {
+    background: linear-gradient(to right, #1a1a1a, #2c2c2c) !important;
+    padding: 0.75rem 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  
+  .navbar-brand img {
+    height: 100px;
+    width: auto;
+    transition: transform 0.2s ease;
+  }
+  
+  .navbar-brand:hover img {
+    transform: scale(1.05);
+  }
+  
+  .nav-link {
+    color: #ffffff !important;
+    font-size: 1.25rem !important;
+    margin: 0 0.75rem;
+    padding: 0.5rem 1rem !important;
+    transition: all 0.2s ease;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+  
+  .nav-link:hover {
+    color: #ff3333 !important;
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .nav-auth-link {
+    color: white !important;
+    border-radius: 4px;
+    padding: 0.5rem 1.5rem !important;
+  }
+  
+  .nav-auth-link:hover {
+    color: #ff3333!important;
+  }
+  
+  .nav-logout {
+    color: white !important;
+  }
+  
+  .nav-logout:hover {
+    color: #ff3333 !important;
+    background-color: rgba(255, 255, 255, 0.1);
+  }
