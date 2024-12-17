@@ -130,7 +130,7 @@ const SignupForm = ( { handleModalClose }: SignupFormProps) => {
         <Button
           disabled={!(userFormData.username && userFormData.email && userFormData.password)}
           type='submit'
-          variant='success'>
+          className="auth-submit-btn">
           Submit
         </Button>
       </Form>
