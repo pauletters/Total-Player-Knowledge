@@ -5,9 +5,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: true, //Needed for Github Actions
     port: 3000,
-    strictPort: true, //Needed for Github Actions
     open: true,
     proxy: {
       '/graphql': {
