@@ -1,5 +1,5 @@
 {
-  "name": "novel-navigator",
+  "name": "total-player-knowledge",
   "version": "1.0.0",
   "description": "",
   "main": "server/server.js",
@@ -9,7 +9,11 @@
     "install": "cd server && npm i && cd ../client && npm i",
     "build": "cd server && npm run build && cd ../client && npm run build",
     "render-build": "npm install && npm run build",
-    "dev": "npm run build && npm run develop"
+    "dev": "npm run build && npm run develop",
+    "cypress": "cypress open",
+    "cypress:component": "cypress run --component",
+    "test:component": "cypress run --component",
+    "test": "cd client && npm run cypress"
   },
   "keywords": [],
   "author": "",
