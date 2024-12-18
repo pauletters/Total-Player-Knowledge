@@ -7,7 +7,7 @@ const CreateCharacter = () => {
       <UserMenu />
       <Container>
         <h1>Create New Character</h1>
-        {/* Add character creation form here */}
+        {}
       </Container>
     </>
   );

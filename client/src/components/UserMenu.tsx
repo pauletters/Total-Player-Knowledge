@@ -11,15 +11,6 @@ const UserMenu = () => {
         <Nav.Item>
           <Nav.Link 
             as={Link} 
-            to="/create-character"
-            className={`nav-link ${location.pathname === '/create-character' ? 'active' : ''}`}
-          >
-            Create New Character
-          </Nav.Link>
-        </Nav.Item>
-        <Nav.Item>
-          <Nav.Link 
-            as={Link} 
             to="/my-characters"
             className={`nav-link ${location.pathname === '/my-characters' ? 'active' : ''}`}
           >
