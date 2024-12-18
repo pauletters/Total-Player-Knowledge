@@ -9,10 +9,6 @@ jobs:
   cypress-run:
     runs-on: ubuntu-latest
 
-    env:
-      MONGODB_URI: ${{ secrets.MONGODB_URI }}
-      JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,17 +24,25 @@ jobs:
       - name: Build server
         working-directory: ./server
         run: npm run build
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
 
       - name: Start server
         working-directory: ./server
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
-        run: npm start & npx wait-on http://localhost:3001
+        run: |
+          echo "Starting server with MONGODB_URI: ${MONGODB_URI}"
+          npm start & npx wait-on http://localhost:3001
 
       - name: Start client
         working-directory: ./client
         run: npm run dev & npx wait-on http://localhost:3000
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
 
       - name: Run Cypress component tests
         uses: cypress-io/github-action@v6
@@ -47,6 +51,9 @@ jobs:
           component: true
           browser: chrome
           install: false
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
 
       - name: Run Cypress E2E tests
         uses: cypress-io/github-action@v6
@@ -54,6 +61,9 @@ jobs:
           working-directory: client
           browser: chrome
           install: false
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
 
       - name: Upload Cypress screenshots if tests fail
         uses: actions/upload-artifact@v3
