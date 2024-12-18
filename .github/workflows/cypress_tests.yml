@@ -34,15 +34,23 @@ jobs:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
         run: |
-          echo "Starting server with MONGODB_URI: ${MONGODB_URI}"
-          npm start & npx wait-on http://localhost:3001
+          npm start &
+          echo "Waiting for server to be ready..."
+          npx wait-on -v --timeout 60000 \
+            tcp:3001 \
+            http://localhost:3001/graphql \
+            http-get://localhost:3001
+          echo "Server is ready!"
 
       - name: Start client
         working-directory: ./client
-        run: npm run dev & npx wait-on http://localhost:3000
-        env:
-          MONGODB_URI: ${{ secrets.MONGODB_URI }}
-          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+        run: |
+          npm run dev &
+          echo "Waiting for client to be ready..."
+          npx wait-on -v --timeout 30000 \
+            tcp:3000 \
+            http-get://localhost:3000
+          echo "Client is ready!"
 
       - name: Run Cypress component tests
         uses: cypress-io/github-action@v6
@@ -51,6 +59,8 @@ jobs:
           component: true
           browser: chrome
           install: false
+          wait-on: 'http://localhost:3000, http://localhost:3001/graphql'
+          wait-on-timeout: 120
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
@@ -61,6 +71,8 @@ jobs:
           working-directory: client
           browser: chrome
           install: false
+          wait-on: 'http://localhost:3000, http://localhost:3001/graphql'
+          wait-on-timeout: 120
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
