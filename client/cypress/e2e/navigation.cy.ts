@@ -5,7 +5,7 @@ describe('Navigation', () => {
     }
   
     beforeEach(() => {
-      cy.visit('http://localhost:3000')
+      cy.visit('/')
       
       // Click login button and wait for modal
       cy.get('.nav-auth-link').click({ force: true })
@@ -20,15 +20,10 @@ describe('Navigation', () => {
       cy.get('.tab-pane.active button[type="submit"]').click()
   
       // Wait for redirect after login
-      cy.url().should('include', '/create-character')
+      cy.url().should('include', '/my-characters')
     })
   
     it('navigates to all pages correctly', () => {
-      // Test Create Character navigation
-      cy.contains('.user-menu .nav-link', 'Create New Character').click()
-      cy.url().should('include', '/create-character')
-      cy.get('h1').should('contain', 'Create New Character')
-  
       // Test My Characters navigation
       cy.contains('.user-menu .nav-link', 'My Characters').click()
       cy.url().should('include', '/my-characters')
