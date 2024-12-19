@@ -8,6 +8,12 @@ on:
 jobs:
   cypress-run:
     runs-on: ubuntu-latest
+    
+    services:
+      mongodb:
+        image: mongo:4.4
+        ports:
+          - 27017:27017
 
     steps:
       - name: Checkout
@@ -25,32 +31,45 @@ jobs:
         working-directory: ./server
         run: npm run build
         env:
-          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_URI: mongodb://localhost:27017/tpktest
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
 
       - name: Start server
         working-directory: ./server
         env:
-          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_URI: mongodb://localhost:27017/tpktest
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
         run: |
           npm start &
-          echo "Waiting for server to be ready..."
-          npx wait-on -v --timeout 60000 \
-            tcp:3001 \
-            http://localhost:3001/graphql \
-            http-get://localhost:3001
-          echo "Server is ready!"
+          # Simple health check for server
+          timeout=30
+          until $(curl --output /dev/null --silent --head --fail http://localhost:3001); do
+            if [ $timeout -eq 0 ]; then
+              echo "Timeout waiting for server"
+              exit 1
+            fi
+            printf '.'
+            timeout=$((timeout-1))
+            sleep 1
+          done
+          echo "Server is up!"
 
       - name: Start client
         working-directory: ./client
         run: |
           npm run dev &
-          echo "Waiting for client to be ready..."
-          npx wait-on -v --timeout 30000 \
-            tcp:3000 \
-            http-get://localhost:3000
-          echo "Client is ready!"
+          # Simple health check for client
+          timeout=30
+          until $(curl --output /dev/null --silent --head --fail http://localhost:3000); do
+            if [ $timeout -eq 0 ]; then
+              echo "Timeout waiting for client"
+              exit 1
+            fi
+            printf '.'
+            timeout=$((timeout-1))
+            sleep 1
+          done
+          echo "Client is up!"
 
       - name: Run Cypress component tests
         uses: cypress-io/github-action@v6
@@ -59,10 +78,8 @@ jobs:
           component: true
           browser: chrome
           install: false
-          wait-on: 'http://localhost:3000, http://localhost:3001/graphql'
-          wait-on-timeout: 120
         env:
-          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_URI: mongodb://localhost:27017/tpktest
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
 
       - name: Run Cypress E2E tests
@@ -71,10 +88,8 @@ jobs:
           working-directory: client
           browser: chrome
           install: false
-          wait-on: 'http://localhost:3000, http://localhost:3001/graphql'
-          wait-on-timeout: 120
         env:
-          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_URI: mongodb://localhost:27017/tpktest
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
 
       - name: Upload Cypress screenshots if tests fail
