@@ -8,12 +8,6 @@ on:
 jobs:
   cypress-run:
     runs-on: ubuntu-latest
-    
-    services:
-      mongodb:
-        image: mongo:4.4
-        ports:
-          - 27017:27017
 
     steps:
       - name: Checkout
@@ -31,45 +25,33 @@ jobs:
         working-directory: ./server
         run: npm run build
         env:
-          MONGODB_URI: mongodb://localhost:27017/tpktest
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
 
       - name: Start server
         working-directory: ./server
         env:
-          MONGODB_URI: mongodb://localhost:27017/tpktest
+          NODE_ENV: test
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
         run: |
-          npm start &
-          # Simple health check for server
-          timeout=30
-          until $(curl --output /dev/null --silent --head --fail http://localhost:3001); do
-            if [ $timeout -eq 0 ]; then
-              echo "Timeout waiting for server"
-              exit 1
-            fi
-            printf '.'
-            timeout=$((timeout-1))
-            sleep 1
-          done
-          echo "Server is up!"
+          echo "Starting server with MONGODB_URI=${MONGODB_URI}"
+          node dist/server.js &
+          sleep 10
+          if ! curl -s http://localhost:3001 > /dev/null; then
+            echo "Server failed to start"
+            exit 1
+          fi
 
       - name: Start client
         working-directory: ./client
         run: |
           npm run dev &
-          # Simple health check for client
-          timeout=30
-          until $(curl --output /dev/null --silent --head --fail http://localhost:3000); do
-            if [ $timeout -eq 0 ]; then
-              echo "Timeout waiting for client"
-              exit 1
-            fi
-            printf '.'
-            timeout=$((timeout-1))
-            sleep 1
-          done
-          echo "Client is up!"
+          sleep 10
+          if ! curl -s http://localhost:3000 > /dev/null; then
+            echo "Client failed to start"
+            exit 1
+          fi
 
       - name: Run Cypress component tests
         uses: cypress-io/github-action@v6
@@ -79,7 +61,8 @@ jobs:
           browser: chrome
           install: false
         env:
-          MONGODB_URI: mongodb://localhost:27017/tpktest
+          NODE_ENV: test
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
 
       - name: Run Cypress E2E tests
@@ -89,7 +72,8 @@ jobs:
           browser: chrome
           install: false
         env:
-          MONGODB_URI: mongodb://localhost:27017/tpktest
+          NODE_ENV: test
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
 
       - name: Upload Cypress screenshots if tests fail
