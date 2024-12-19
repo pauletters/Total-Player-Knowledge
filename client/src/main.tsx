@@ -7,6 +7,7 @@ import About from './pages/about.js'
 import MyCharacters from './pages/MyCharacters.js'
 import MyCampaigns from './pages/MyCampaigns.js'
 import CharacterCreation from './components/CharacterCreation.js'
+import CharacterDetails from './components/CharacterDetails.js'
 import ProtectedRoute from './components/ProtectedRoute.js'
 import AuthService from './utils/auth.js'
 
@@ -37,6 +38,14 @@ const router = createBrowserRouter([
             element: (
               <ProtectedRoute>
                 <CharacterCreation />
+              </ProtectedRoute>
+            )
+          },
+          {
+            path: ':characterId',
+            element: (
+              <ProtectedRoute>
+                <CharacterDetails />
               </ProtectedRoute>
             )
           }

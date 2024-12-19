@@ -28,19 +28,18 @@ const MyCharacters = () => {
   };
 
   const handleViewCharacter = (characterId: string) => {
-    // TODO: Implement view/edit character logic
-    // This could navigate to a character details page
-    console.log(`Viewing character ${characterId}`);
+    navigate(`/my-characters/${characterId}`);
   };
 
-  // Check if we're on the character creation route
-  const isCreatingCharacter = location.pathname.includes('/character-creation');
+   // Check if we're on the character creation route or viewing a character
+   const isCreatingCharacter = location.pathname.includes('/character-creation');
+   const isViewingCharacter = location.pathname.split('/').length > 2 && !isCreatingCharacter;
 
   return (
     <>
       <UserMenu />
       <Container>
-        {!isCreatingCharacter && (
+        {!isCreatingCharacter && !isViewingCharacter && (
           <>
             <div className="d-flex justify-content-between align-items-center mb-4">
               <h1>My Characters</h1>
