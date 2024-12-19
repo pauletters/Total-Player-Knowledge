@@ -4,7 +4,6 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 
 import App from './App.jsx'
 import About from './pages/about.js'
-import CreateCharacter from './pages/CreateCharacter.js'
 import MyCharacters from './pages/MyCharacters.js'
 import MyCampaigns from './pages/MyCampaigns.js'
 import CharacterCreation from './components/CharacterCreation.js'
@@ -19,19 +18,11 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: AuthService.loggedIn() ? <Navigate to="/create-character" replace /> : <About />
+        element: AuthService.loggedIn() ? <Navigate to="/my-characters" replace /> : <About />
       },
       {
         path: 'about',
         element: <About />
-      },
-      {
-        path: 'create-character',
-        element: (
-          <ProtectedRoute>
-            <CreateCharacter />
-          </ProtectedRoute>
-        )
       },
       {
         path: 'my-characters',

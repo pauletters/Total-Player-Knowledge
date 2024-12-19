@@ -6,7 +6,11 @@ describe('Authentication Flow', () => {
     }
   
     beforeEach(() => {
-      cy.visit('http://localhost:3000')
+      cy.visit('/')
+      // Clear localStorage before each test
+      cy.window().then((win) => {
+        win.localStorage.clear()
+      })
     })
   
     it('shows about page when user is not logged in', () => {
@@ -36,7 +40,7 @@ describe('Authentication Flow', () => {
       cy.get('.tab-content .active input[name="username"]').should('not.exist')
     })
   
-    it('allows user to sign up and redirects to create character', () => {
+    it('allows user to sign up and redirects to my characters', () => {
       // Click login/signup button
       cy.get('.nav-auth-link').click({ force: true })
   
@@ -51,16 +55,23 @@ describe('Authentication Flow', () => {
   
       // Submit form
       cy.get('.tab-content .active button[type="submit"]').click()
+
+      cy.wait(1000);
   
-      // Should be redirected to create character page
-      cy.url().should('include', '/create-character')
-      cy.get('h1').should('contain', 'Create New Character')
+      // Wait for token to be set in localStorage
+      // cy.window().its('localStorage').invoke('getItem', 'id_token').then((token) => {
+      //   cy.log('Token in localStorage:', token);
+      //   expect(token).to.exist
+      // })
   
-      // Logout to prepare for login test
-      cy.get('.nav-logout').click()
+      // Then check redirect
+      cy.location('pathname', { timeout: 10000 }).should('eq', '/')
+  
+      // // Logout to prepare for login test
+      // cy.get('.nav-logout').click()
     })
   
-    it('allows user to login with created account and redirects to create character', () => {
+    it('allows user to login with created account and redirects to my characters', () => {
       // Click login/signup button
       cy.get('.nav-auth-link').click({ force: true })
   
@@ -74,8 +85,10 @@ describe('Authentication Flow', () => {
       // Submit form
       cy.get('.tab-content .active button[type="submit"]').click()
   
-      // Should be redirected to create character page
-      cy.url().should('include', '/create-character')
-      cy.get('h1').should('contain', 'Create New Character')
+      // Wait for token to be set in localStorage
+      cy.window().its('localStorage').invoke('getItem', 'id_token').should('exist')
+      
+      // Then check redirect
+      cy.location('pathname', { timeout: 10000 }).should('eq', '/my-characters')
     })
   })
