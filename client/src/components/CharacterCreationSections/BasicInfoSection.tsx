@@ -12,6 +12,12 @@ const classOptions = [
   'Druid', 'Warlock', 'Barbarian'
 ];
 
+const backgroundOptions = [
+  'Acolyte', 'Charlatan', 'Criminal', 'Entertainer',
+  'Folk Hero', 'Guild Artisan', 'Hermit', 'Noble',
+  'Outlander', 'Sage', 'Sailor', 'Soldier', 'Urchin'
+];
+
 export const BasicInfoSection: React.FC<SectionProps> = ({ character, onInputChange }) => {
   return (
     <section className="mb-6">
@@ -29,7 +35,7 @@ export const BasicInfoSection: React.FC<SectionProps> = ({ character, onInputCha
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
           />
         </div>
-        <div>
+        <div className="relative">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Race
           </label>
@@ -45,6 +51,24 @@ export const BasicInfoSection: React.FC<SectionProps> = ({ character, onInputCha
               </option>
             ))}
           </select>
+          {/* Background dropdown positioned below Race */}
+          <div className="absolute left-1/2 transform -translate-x-1/2 mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Background
+            </label>
+            <select 
+              value={character.basicInfo.background}
+              onChange={(e) => onInputChange('basicInfo', 'background', e.target.value)}
+              className="block w-40 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            >
+              <option value="">Select Background</option>
+              {backgroundOptions.map(background => (
+                <option key={background.toLowerCase()} value={background.toLowerCase()}>
+                  {background}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
