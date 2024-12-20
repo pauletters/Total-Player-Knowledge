@@ -4,7 +4,7 @@
   "description": "",
   "main": "server/server.js",
   "scripts": {
-    "start": "cd server && npm start",
+    "start": "npm run build && cd server && npm start",
     "develop": "concurrently \"cd server && npm run watch\" \"cd client && npm run dev\"",
     "install": "cd server && npm i && cd ../client && npm i",
     "build": "cd server && npm run build && cd ../client && npm run build",
@@ -13,7 +13,8 @@
     "cypress": "cypress open",
     "cypress:component": "cypress run --component",
     "test:component": "cypress run --component",
-    "test": "cd client && npm run cypress"
+    "test": "cd client && npm run cypress",
+    "seed": "npm run build && cd server && npm run seed"
   },
   "keywords": [],
   "author": "",
