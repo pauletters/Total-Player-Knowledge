@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { SectionProps } from '../types';
 
 const raceOptions = [
@@ -18,7 +18,54 @@ const backgroundOptions = [
   'Outlander', 'Sage', 'Sailor', 'Soldier', 'Urchin'
 ];
 
+const classSkillProficiencies = {
+  fighter: ['Acrobatics', 'Animal Handling', 'Athletics', 'History', 'Insight', 'Intimidation', 'Perception', 'Survival'],
+  wizard: ['Arcana', 'History', 'Insight', 'Investigation', 'Medicine', 'Religion'],
+  rogue: ['Acrobatics', 'Athletics', 'Deception', 'Insight', 'Intimidation', 'Investigation', 'Perception', 'Performance', 'Persuasion', 'Sleight of Hand', 'Stealth'],
+  cleric: ['History', 'Insight', 'Medicine', 'Persuasion', 'Religion'],
+  bard: ['Any'],
+  ranger: ['Animal Handling', 'Athletics', 'Insight', 'Investigation', 'Nature', 'Perception', 'Stealth', 'Survival'],
+  paladin: ['Athletics', 'Insight', 'Intimidation', 'Medicine', 'Persuasion', 'Religion'],
+  sorcerer: ['Arcana', 'Deception', 'Insight', 'Intimidation', 'Persuasion', 'Religion'],
+  monk: ['Acrobatics', 'Athletics', 'History', 'Insight', 'Religion', 'Stealth'],
+  druid: ['Arcana', 'Animal Handling', 'Insight', 'Medicine', 'Nature', 'Perception', 'Religion', 'Survival'],
+  warlock: ['Arcana', 'Deception', 'History', 'Intimidation', 'Investigation', 'Nature', 'Religion'],
+  barbarian: ['Animal Handling', 'Athletics', 'Intimidation', 'Nature', 'Perception', 'Survival']
+};
+
+type ClassType = 'fighter' | 'wizard' | 'rogue' | 'cleric' | 'bard' | 'ranger' | 'paladin' | 'sorcerer' | 'monk' | 'druid' | 'warlock' | 'barbarian';
+type BackgroundType = 'acolyte' | 'charlatan' | 'criminal' | 'entertainer' | 'folk hero' | 'guild artisan' | 'hermit' | 'noble' | 'outlander' | 'sage' | 'sailor' | 'soldier' | 'urchin';
+
+const backgroundSkillProficiencies: Record<BackgroundType, string[]> = {
+  acolyte: ['Insight', 'Religion'],
+  charlatan: ['Deception', 'Sleight of Hand'],
+  criminal: ['Deception', 'Stealth'],
+  entertainer: ['Acrobatics', 'Performance'],
+  'folk hero': ['Animal Handling', 'Survival'],
+  'guild artisan': ['Insight', 'Persuasion'],
+  hermit: ['Medicine', 'Religion'],
+  noble: ['History', 'Persuasion'],
+  outlander: ['Athletics', 'Survival'],
+  sage: ['Arcana', 'History'],
+  sailor: ['Athletics', 'Perception'],
+  soldier: ['Athletics', 'Intimidation'],
+  urchin: ['Sleight of Hand', 'Stealth']
+};
+
 export const BasicInfoSection: React.FC<SectionProps> = ({ character, onInputChange }) => {
+  const availableSkills = useMemo(() => {
+    const classSkills = character.basicInfo.class ? 
+      classSkillProficiencies[character.basicInfo.class.toLowerCase() as ClassType] || [] : [];
+    const backgroundSkills = character.basicInfo.background ? 
+      backgroundSkillProficiencies[character.basicInfo.background.toLowerCase() as BackgroundType] || [] : [];
+    
+    return {
+      classSkills,
+      backgroundSkills,
+      allSkills: [...new Set([...classSkills, ...backgroundSkills])]
+    };
+  }, [character.basicInfo.class, character.basicInfo.background]);
+
   return (
     <section className="mb-6">
       <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
@@ -51,7 +98,6 @@ export const BasicInfoSection: React.FC<SectionProps> = ({ character, onInputCha
               </option>
             ))}
           </select>
-          {/* Background dropdown positioned below Race */}
           <div className="absolute left-1/2 transform -translate-x-1/2 mt-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Background
@@ -88,6 +134,31 @@ export const BasicInfoSection: React.FC<SectionProps> = ({ character, onInputCha
           </select>
         </div>
       </div>
+      
+      {/* Compact Skill Proficiencies Display */}
+      {(character.basicInfo.class || character.basicInfo.background) && (
+        <div className="mt-4">
+          <h5 className="text-xs font-medium text-gray-700 mb-1">Available Skill Proficiencies</h5>
+          <div className="grid grid-cols-2 gap-2">
+            {character.basicInfo.class && (
+              <div className="border rounded p-2 text-xs">
+                <span className="font-medium">{character.basicInfo.class}:</span>{' '}
+                <span className="text-gray-600">
+                  {availableSkills.classSkills.join(', ')}
+                </span>
+              </div>
+            )}
+            {character.basicInfo.background && (
+              <div className="border rounded p-2 text-xs">
+                <span className="font-medium">{character.basicInfo.background}:</span>{' '}
+                <span className="text-gray-600">
+                  {availableSkills.backgroundSkills.join(', ')}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </section>
   );
 };
