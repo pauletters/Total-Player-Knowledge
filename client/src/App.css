@@ -154,3 +154,32 @@ button:hover {
   font-size: 0.875rem;
   color: #6c757d;
 }
+
+/* Nav Tabs Styling */
+.nav-pills .nav-link {
+  background-color: #343a40;  /* dark grey background */
+  color: white;
+  margin-bottom: 0.5rem;
+  transition: background-color 0.2s ease;
+}
+
+.nav-pills .nav-link:hover {
+  background-color: #dc3545;  /* bootstrap's danger red */
+  color: white !important;
+}
+
+.nav-pills .nav-link.active {
+  background-color: #dc3545;  /* bootstrap's danger red */
+  color: white;
+}
+
+/* Add some padding and margins for better spacing */
+.nav-pills {
+  padding: 1rem;
+  border-radius: 0.25rem;
+}
+
+.nav-pills .nav-item {
+  width: 100%;
+  text-align: center;
+}

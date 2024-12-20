@@ -1,7 +1,7 @@
 // CharacterDetails.tsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Card, Row, Col, Button } from 'react-bootstrap';
+import { Container, Card, Row, Col, Button, Nav, Tab } from 'react-bootstrap';
 
 interface Character {
   id: string;
@@ -52,6 +52,7 @@ const CharacterDetails: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [character, setCharacter] = useState<Character | null>(null);
+  const [activeTab, setActiveTab] = useState('details');
 
   const getCharacterData = (id: string): Character | null => {
     // This is mock data - replace with your actual data fetching logic
@@ -183,8 +184,13 @@ const CharacterDetails: React.FC = () => {
         </Button>
       </div>
 
-      <Row className="g-4">
-        <Col md={4}>
+      <Row>
+        <Col sm={9}>
+        <Tab.Container activeKey={activeTab} onSelect={(k) => setActiveTab(k || 'details')}>
+            <Tab.Content>
+              <Tab.Pane eventKey="details">
+                <Row className="g-4">
+                  <Col md={4}>
           <Card>
             <Card.Header>Basic Information</Card.Header>
             <Card.Body>
@@ -256,18 +262,90 @@ const CharacterDetails: React.FC = () => {
             </Card.Body>
           </Card>
         </Col>
+        </Row>
+        </Tab.Pane>
 
-        <Col md={12}>
-          <Card>
-            <Card.Header>Equipment</Card.Header>
-            <Card.Body>
-              <ul className="list-unstyled">
-                {character.equipment.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </Card.Body>
-          </Card>
+        <Tab.Pane eventKey="spells">
+                <Card>
+                  <Card.Header>
+                    <div className="d-flex justify-content-between align-items-center">
+                      <span>Spells</span>
+                      <Button variant="primary" size="sm">Add Spell</Button>
+                    </div>
+                  </Card.Header>
+                  <Card.Body>
+                    {character.spells && character.spells.length > 0 ? (
+                      <Row xs={1} md={2} lg={3} className="g-4">
+                        {character.spells.map((spell, index) => (
+                          <Col key={index}>
+                            <Card>
+                              <Card.Body>
+                                <p><strong>{spell.name}</strong></p>
+                                <p>Level {spell.level}</p>
+                                <p>{spell.prepared ? 'Prepared' : 'Not Prepared'}</p>
+                              </Card.Body>
+                            </Card>
+                          </Col>
+                        ))}
+                      </Row>
+                    ) : (
+                      <p className="text-center">No spells added yet.</p>
+                    )}
+                  </Card.Body>
+                </Card>
+              </Tab.Pane>
+
+              <Tab.Pane eventKey="equipment">
+                <Card>
+                  <Card.Header>
+                    <div className="d-flex justify-content-between align-items-center">
+                      <span>Equipment</span>
+                      <Button variant="primary" size="sm">Add Equipment</Button>
+                    </div>
+                  </Card.Header>
+                  <Card.Body>
+                    <ul className="list-unstyled">
+                      {character.equipment.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  </Card.Body>
+                </Card>
+              </Tab.Pane>
+            </Tab.Content>
+          </Tab.Container>
+        </Col>
+
+        <Col sm={3}>
+          <Nav variant="pills" className="flex-column">
+            <Nav.Item>
+              <Nav.Link 
+                eventKey="details" 
+                active={activeTab === 'details'}
+                onClick={() => setActiveTab('details')}
+              >
+                Details
+              </Nav.Link>
+            </Nav.Item>
+            <Nav.Item>
+              <Nav.Link 
+                eventKey="spells" 
+                active={activeTab === 'spells'}
+                onClick={() => setActiveTab('spells')}
+              >
+                Spells
+              </Nav.Link>
+            </Nav.Item>
+            <Nav.Item>
+              <Nav.Link 
+                eventKey="equipment" 
+                active={activeTab === 'equipment'}
+                onClick={() => setActiveTab('equipment')}
+              >
+                Equipment
+              </Nav.Link>
+            </Nav.Item>
+          </Nav>
         </Col>
       </Row>
     </Container>
