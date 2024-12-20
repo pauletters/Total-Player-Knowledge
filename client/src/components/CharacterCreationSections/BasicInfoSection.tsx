@@ -142,7 +142,7 @@ export const BasicInfoSection: React.FC<SectionProps> = ({ character, onInputCha
           <div className="grid grid-cols-2 gap-2">
             {character.basicInfo.class && (
               <div className="border rounded p-2 text-xs">
-                <span className="font-medium">{character.basicInfo.class}:</span>{' '}
+                <span className="font-medium">{character.basicInfo.class.charAt(0).toUpperCase() + character.basicInfo.class.slice(1).toLowerCase()}:</span>{' '}
                 <span className="text-gray-600">
                   {availableSkills.classSkills.join(', ')}
                 </span>
@@ -150,7 +150,7 @@ export const BasicInfoSection: React.FC<SectionProps> = ({ character, onInputCha
             )}
             {character.basicInfo.background && (
               <div className="border rounded p-2 text-xs">
-                <span className="font-medium">{character.basicInfo.background}:</span>{' '}
+                <span className="font-medium">{character.basicInfo.background.charAt(0).toUpperCase() + character.basicInfo.background.slice(1).toLowerCase()}:</span>{' '}
                 <span className="text-gray-600">
                   {availableSkills.backgroundSkills.join(', ')}
                 </span>
