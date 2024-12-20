@@ -113,10 +113,24 @@ const typeDefs = `
         updatedAt: String!
     }
 
+    type Campaign {
+        _id: ID!
+        name: String!
+        description: String
+        members: [Character!]!
+        milestones: [String!]!
+        createdBy: User!
+        playerCount: Int!
+        createdAt: String!
+        updatedAt: String!
+    }
+
     type Query {
         me: User
-        characters: [Character!]! # Fetch all characters
-        character(id: ID!): Character # Fetch a specific character by ID
+        characters: [Character!]!
+        character(id: ID!): Character
+        campaigns: [Campaign!]!
+        campaign(id: ID!): Campaign
     }
 
     type Mutation {
@@ -166,6 +180,21 @@ const typeDefs = `
         ): Character
 
         deleteCharacter(id: ID!): Character
+
+        addCampaign(
+            name: String!
+            description: String
+            members: [ID!]!
+        ): Campaign
+
+        updateCampaign(
+            id: ID!
+            name: String
+            description: String
+            members: [ID!]
+        ): Campaign
+
+        deleteCampaign(id: ID!): Campaign
     }
 
     input AttributesInput {
