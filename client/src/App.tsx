@@ -71,7 +71,7 @@ function App() {
 
   useEffect(() => {
     if (AuthService.loggedIn()) {
-      navigate('/create-character');
+      navigate('/my-characters');
     }
   }, [navigate]);
   

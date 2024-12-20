@@ -7,7 +7,6 @@ import { expressMiddleware } from '@apollo/server/express4';
 import { typeDefs, resolvers } from './schemas/index.js';
 import { authenticateToken } from './utils/auth.js';
 import cors from 'cors';
-import { GraphQLFormattedError } from 'graphql';
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -17,15 +16,8 @@ const startApolloServer = async () => {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
-    formatError: (formattedError: GraphQLFormattedError) => {
-      console.error('GraphQL Error Details:', {
-        message: formattedError.message,
-        locations: formattedError.locations,
-        path: formattedError.path,
-        extensions: formattedError.extensions
-      });
-      return formattedError;
-    },
+    csrfPrevention: true,
+    cache: 'bounded',
   });
 
   await server.start();
