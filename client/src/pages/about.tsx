@@ -5,9 +5,9 @@
         <div className="about-page">
           <div className="hero-section">
           <Container className="hero-content">
-            <h1 className="hero-title">About</h1>
-            <h2 className="hero-subtitle">Total Player Knowledge</h2>
-            <h4 className="hero-subtitle">It's the TPK you'll actually want to experience!</h4>
+            <h1 className="hero-title">Total Player Knowledge</h1>
+            <h2 className="hero-subtitle">About</h2>
+            <h5 className="hero-subtitle-2">It's the TPK you'll actually want to experience!</h5>
           </Container>
         </div>
 
