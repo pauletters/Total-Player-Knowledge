@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Container, Button, Card, Row, Col } from 'react-bootstrap';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import UserMenu from '../components/UserMenu';
+import CreateCampaignModal from '../components/CreateCampaignModal';
 
 // You might want to create a type for your campaigns
 interface Campaign {
@@ -15,18 +16,30 @@ const MyCampaigns = () => {
   const location = useLocation();
 
   // Placeholder for campaigns - in a real app, this would come from state management or API
-  const [campaigns] = useState<Campaign[]>([
+  const [campaigns, setCampaigns] = useState<Campaign[]>([
     { id: '1', name: 'Adventure Squad', members: ['Alice', 'Bob', 'Charlie'] },
     { id: '2', name: 'Dragon Slayers', members: ['John', 'Doe', 'Smith'] },
   ]);
 
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
   const handleCreateCampaign = () => {
-    // Navigate to the campaign creation page
-    navigate('/my-campaigns/campaign-creation');
+    setShowCreateModal(true);
   };
 
   const handleViewCampaign = (campaignId: string) => {
     navigate(`/my-campaigns/${campaignId}`);
+  };
+
+  const handleCreateCampaignSubmit = (newCampaign: { name: string; description: string; members: string[] }) => {
+    // Simulate adding the new campaign to the list (replace with API call in a real app)
+    const newCampaignId = (campaigns.length + 1).toString();
+    const updatedCampaigns = [
+      ...campaigns,
+      { id: newCampaignId, name: newCampaign.name, members: newCampaign.members },
+    ];
+    setCampaigns(updatedCampaigns);
+    setShowCreateModal(false);
   };
 
   // Check if we're on the campaign creation route or viewing a campaign
@@ -102,6 +115,12 @@ const MyCampaigns = () => {
         {/* Add Outlet to render nested routes */}
         <Outlet />
       </Container>
+
+      <CreateCampaignModal
+        show={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onCreateCampaign={handleCreateCampaignSubmit}
+      />
     </>
   );
 };
