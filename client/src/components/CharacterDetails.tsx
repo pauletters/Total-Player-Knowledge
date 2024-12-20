@@ -1,7 +1,7 @@
 // CharacterDetails.tsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Card, Row, Col, Button, Nav, Tab } from 'react-bootstrap';
+import { Container, Card, Row, Col, Button, Nav } from 'react-bootstrap';
 
 interface Character {
   id: string;
@@ -52,7 +52,8 @@ const CharacterDetails: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [character, setCharacter] = useState<Character | null>(null);
-  const [activeTab, setActiveTab] = useState('details');
+  type TabKey = 'details' | 'spells' | 'equipment' | 'background';
+  const [activeTab, setActiveTab] = useState<TabKey>('details');
 
   const getCharacterData = (id: string): Character | null => {
     // This is mock data - replace with your actual data fetching logic
@@ -134,7 +135,6 @@ const CharacterDetails: React.FC = () => {
     const fetchCharacter = async () => {
       setLoading(true);
       try {
-        // Simulate API call
         const data = getCharacterData(characterId);
         setCharacter(data);
       } catch (error) {
@@ -146,6 +146,11 @@ const CharacterDetails: React.FC = () => {
 
     fetchCharacter();
   }, [characterId]);
+
+  const getModifier = (score: number): string => {
+    const modifier = Math.floor((score - 10) / 2);
+    return modifier >= 0 ? `+${modifier}` : `${modifier}`;
+  };
 
   if (loading) {
     return (
@@ -170,11 +175,6 @@ const CharacterDetails: React.FC = () => {
     );
   }
 
-  const getModifier = (score: number): string => {
-    const modifier = Math.floor((score - 10) / 2);
-    return modifier >= 0 ? `+${modifier}` : `${modifier}`;
-  };
-
   return (
     <Container className="py-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
@@ -184,143 +184,153 @@ const CharacterDetails: React.FC = () => {
         </Button>
       </div>
 
-      <Row>
-        <Col sm={9}>
-        <Tab.Container activeKey={activeTab} onSelect={(k) => setActiveTab(k || 'details')}>
-            <Tab.Content>
-              <Tab.Pane eventKey="details">
-                <Row className="g-4">
-                  <Col md={4}>
-          <Card>
-            <Card.Header>Basic Information</Card.Header>
-            <Card.Body>
-              <p><strong>Class:</strong> {character.class}</p>
-              <p><strong>Level:</strong> {character.level}</p>
-              <p><strong>Race:</strong> {character.race}</p>
-              <p><strong>Background:</strong> {character.background}</p>
-              <p><strong>Alignment:</strong> {character.alignment}</p>
-              <p><strong>Experience:</strong> {character.experience}</p>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col md={4}>
-          <Card>
-            <Card.Header>Combat Stats</Card.Header>
-            <Card.Body>
-              <p><strong>Armor Class:</strong> {character.armorClass}</p>
-              <p><strong>Initiative:</strong> +{character.initiative}</p>
-              <p><strong>Speed:</strong> {character.speed} ft.</p>
-              <p><strong>Hit Points:</strong> {character.hitPoints.current}/{character.hitPoints.maximum}</p>
-              <p><strong>Temporary HP:</strong> {character.hitPoints.temporary}</p>
-              <p><strong>Proficiency Bonus:</strong> +{character.proficiencyBonus}</p>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col md={4}>
-          <Card>
-            <Card.Header>Attributes</Card.Header>
-            <Card.Body>
-              {Object.entries(character.attributes).map(([attr, value]) => (
-                <p key={attr}>
-                  <strong>{attr.charAt(0).toUpperCase() + attr.slice(1)}:</strong>{' '}
-                  {value} ({getModifier(value)})
-                </p>
-              ))}
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col md={6}>
-          <Card>
-            <Card.Header>Skills</Card.Header>
-            <Card.Body>
-              <Row>
-                {character.skills.map((skill) => (
-                  <Col key={skill.name} xs={6}>
-                    <p>
-                      <strong>{skill.name}:</strong> +{skill.modifier}
-                      {skill.proficient && ' (P)'}
-                    </p>
-                  </Col>
-                ))}
-              </Row>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col md={6}>
-          <Card>
-            <Card.Header>Features & Traits</Card.Header>
-            <Card.Body>
-              <ul className="list-unstyled">
-                {character.features.map((feature) => (
-                  <li key={feature}>{feature}</li>
-                ))}
-              </ul>
-            </Card.Body>
-          </Card>
-        </Col>
-        </Row>
-        </Tab.Pane>
-
-        <Tab.Pane eventKey="spells">
+      <div className="character-sheet-container">
+        <div className="content-container">
+          {activeTab === 'details' && (
+            <Row className="g-4">
+              <Col md={4}>
                 <Card>
-                  <Card.Header>
-                    <div className="d-flex justify-content-between align-items-center">
-                      <span>Spells</span>
-                      <Button variant="primary" size="sm">Add Spell</Button>
-                    </div>
-                  </Card.Header>
+                  <Card.Header>Basic Information</Card.Header>
                   <Card.Body>
-                    {character.spells && character.spells.length > 0 ? (
-                      <Row xs={1} md={2} lg={3} className="g-4">
-                        {character.spells.map((spell, index) => (
-                          <Col key={index}>
-                            <Card>
-                              <Card.Body>
-                                <p><strong>{spell.name}</strong></p>
-                                <p>Level {spell.level}</p>
-                                <p>{spell.prepared ? 'Prepared' : 'Not Prepared'}</p>
-                              </Card.Body>
-                            </Card>
-                          </Col>
-                        ))}
-                      </Row>
-                    ) : (
-                      <p className="text-center">No spells added yet.</p>
-                    )}
+                    <p><strong>Class:</strong> {character.class}</p>
+                    <p><strong>Level:</strong> {character.level}</p>
+                    <p><strong>Race:</strong> {character.race}</p>
+                    <p><strong>Background:</strong> {character.background}</p>
+                    <p><strong>Alignment:</strong> {character.alignment}</p>
+                    <p><strong>Experience:</strong> {character.experience}</p>
                   </Card.Body>
                 </Card>
-              </Tab.Pane>
+              </Col>
 
-              <Tab.Pane eventKey="equipment">
+              <Col md={4}>
                 <Card>
-                  <Card.Header>
-                    <div className="d-flex justify-content-between align-items-center">
-                      <span>Equipment</span>
-                      <Button variant="primary" size="sm">Add Equipment</Button>
-                    </div>
-                  </Card.Header>
+                  <Card.Header>Combat Stats</Card.Header>
+                  <Card.Body>
+                    <p><strong>Armor Class:</strong> {character.armorClass}</p>
+                    <p><strong>Initiative:</strong> +{character.initiative}</p>
+                    <p><strong>Speed:</strong> {character.speed} ft.</p>
+                    <p><strong>Hit Points:</strong> {character.hitPoints.current}/{character.hitPoints.maximum}</p>
+                    <p><strong>Temporary HP:</strong> {character.hitPoints.temporary}</p>
+                    <p><strong>Proficiency Bonus:</strong> +{character.proficiencyBonus}</p>
+                  </Card.Body>
+                </Card>
+              </Col>
+
+              <Col md={4}>
+                <Card>
+                  <Card.Header>Attributes</Card.Header>
+                  <Card.Body>
+                    {Object.entries(character.attributes).map(([attr, value]) => (
+                      <p key={attr}>
+                        <strong>{attr.charAt(0).toUpperCase() + attr.slice(1)}:</strong>{' '}
+                        {value} ({getModifier(value)})
+                      </p>
+                    ))}
+                  </Card.Body>
+                </Card>
+              </Col>
+
+              <Col md={6}>
+                <Card>
+                  <Card.Header>Skills</Card.Header>
+                  <Card.Body>
+                    <Row>
+                      {character.skills.map((skill) => (
+                        <Col key={skill.name} xs={6}>
+                          <p>
+                            <strong>{skill.name}:</strong> +{skill.modifier}
+                            {skill.proficient && ' (P)'}
+                          </p>
+                        </Col>
+                      ))}
+                    </Row>
+                  </Card.Body>
+                </Card>
+              </Col>
+
+              <Col md={6}>
+                <Card>
+                  <Card.Header>Features & Traits</Card.Header>
                   <Card.Body>
                     <ul className="list-unstyled">
-                      {character.equipment.map((item) => (
-                        <li key={item}>{item}</li>
+                      {character.features.map((feature) => (
+                        <li key={feature}>{feature}</li>
                       ))}
                     </ul>
                   </Card.Body>
                 </Card>
-              </Tab.Pane>
-            </Tab.Content>
-          </Tab.Container>
-        </Col>
+              </Col>
+            </Row>
+          )}
 
-        <Col sm={3}>
+          {activeTab === 'spells' && (
+            <Card>
+              <Card.Header>
+                <div className="d-flex justify-content-between align-items-center">
+                  <span>Spells</span>
+                  <Button variant="primary" size="sm">Add Spell</Button>
+                </div>
+              </Card.Header>
+              <Card.Body>
+                {character.spells && character.spells.length > 0 ? (
+                  <Row xs={1} md={2} lg={3} className="g-4">
+                    {character.spells.map((spell, index) => (
+                      <Col key={index}>
+                        <Card>
+                          <Card.Body>
+                            <p><strong>{spell.name}</strong></p>
+                            <p>Level {spell.level}</p>
+                            <p>{spell.prepared ? 'Prepared' : 'Not Prepared'}</p>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+                    ))}
+                  </Row>
+                ) : (
+                  <p className="text-center">No spells added yet.</p>
+                )}
+              </Card.Body>
+            </Card>
+          )}
+
+          {activeTab === 'equipment' && (
+            <Card>
+              <Card.Header>
+                <div className="d-flex justify-content-between align-items-center">
+                  <span>Equipment</span>
+                  <Button variant="primary" size="sm">Add Equipment</Button>
+                </div>
+              </Card.Header>
+              <Card.Body>
+                <ul className="list-unstyled">
+                  {character.equipment.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </Card.Body>
+            </Card>
+          )}
+        
+
+        {activeTab === 'background' && (
+            <Card>
+              <Card.Header>
+                <div className="d-flex justify-content-between align-items-center">
+                  <span>Background</span>
+                  <Button variant="primary" size="sm">Add Background</Button>
+                </div>
+              </Card.Header>
+              <Card.Body>
+                  <p className="text-center">No background added yet.</p>
+              </Card.Body>
+            </Card>
+          )}
+          </div>
+
+        <div className="character-tabs">
           <Nav variant="pills" className="flex-column">
             <Nav.Item>
               <Nav.Link 
-                eventKey="details" 
                 active={activeTab === 'details'}
                 onClick={() => setActiveTab('details')}
               >
@@ -329,7 +339,6 @@ const CharacterDetails: React.FC = () => {
             </Nav.Item>
             <Nav.Item>
               <Nav.Link 
-                eventKey="spells" 
                 active={activeTab === 'spells'}
                 onClick={() => setActiveTab('spells')}
               >
@@ -338,16 +347,23 @@ const CharacterDetails: React.FC = () => {
             </Nav.Item>
             <Nav.Item>
               <Nav.Link 
-                eventKey="equipment" 
                 active={activeTab === 'equipment'}
                 onClick={() => setActiveTab('equipment')}
               >
                 Equipment
               </Nav.Link>
             </Nav.Item>
+            <Nav.Item>
+              <Nav.Link 
+                active={activeTab === 'background'}
+                onClick={() => setActiveTab('background')}
+              >
+                Background
+              </Nav.Link>
+            </Nav.Item>
           </Nav>
-        </Col>
-      </Row>
+        </div>
+      </div>
     </Container>
   );
 };
