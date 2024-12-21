@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useMutation } from '@apollo/client';
 import { BasicInfoSection } from './CharacterCreationSections/BasicInfoSection';
 import { AttributesSection } from './CharacterCreationSections/AttributesSection';
 import { CombatSection } from './CharacterCreationSections/CombatSection';
 import { SkillsSection } from './CharacterCreationSections/SkillsSection';
 import { CharacterData } from './types';
+import { ADD_CHARACTER } from '../utils/mutations';
 
 const initialCharacterState: CharacterData = {
   basicInfo: {
@@ -40,6 +42,7 @@ const initialCharacterState: CharacterData = {
 const CharacterSheet: React.FC = () => {
   const [character, setCharacter] = useState<CharacterData>(initialCharacterState);
   const navigate = useNavigate();
+  const [addCharacter] = useMutation(ADD_CHARACTER); 
 
   // Handler to update character information
   const handleInputChange = (category: keyof CharacterData, field: string, value: any) => {
@@ -57,10 +60,16 @@ const CharacterSheet: React.FC = () => {
     return Math.floor((score - 10) / 2);
   };
 
-  const handleSaveCharacter = () => {
-    // TODO: Implement save functionality (e.g., local storage, API call)
+  const handleSaveCharacter = async () => {
     console.log('Saving character:', character);
-    navigate('/my-characters');
+    try {
+      const { data } = await addCharacter({ variables: { input: character } });
+      alert (`Character ${data.addCharacter.basicInfo.name} created.`)
+      navigate('/my-characters');
+    } catch (error) {
+      console.error('Error creating character', error);
+    }
+    
   };
 
   const handleCancelCharacter = () => {

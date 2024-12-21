@@ -25,9 +25,14 @@ export interface CharacterData {
     proficiencies: string[];
     savingThrows: string[];
   };
-  equipment: any[];
-  spells: any[];
+  equipment: string[];
+  spells: string[];
 }
+
+/*
+background: string;
+feats: string[];
+*/
 
 export interface SectionProps {
   character: CharacterData;

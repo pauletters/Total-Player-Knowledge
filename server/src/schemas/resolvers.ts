@@ -16,87 +16,34 @@ interface LoginArgs {
 }
 
 interface AddCharacterArgs {
-  name: string;
-  class: string;
-  race: string;
-  level: number;
-  maximumHealth: number;
-  currentHealth: number;
-  armorClass: number;
-  attributes?: {
+  basicInfo: {
+    name: string;
+    race: string;
+    class: string;
+    level: number;
+    background?: string;
+    alignment?: string;
+  };
+  attributes: {
     strength: number;
     dexterity: number;
     constitution: number;
     intelligence: number;
     wisdom: number;
     charisma: number;
+  };
+  combat?: {
+    armorClass: number;
+    hitPoints: number;
+    initiative: number;
+    speed: number;
   };
   skills?: {
-    acrobatics: number;
-    animalHandling: number;
-    arcana: number;
-    athletics: number;
-    deception: number;
-    history: number;
-    insight: number;
-    intimidation: number;
-    investigation: number;
-    medicine: number;
-    nature: number;
-    perception: number;
-    performance: number;
-    persuasion: number;
-    religion: number;
-    sleightOfHand: number;
-    stealth: number;
-    survival: number;
+    proficiencies: string[];
+    savingThrows: string[];
   };
-  savingThrows?: {
-    strength: number;
-    dexterity: number;
-    constitution: number;
-    intelligence: number;
-    wisdom: number;
-    charisma: number;
-  };
-  weapons?: {
-    name: string;
-    desc: string;
-    damage: string;
-    damageType: string;
-    range: string;
-  }[];
-  equipment?: {
-    name: string;
-    desc: string;
-  }[];
-  feats?: {
-    name: string;
-    desc: string[];
-  }[];
-  inventory?: {
-    name: string;
-    desc: string;
-  }[];
-  spells?: {
-    name: string;
-    desc: string[];
-    level: number;
-    damage: any;
-    range: string;
-  }[];
-  biography?: {
-    alignment: string;
-    background: string;
-    languages: string[];
-  };
-  currency?: {
-    copperPieces: number;
-    silverPieces: number;
-    electrumPieces: number;
-    goldPieces: number;
-    platinumPieces: number;
-  };
+  equipment?: any[];
+  spells?: any[];
 }
 
 interface UpdateCharacterArgs extends Partial<AddCharacterArgs> {
@@ -196,20 +143,20 @@ const resolvers = {
       return { token, user };
     },
 
-    addCharacter: async (_parent: unknown, args: AddCharacterArgs, context: Context) => {
+    addCharacter: async (_parent: unknown, { input }: {input: AddCharacterArgs}, context: Context) => {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-      return Character.create({ ...args, player: context.user._id });
+      return Character.create({ ...input, player: context.user._id });
     },
 
-    updateCharacter: async (_parent: unknown, { id, ...updateData }: UpdateCharacterArgs, context: Context) => {
+    updateCharacter: async (_parent: unknown, { input }: {input: UpdateCharacterArgs}, context: Context) => {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
       const character = await Character.findOneAndUpdate(
-        { _id: id, player: context.user._id },
-        { $set: updateData },
+        { _id: input.id, player: context.user._id },
+        { $set: input },
         { new: true }
       );
       if (!character) {
