@@ -37,26 +37,15 @@ const typeDefs = `
         savingThrows: [String!]!
     }
 
-    type Character {
+     type Character {
         _id: ID!
         player: User!
-        name: String!
-        class: String!
-        race: String!
-        level: Int!
-        maximumHealth: Int!
-        currentHealth: Int!
-        armorClass: Int!
-        attributes: Attributes
+        basicInfo: BasicInfo!
+        attributes: Attributes!
+        combat: Combat
         skills: Skills
-        savingThrows: SavingThrows
-        weapons: [Weapon!]!
-        equipment: [Equipment!]!
-        feats: [Feat!]!
-        inventory: [Item!]!
-        spells: [Spell!]!
-        biography: Biography
-        currency: Currency
+        equipment: [String!]
+        spells: [String!]
         createdAt: String!
         updatedAt: String!
     }
