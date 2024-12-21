@@ -53,14 +53,14 @@ interface UpdateCharacterArgs extends Partial<AddCharacterArgs> {
 interface AddCampaignArgs {
   name: string;
   description?: string;
-  members: string[]; // Character IDs
+  players: string[]; // Character IDs
 }
 
 interface UpdateCampaignArgs {
   id: string;
   name?: string;
   description?: string;
-  members?: string[];
+  players?: string[];
 }
 
 interface Context {
@@ -105,7 +105,17 @@ const resolvers = {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-      return Campaign.find({ createdBy: context.user._id });
+
+      // Find all character IDs associated with the signed-in user
+      const userCharacters = await Character.find({ player: context.user._id }).select('_id');
+
+      // Return campaigns where the user is the creator OR their characters are in the players array
+      return Campaign.find({
+        $or: [
+          { createdBy: context.user._id },
+          { players: { $in: userCharacters.map((char) => char._id) } },
+        ],
+      }).populate('players createdBy');
     },
 
     campaign: async (_parent: unknown, { id }: { id: string }, context: Context) => {
@@ -119,6 +129,22 @@ const resolvers = {
         });
       }
       return campaign;
+    },
+
+    searchUsers: async (_parent: unknown, { term }: { term: string }, context: Context) => {
+      if (!context.user) {
+        throw new AuthenticationError('Not logged in');
+      }
+
+      if (!term || term.trim() === '') {
+        return [];
+      }
+
+      return User.find({
+        username: { $regex: term, $options: 'i' }, // Case-insensitive regex search
+      })
+        .populate('characters') // Populate characters for the users
+        .select('-password -__v'); // Exclude sensitive fields like password
     },
   },
 
@@ -180,21 +206,48 @@ const resolvers = {
       return character;
     },
 
-    addCampaign: async (_parent: unknown, { name, description, members }: AddCampaignArgs, context: Context) => {
+    addCampaign: async (_parent: unknown, { name, description, players }: AddCampaignArgs, context: Context) => {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-      return Campaign.create({
+
+      // Validate players' character IDs
+      const validCharacters = await Character.find({ _id: { $in: players } });
+      if (validCharacters.length !== players.length) {
+        throw new GraphQLError('Some character IDs are invalid', {
+          extensions: { code: 'BAD_USER_INPUT' },
+        });
+      }
+
+      // Create the campaign
+      const newCampaign = await Campaign.create({
         name,
         description,
-        members,
+        players,
         createdBy: context.user._id,
       });
+
+      // Add the campaign to the creator's campaigns array
+      await User.findByIdAndUpdate(
+        context.user._id,
+        { $push: { campaigns: newCampaign._id } },
+        { new: true }
+      );
+
+      // Optionally, update other users who own the characters in the campaign
+      const playerOwners = await Character.find({ _id: { $in: players } }).distinct('player');
+      await User.updateMany(
+        { _id: { $in: playerOwners } },
+        { $push: { campaigns: newCampaign._id } },
+        { new: true }
+      );
+
+      return newCampaign.populate('players createdBy'); // Populate references for the response
     },
 
     updateCampaign: async (
       _parent: unknown,
-      { id, name, description, members }: UpdateCampaignArgs,
+      { id, name, description, players }: UpdateCampaignArgs,
       context: Context
     ) => {
       if (!context.user) {
@@ -202,7 +255,7 @@ const resolvers = {
       }
       const campaign = await Campaign.findOneAndUpdate(
         { _id: id, createdBy: context.user._id },
-        { $set: { name, description, members } },
+        { $set: { name, description, players } },
         { new: true }
       );
       if (!campaign) {
@@ -223,12 +276,19 @@ const resolvers = {
           extensions: { code: 'NOT_FOUND' },
         });
       }
+
+      // Remove the campaign from all users' campaigns arrays
+      await User.updateMany(
+        { campaigns: campaign._id },
+        { $pull: { campaigns: campaign._id } }
+      );
+
       return campaign;
     },
   },
 
   Campaign: {
-    playerCount: (parent: any) => parent.members.length,
+    playerCount: (parent: any) => parent.players.length,
   },
 };
 

@@ -7,9 +7,7 @@ import Campaign from '../models/Campaign.js';
 // Load environment variables
 dotenv.config();
 
-// Debug: Log the MONGODB_URI
 const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/TPK';
-
 console.log('MONGODB_URI:', mongoUri);
 
 const seedDatabase = async () => {
@@ -21,11 +19,11 @@ const seedDatabase = async () => {
 
     console.log('Database connected!');
 
-    // Clear existing data
-    await User.deleteMany({});
+    // Clear existing data, but preserve users whose username starts with '@'
+    await User.deleteMany({ username: { $not: /^@/ } }); // This keeps users whose username starts with '@'
     await Character.deleteMany({});
     await Campaign.deleteMany({});
-    console.log('Existing data cleared!');
+    console.log('Existing data cleared except users starting with "@"!');
 
     // Create users and characters
     const users = [];
@@ -71,16 +69,21 @@ const seedDatabase = async () => {
       });
 
       characters.push(char1, char2);
+      user.characters.push(char1._id, char2._id);
+      await user.save(); // Save user with populated characters
     }
 
     console.log(`Users created: ${users.length}`);
     console.log(`Characters created: ${characters.length}`);
 
     // Create campaigns
+    const campaign1Players = characters.slice(0, 5).map((char) => char._id); // Characters from TestUsers 1-5
+    const campaign2Players = characters.slice(5, 10).map((char) => char._id); // Characters from TestUsers 6-10
+
     const campaign1 = await Campaign.create({
       name: 'Campaign One',
       description: 'Adventure with TestUsers1-5.',
-      players: characters.slice(0, 5).map((char) => char._id), // Char1 of TestUsers1-5
+      players: campaign1Players,
       milestones: ['Started the quest', 'Reached the first dungeon'],
       createdBy: users[0]._id, // TestUser1
     });
@@ -88,10 +91,27 @@ const seedDatabase = async () => {
     const campaign2 = await Campaign.create({
       name: 'Campaign Two',
       description: 'Adventure with TestUsers6-10.',
-      players: characters.slice(5, 10).map((char) => char._id), // Char1 of TestUsers6-10
+      players: campaign2Players,
       milestones: ['Gathered the party', 'Slayed the dragon'],
       createdBy: users[5]._id, // TestUser6
     });
+
+    // Add campaigns to relevant users
+    const linkCampaignsToUsers = async (campaign, playerIds) => {
+      for (const playerId of playerIds) {
+        const character = characters.find((char) => char._id.equals(playerId));
+        if (character) {
+          const user = users.find((u) => u._id.equals(character.player));
+          if (user && !user.campaigns.includes(campaign._id)) {
+            user.campaigns.push(campaign._id);
+            await user.save(); // Save user with campaign reference
+          }
+        }
+      }
+    };
+
+    await linkCampaignsToUsers(campaign1, campaign1Players);
+    await linkCampaignsToUsers(campaign2, campaign2Players);
 
     console.log('Campaigns created:', [campaign1, campaign2]);
 
