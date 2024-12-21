@@ -20,7 +20,7 @@ const seedDatabase = async () => {
     console.log('Database connected!');
 
     // Clear existing data, but preserve users whose username starts with '@'
-    await User.deleteMany({ username: { $not: /^@/ } }); // This keeps users whose username starts with '@'
+    await User.deleteMany({ username: { $not: /^@/ } });
     await Character.deleteMany({});
     await Campaign.deleteMany({});
     console.log('Existing data cleared except users starting with "@"!');
@@ -41,31 +41,36 @@ const seedDatabase = async () => {
       // Create 2 characters for each user
       const char1 = await Character.create({
         player: user._id,
-        name: `Test${i}Char1`,
-        class: 'Fighter',
-        race: 'Human',
-        level: 5,
-        maximumHealth: 50,
-        currentHealth: 50,
-        armorClass: 16,
+        basicInfo: {
+          name: `Test${i}Char1`,
+          race: 'Human',
+          class: 'Fighter',
+          level: 5,
+          background: 'Soldier',
+          alignment: 'Neutral Good',
+        },
         attributes: { strength: 15, dexterity: 12, constitution: 14, intelligence: 10, wisdom: 10, charisma: 8 },
-        skills: { athletics: 3, perception: 2, intimidation: 2 },
-        biography: { alignment: 'Neutral Good', background: 'Soldier', languages: ['Common'] },
-        currency: { goldPieces: 30, silverPieces: 15 },
+        combat: { armorClass: 16, hitPoints: 50, initiative: 0, speed: 30 },
+        skills: { proficiencies: ['Athletics', 'Perception'], savingThrows: ['Strength', 'Constitution'] },
+        equipment: ['Sword', 'Shield'],
+        spells: [],
       });
+
       const char2 = await Character.create({
         player: user._id,
-        name: `Test${i}Char2`,
-        class: 'Wizard',
-        race: 'Elf',
-        level: 4,
-        maximumHealth: 30,
-        currentHealth: 30,
-        armorClass: 14,
+        basicInfo: {
+          name: `Test${i}Char2`,
+          race: 'Elf',
+          class: 'Wizard',
+          level: 4,
+          background: 'Sage',
+          alignment: 'Chaotic Good',
+        },
         attributes: { strength: 8, dexterity: 14, constitution: 10, intelligence: 18, wisdom: 12, charisma: 10 },
-        skills: { arcana: 4, investigation: 3, perception: 2 },
-        biography: { alignment: 'Chaotic Good', background: 'Sage', languages: ['Common', 'Elvish'] },
-        currency: { goldPieces: 50, silverPieces: 25 },
+        combat: { armorClass: 14, hitPoints: 30, initiative: 1, speed: 30 },
+        skills: { proficiencies: ['Arcana', 'Investigation'], savingThrows: ['Intelligence', 'Wisdom'] },
+        equipment: ['Staff', 'Spellbook'],
+        spells: ['Fireball', 'Magic Missile'],
       });
 
       characters.push(char1, char2);

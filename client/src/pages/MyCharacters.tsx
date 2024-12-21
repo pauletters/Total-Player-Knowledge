@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Container, Button, Card, Row, Col } from 'react-bootstrap';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { useQuery } from '@apollo/client';
@@ -19,7 +18,7 @@ const MyCharacters = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { loading, error, data } = useQuery<{ characters: Character[] }>(GET_CHARACTERS);
+  const { data } = useQuery<{ characters: Character[] }>(GET_CHARACTERS);
   
   const handleCreateCharacter = () => {
     // Navigate to the character creation page

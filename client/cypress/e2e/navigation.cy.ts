@@ -37,7 +37,7 @@ describe('Navigation', () => {
       // Test About navigation
       cy.contains('.navbar .nav-link', 'About').click()
       cy.url().should('include', '/about')
-      cy.get('.hero-title').should('contain', 'About')
+      cy.get('.hero-title').should('contain', 'Total Player Knowledge')
     })
   
     it('logs out and redirects to about page', () => {
@@ -51,7 +51,7 @@ describe('Navigation', () => {
       cy.location('pathname').should('eq', '/')
       
       // Verify we're on the about page
-      cy.get('.hero-title').should('contain', 'About')
+      cy.get('.hero-title').should('contain', 'Total Player Knowledge')
   
       // Login button should be visible again
       cy.get('.nav-auth-link').should('exist')

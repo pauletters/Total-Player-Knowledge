@@ -14,7 +14,13 @@ const GET_CAMPAIGNS = gql`
       description
       players {
         _id
-        name
+        basicInfo {
+          name
+        }
+        player {
+          _id
+          username
+        }
       }
       playerCount
     }
@@ -82,7 +88,11 @@ const MyCampaigns: React.FC = () => {
                     Players:
                     <ul>
                       {campaign.players.map((player: any) => (
-                        <li key={player._id}>{player.name}</li>
+                        <li key={player._id}>
+                          <strong>{player.basicInfo.name}</strong>
+                          <br />
+                          <small>Player: {player.player.username}</small>
+                        </li>
                       ))}
                     </ul>
                   </Card.Text>

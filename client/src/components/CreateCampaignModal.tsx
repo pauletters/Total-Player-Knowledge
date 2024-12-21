@@ -5,7 +5,9 @@ import { Modal, Button, Form, InputGroup, Dropdown, DropdownButton } from 'react
 // Types for Users and Characters
 interface Character {
   _id: string;
-  name: string;
+  basicInfo: {
+    name: string;
+  };
 }
 
 interface User {
@@ -28,7 +30,9 @@ const SEARCH_USERS = gql`
       username
       characters {
         _id
-        name
+        basicInfo {
+          name
+        }
       }
     }
   }
@@ -43,7 +47,9 @@ const ADD_CAMPAIGN = gql`
       description
       players {
         _id
-        name
+        basicInfo {
+          name
+        }
       }
       createdBy {
         _id
@@ -57,7 +63,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({ show, onClose
   const [campaignName, setCampaignName] = useState('');
   const [campaignDescription, setCampaignDescription] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedMembers, setSelectedMembers] = useState<{ id: string; name: string; username: string }[]>([]);
+  const [selectedPlayers, setSelectedPlayers] = useState<{ id: string; characterName: string; username: string }[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [searchUsers, { data: searchResults }] = useLazyQuery(SEARCH_USERS);
   const [addCampaign, { loading: addingCampaign }] = useMutation(ADD_CAMPAIGN);
@@ -76,10 +82,10 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({ show, onClose
   };
 
   const handleSelectCharacter = (characterId: string, characterName: string) => {
-    if (!selectedMembers.some((member) => member.id === characterId) && selectedUser) {
-      setSelectedMembers((prev) => [
+    if (!selectedPlayers.some((player) => player.id === characterId) && selectedUser) {
+      setSelectedPlayers((prev) => [
         ...prev,
-        { id: characterId, name: characterName, username: selectedUser.username },
+        { id: characterId, characterName, username: selectedUser.username },
       ]);
     }
     // Reset the user selection after selecting a character
@@ -87,13 +93,13 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({ show, onClose
   };
 
   const handleCreate = async () => {
-    if (campaignName.trim() && campaignDescription.trim() && selectedMembers.length > 0) {
+    if (campaignName.trim() && campaignDescription.trim() && selectedPlayers.length > 0) {
       try {
         await addCampaign({
           variables: {
             name: campaignName,
             description: campaignDescription,
-            players: selectedMembers.map((member) => member.id), // Corrected to players
+            players: selectedPlayers.map((player) => player.id),
           },
         });
         onCampaignCreated(); // Trigger re-render of campaign list
@@ -102,7 +108,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({ show, onClose
         console.error('Error creating campaign:', error);
       }
     } else {
-      alert('Please complete all fields and select members.');
+      alert('Please complete all fields and select players.');
     }
   };
 
@@ -162,23 +168,25 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({ show, onClose
                 {selectedUser.characters.map((character) => (
                   <Dropdown.Item
                     key={character._id}
-                    onClick={() => handleSelectCharacter(character._id, character.name)}
+                    onClick={() =>
+                      handleSelectCharacter(character._id, character.basicInfo.name)
+                    }
                   >
-                    {character.name}
+                    {character.basicInfo.name}
                   </Dropdown.Item>
                 ))}
               </DropdownButton>
             </Form.Group>
           )}
-          {selectedMembers.length > 0 && (
+          {selectedPlayers.length > 0 && (
             <Form.Group className="mt-3">
               <Form.Label>Selected Characters</Form.Label>
               <ul>
-                {selectedMembers.map((member) => (
-                  <li key={member.id}>
-                    <strong>{member.name}</strong>
+                {selectedPlayers.map((player) => (
+                  <li key={player.id}>
+                    <strong>{player.characterName}</strong>
                     <br />
-                    <small>Player: {member.username}</small>
+                    <small>Player: {player.username}</small>
                   </li>
                 ))}
               </ul>

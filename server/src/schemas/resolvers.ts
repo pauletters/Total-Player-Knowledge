@@ -42,8 +42,8 @@ interface AddCharacterArgs {
     proficiencies: string[];
     savingThrows: string[];
   };
-  equipment?: any[];
-  spells?: any[];
+  equipment?: string[];
+  spells?: string[];
 }
 
 interface UpdateCharacterArgs extends Partial<AddCharacterArgs> {
@@ -77,8 +77,7 @@ const resolvers = {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-      const user = await User.findById(context.user._id).select('-__v -password');
-      return user;
+      return User.findById(context.user._id).populate('characters campaigns');
     },
 
     characters: async (_parent: unknown, _args: unknown, context: Context) => {
@@ -92,13 +91,7 @@ const resolvers = {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-      const character = await Character.findOne({ _id: id, player: context.user._id });
-      if (!character) {
-        throw new GraphQLError('Character not found or unauthorized', {
-          extensions: { code: 'NOT_FOUND' },
-        });
-      }
-      return character;
+      return Character.findOne({ _id: id, player: context.user._id });
     },
 
     campaigns: async (_parent: unknown, _args: unknown, context: Context) => {
@@ -106,45 +99,50 @@ const resolvers = {
         throw new AuthenticationError('Not logged in');
       }
 
-      // Find all character IDs associated with the signed-in user
       const userCharacters = await Character.find({ player: context.user._id }).select('_id');
-
-      // Return campaigns where the user is the creator OR their characters are in the players array
       return Campaign.find({
         $or: [
           { createdBy: context.user._id },
           { players: { $in: userCharacters.map((char) => char._id) } },
         ],
-      }).populate('players createdBy');
+      })
+        .populate({
+          path: 'players',
+          populate: {
+            path: 'player',
+            select: 'username',
+          },
+        })
+        .populate('createdBy', 'username');
     },
 
     campaign: async (_parent: unknown, { id }: { id: string }, context: Context) => {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-      const campaign = await Campaign.findOne({ _id: id, createdBy: context.user._id });
-      if (!campaign) {
-        throw new GraphQLError('Campaign not found or unauthorized', {
-          extensions: { code: 'NOT_FOUND' },
-        });
-      }
-      return campaign;
+      return Campaign.findById(id)
+        .populate({
+          path: 'players',
+          populate: {
+            path: 'player',
+            select: 'username',
+          },
+        })
+        .populate('createdBy', 'username');
     },
 
     searchUsers: async (_parent: unknown, { term }: { term: string }, context: Context) => {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-
-      if (!term || term.trim() === '') {
-        return [];
-      }
-
       return User.find({
-        username: { $regex: term, $options: 'i' }, // Case-insensitive regex search
+        username: { $regex: term, $options: 'i' },
       })
-        .populate('characters') // Populate characters for the users
-        .select('-password -__v'); // Exclude sensitive fields like password
+        .populate({
+          path: 'characters',
+          select: 'basicInfo.name',
+        })
+        .select('-password -__v');
     },
   },
 
@@ -169,41 +167,29 @@ const resolvers = {
       return { token, user };
     },
 
-    addCharacter: async (_parent: unknown, { input }: {input: AddCharacterArgs}, context: Context) => {
+    addCharacter: async (_parent: unknown, { input }: { input: AddCharacterArgs }, context: Context) => {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
       return Character.create({ ...input, player: context.user._id });
     },
 
-    updateCharacter: async (_parent: unknown, { input }: {input: UpdateCharacterArgs}, context: Context) => {
+    updateCharacter: async (_parent: unknown, { input }: { input: UpdateCharacterArgs }, context: Context) => {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-      const character = await Character.findOneAndUpdate(
+      return Character.findOneAndUpdate(
         { _id: input.id, player: context.user._id },
         { $set: input },
         { new: true }
       );
-      if (!character) {
-        throw new GraphQLError('Character not found or unauthorized', {
-          extensions: { code: 'NOT_FOUND' },
-        });
-      }
-      return character;
     },
 
     deleteCharacter: async (_parent: unknown, { id }: { id: string }, context: Context) => {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-      const character = await Character.findOneAndDelete({ _id: id, player: context.user._id });
-      if (!character) {
-        throw new GraphQLError('Character not found or unauthorized', {
-          extensions: { code: 'NOT_FOUND' },
-        });
-      }
-      return character;
+      return Character.findOneAndDelete({ _id: id, player: context.user._id });
     },
 
     addCampaign: async (_parent: unknown, { name, description, players }: AddCampaignArgs, context: Context) => {
@@ -211,7 +197,6 @@ const resolvers = {
         throw new AuthenticationError('Not logged in');
       }
 
-      // Validate players' character IDs
       const validCharacters = await Character.find({ _id: { $in: players } });
       if (validCharacters.length !== players.length) {
         throw new GraphQLError('Some character IDs are invalid', {
@@ -219,22 +204,19 @@ const resolvers = {
         });
       }
 
-      // Create the campaign
-      const newCampaign = await Campaign.create({
+      let newCampaign = await Campaign.create({
         name,
         description,
         players,
         createdBy: context.user._id,
       });
 
-      // Add the campaign to the creator's campaigns array
       await User.findByIdAndUpdate(
         context.user._id,
         { $push: { campaigns: newCampaign._id } },
         { new: true }
       );
 
-      // Optionally, update other users who own the characters in the campaign
       const playerOwners = await Character.find({ _id: { $in: players } }).distinct('player');
       await User.updateMany(
         { _id: { $in: playerOwners } },
@@ -242,28 +224,44 @@ const resolvers = {
         { new: true }
       );
 
-      return newCampaign.populate('players createdBy'); // Populate references for the response
+      newCampaign = await (await newCampaign
+        .populate({
+          path: 'players',
+          populate: {
+            path: 'player',
+            select: 'username',
+          },
+        }))
+        .populate('createdBy', 'username');
+
+      return newCampaign;
     },
 
-    updateCampaign: async (
-      _parent: unknown,
-      { id, name, description, players }: UpdateCampaignArgs,
-      context: Context
-    ) => {
+    updateCampaign: async (_parent: unknown, { id, name, description, players }: UpdateCampaignArgs, context: Context) => {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-      const campaign = await Campaign.findOneAndUpdate(
+      const updatedCampaign = await Campaign.findOneAndUpdate(
         { _id: id, createdBy: context.user._id },
         { $set: { name, description, players } },
         { new: true }
       );
-      if (!campaign) {
-        throw new GraphQLError('Campaign not found or unauthorized', {
-          extensions: { code: 'NOT_FOUND' },
+
+      if (!updatedCampaign) {
+        throw new GraphQLError('Campaign not found', {
+          extensions: { code: 'BAD_USER_INPUT' },
         });
       }
-      return campaign;
+
+      return (await updatedCampaign
+        .populate({
+          path: 'players',
+          populate: {
+            path: 'player',
+            select: 'username',
+          },
+        }))
+        .populate('createdBy', 'username');
     },
 
     deleteCampaign: async (_parent: unknown, { id }: { id: string }, context: Context) => {
@@ -271,17 +269,13 @@ const resolvers = {
         throw new AuthenticationError('Not logged in');
       }
       const campaign = await Campaign.findOneAndDelete({ _id: id, createdBy: context.user._id });
-      if (!campaign) {
-        throw new GraphQLError('Campaign not found or unauthorized', {
-          extensions: { code: 'NOT_FOUND' },
-        });
-      }
 
-      // Remove the campaign from all users' campaigns arrays
-      await User.updateMany(
-        { campaigns: campaign._id },
-        { $pull: { campaigns: campaign._id } }
-      );
+      if (campaign) {
+        await User.updateMany(
+          { campaigns: campaign._id },
+          { $pull: { campaigns: campaign._id } }
+        );
+      }
 
       return campaign;
     },
