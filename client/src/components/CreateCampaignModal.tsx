@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
-import { Modal, Button, Form, InputGroup, Row, Col } from 'react-bootstrap';
+import { useLazyQuery, useMutation, gql } from '@apollo/client';
+import { Modal, Button, Form, InputGroup, Dropdown, DropdownButton } from 'react-bootstrap';
 
 // Types for Users and Characters
 interface Character {
-  id: string;
-  name: string;
+  _id: string;
+  basicInfo: {
+    name: string;
+  };
 }
 
 interface User {
-  id: string;
+  _id: string;
   username: string;
   characters: Character[];
 }
@@ -16,57 +19,96 @@ interface User {
 interface CreateCampaignModalProps {
   show: boolean;
   onClose: () => void;
-  onCreateCampaign: (campaign: { name: string; description: string; members: string[] }) => void;
+  onCampaignCreated: () => void;
 }
 
-const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({ show, onClose, onCreateCampaign }) => {
+// GraphQL Query to Fetch Users and Characters
+const SEARCH_USERS = gql`
+  query SearchUsers($term: String!) {
+    searchUsers(term: $term) {
+      _id
+      username
+      characters {
+        _id
+        basicInfo {
+          name
+        }
+      }
+    }
+  }
+`;
+
+// GraphQL Mutation to Add a Campaign
+const ADD_CAMPAIGN = gql`
+  mutation AddCampaign($name: String!, $description: String, $players: [ID!]!) {
+    addCampaign(name: $name, description: $description, players: $players) {
+      _id
+      name
+      description
+      players {
+        _id
+        basicInfo {
+          name
+        }
+      }
+      createdBy {
+        _id
+        username
+      }
+    }
+  }
+`;
+
+const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({ show, onClose, onCampaignCreated }) => {
   const [campaignName, setCampaignName] = useState('');
   const [campaignDescription, setCampaignDescription] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState<User[]>([]);
-  const [selectedMembers, setSelectedMembers] = useState<string[]>([]); // Character IDs
+  const [selectedPlayers, setSelectedPlayers] = useState<{ id: string; characterName: string; username: string }[]>([]);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [searchUsers, { data: searchResults }] = useLazyQuery(SEARCH_USERS);
+  const [addCampaign, { loading: addingCampaign }] = useMutation(ADD_CAMPAIGN);
 
-  // Simulated search function (replace with your API call)
-  const handleSearch = async (term: string) => {
+  const handleSearch = (term: string) => {
     setSearchTerm(term);
     if (term.trim() === '') {
-      setSearchResults([]);
       return;
     }
-    // Replace with a real API call to fetch users and their characters
-    const results: User[] = [
-      {
-        id: '1',
-        username: 'Alice',
-        characters: [{ id: 'c1', name: 'Archer' }, { id: 'c2', name: 'Mage' }],
-      },
-      {
-        id: '2',
-        username: 'Bob',
-        characters: [{ id: 'c3', name: 'Warrior' }],
-      },
-    ];
-    setSearchResults(results);
+    searchUsers({ variables: { term } });
   };
 
-  const handleSelectCharacter = (characterId: string) => {
-    if (!selectedMembers.includes(characterId)) {
-      setSelectedMembers((prev) => [...prev, characterId]);
+  const handleSelectUser = (user: User) => {
+    setSelectedUser(user);
+    setSearchTerm('');
+  };
+
+  const handleSelectCharacter = (characterId: string, characterName: string) => {
+    if (!selectedPlayers.some((player) => player.id === characterId) && selectedUser) {
+      setSelectedPlayers((prev) => [
+        ...prev,
+        { id: characterId, characterName, username: selectedUser.username },
+      ]);
     }
+    // Reset the user selection after selecting a character
+    setSelectedUser(null);
   };
 
-  const handleRemoveCharacter = (characterId: string) => {
-    setSelectedMembers((prev) => prev.filter((id) => id !== characterId));
-  };
-
-  const handleCreate = () => {
-    if (campaignName.trim() && campaignDescription.trim()) {
-      onCreateCampaign({
-        name: campaignName,
-        description: campaignDescription,
-        members: selectedMembers,
-      });
-      onClose();
+  const handleCreate = async () => {
+    if (campaignName.trim() && campaignDescription.trim() && selectedPlayers.length > 0) {
+      try {
+        await addCampaign({
+          variables: {
+            name: campaignName,
+            description: campaignDescription,
+            players: selectedPlayers.map((player) => player.id),
+          },
+        });
+        onCampaignCreated(); // Trigger re-render of campaign list
+        onClose(); // Close the modal
+      } catch (error) {
+        console.error('Error creating campaign:', error);
+      }
+    } else {
+      alert('Please complete all fields and select players.');
     }
   };
 
@@ -109,38 +151,43 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({ show, onClose
                 onChange={(e) => handleSearch(e.target.value)}
               />
             </InputGroup>
+            {searchTerm && searchResults?.searchUsers && (
+              <Dropdown.Menu show>
+                {searchResults.searchUsers.map((user: User) => (
+                  <Dropdown.Item key={user._id} onClick={() => handleSelectUser(user)}>
+                    {user.username}
+                  </Dropdown.Item>
+                ))}
+              </Dropdown.Menu>
+            )}
           </Form.Group>
-          <Row>
-            {searchResults.map((user) => (
-              <Col key={user.id} md={6}>
-                <h5>{user.username}</h5>
-                <ul>
-                  {user.characters.map((character) => (
-                    <li key={character.id}>
-                      <Button
-                        variant={selectedMembers.includes(character.id) ? 'success' : 'outline-primary'}
-                        size="sm"
-                        className="me-2 mb-2"
-                        onClick={() =>
-                          selectedMembers.includes(character.id)
-                            ? handleRemoveCharacter(character.id)
-                            : handleSelectCharacter(character.id)
-                        }
-                      >
-                        {selectedMembers.includes(character.id) ? 'Selected' : 'Select'} - {character.name}
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              </Col>
-            ))}
-          </Row>
-          {selectedMembers.length > 0 && (
+          {selectedUser && (
+            <Form.Group className="mb-3">
+              <Form.Label>Select a Character from {selectedUser.username}</Form.Label>
+              <DropdownButton title="Select Character" className="mb-3">
+                {selectedUser.characters.map((character) => (
+                  <Dropdown.Item
+                    key={character._id}
+                    onClick={() =>
+                      handleSelectCharacter(character._id, character.basicInfo.name)
+                    }
+                  >
+                    {character.basicInfo.name}
+                  </Dropdown.Item>
+                ))}
+              </DropdownButton>
+            </Form.Group>
+          )}
+          {selectedPlayers.length > 0 && (
             <Form.Group className="mt-3">
               <Form.Label>Selected Characters</Form.Label>
               <ul>
-                {selectedMembers.map((member) => (
-                  <li key={member}>{member}</li>
+                {selectedPlayers.map((player) => (
+                  <li key={player.id}>
+                    <strong>{player.characterName}</strong>
+                    <br />
+                    <small>Player: {player.username}</small>
+                  </li>
                 ))}
               </ul>
             </Form.Group>
@@ -148,11 +195,11 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({ show, onClose
         </Form>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="secondary" onClick={onClose}>
+        <Button variant="secondary" onClick={onClose} disabled={addingCampaign}>
           Cancel
         </Button>
-        <Button variant="primary" onClick={handleCreate}>
-          Create Campaign
+        <Button variant="primary" onClick={handleCreate} disabled={addingCampaign}>
+          {addingCampaign ? 'Creating...' : 'Create Campaign'}
         </Button>
       </Modal.Footer>
     </Modal>

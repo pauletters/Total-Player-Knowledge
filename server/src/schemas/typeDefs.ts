@@ -3,6 +3,8 @@ const typeDefs = `
         _id: ID!
         username: String!
         email: String!
+        characters: [Character!]!
+        campaigns: [Campaign!]! # Added to match the User model
     }
 
     type BasicInfo {
@@ -35,7 +37,7 @@ const typeDefs = `
         savingThrows: [String!]!
     }
 
-    type Character {
+     type Character {
         _id: ID!
         player: User!
         basicInfo: BasicInfo!
@@ -52,9 +54,9 @@ const typeDefs = `
         _id: ID!
         name: String!
         description: String
-        members: [Character!]!
+        players: [Character!]! # Updated to match the model
         milestones: [String!]!
-        createdBy: User!
+        createdBy: User! # Reflects the User model reference
         playerCount: Int!
         createdAt: String!
         updatedAt: String!
@@ -66,6 +68,7 @@ const typeDefs = `
         character(id: ID!): Character
         campaigns: [Campaign!]!
         campaign(id: ID!): Campaign
+        searchUsers(term: String!): [User!]!
     }
 
     type Mutation {
@@ -78,14 +81,14 @@ const typeDefs = `
         addCampaign(
             name: String!
             description: String
-            members: [ID!]!
+            players: [ID!]!
         ): Campaign
 
         updateCampaign(
             id: ID!
             name: String
             description: String
-            members: [ID!]
+            players: [ID!]
         ): Campaign
 
         deleteCampaign(id: ID!): Campaign

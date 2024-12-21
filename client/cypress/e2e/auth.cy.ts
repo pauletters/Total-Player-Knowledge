@@ -14,8 +14,8 @@ describe('Authentication Flow', () => {
     })
   
     it('shows about page when user is not logged in', () => {
-      cy.get('.hero-title').should('contain', 'About')
-      cy.get('.hero-subtitle').should('contain', 'Total Player Knowledge')
+      cy.get('.hero-title').should('contain', 'Total Player Knowledge')
+      cy.get('.hero-subtitle').should('contain', 'About')
     })
   
     it('opens auth modal and switches between login and signup', () => {
