@@ -1,27 +1,26 @@
 import { useState } from 'react';
 import { Container, Button, Card, Row, Col } from 'react-bootstrap';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
+import { useQuery } from '@apollo/client';
+import { GET_CHARACTERS } from '../utils/queries';
 import UserMenu from '../components/UserMenu';
 
 // You might want to create a type for your characters
 interface Character {
-  id: string;
-  name: string;
-  class: string;
-  level: number;
+  _id: string;
+  basicInfo: {
+    name: string;
+    class: string;
+    level: number;
+  };
 }
 
 const MyCharacters = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // Placeholder for characters - in a real app, this would come from state management or API
-  const [characters] = useState<Character[]>([
-    // Example characters
-    { id: '1', name: 'Aragorn', class: 'Ranger', level: 5 },
-    { id: '2', name: 'Gandalf', class: 'Wizard', level: 20 },
-  ]);
 
+  const { loading, error, data } = useQuery<{ characters: Character[] }>(GET_CHARACTERS);
+  
   const handleCreateCharacter = () => {
     // Navigate to the character creation page
     navigate('/my-characters/character-creation');
@@ -34,6 +33,8 @@ const MyCharacters = () => {
    // Check if we're on the character creation route or viewing a character
    const isCreatingCharacter = location.pathname.includes('/character-creation');
    const isViewingCharacter = location.pathname.split('/').length > 2 && !isCreatingCharacter;
+
+   const characters = data?.characters || [];
 
   return (
     <>
@@ -64,18 +65,18 @@ const MyCharacters = () => {
             ) : (
               <Row xs={1} md={2} lg={3} className="g-4">
                 {characters.map((character) => (
-                  <Col key={character.id}>
+                  <Col key={character._id}>
                     <Card>
                       <Card.Body>
-                        <Card.Title>{character.name}</Card.Title>
+                        <Card.Title>{character.basicInfo.name}</Card.Title>
                         <Card.Text>
-                          Level {character.level} {character.class}
+                          Level {character.basicInfo.level} {character.basicInfo.class}
                         </Card.Text>
                         <div className="d-flex justify-content-between">
                           <Button 
                             variant="outline-primary" 
                             size="sm"
-                            onClick={() => handleViewCharacter(character.id)}
+                            onClick={() => handleViewCharacter(character._id)}
                           >
                             View
                           </Button>

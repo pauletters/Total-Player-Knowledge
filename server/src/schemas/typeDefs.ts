@@ -5,6 +5,15 @@ const typeDefs = `
         email: String!
     }
 
+    type BasicInfo {
+        name: String!
+        race: String!
+        class: String!
+        level: Int!
+        background: String
+        alignment: String
+    }
+
     type Attributes {
         strength: Int!
         dexterity: Int!
@@ -14,101 +23,27 @@ const typeDefs = `
         charisma: Int!
     }
 
+    type Combat {
+        armorClass: Int!
+        hitPoints: Int!
+        initiative: Int!
+        speed: Int!
+    }
+
     type Skills {
-        acrobatics: Int!
-        animalHandling: Int!
-        arcana: Int!
-        athletics: Int!
-        deception: Int!
-        history: Int!
-        insight: Int!
-        intimidation: Int!
-        investigation: Int!
-        medicine: Int!
-        nature: Int!
-        perception: Int!
-        performance: Int!
-        persuasion: Int!
-        religion: Int!
-        sleightOfHand: Int!
-        stealth: Int!
-        survival: Int!
-    }
-
-    type SavingThrows {
-        strength: Int!
-        dexterity: Int!
-        constitution: Int!
-        intelligence: Int!
-        wisdom: Int!
-        charisma: Int!
-    }
-
-    type Weapon {
-        name: String!
-        desc: String!
-        damage: String!
-        damageType: String!
-        range: String!
-    }
-
-    type Equipment {
-        name: String!
-        desc: String!
-    }
-
-    type Feat {
-        name: String!
-        desc: [String!]!
-    }
-
-    type Item {
-        name: String!
-        desc: String!
-    }
-
-    type Spell {
-        name: String!
-        desc: [String!]!
-        level: Int!
-        damage: String
-        range: String!
-    }
-
-    type Biography {
-        alignment: String!
-        background: String!
-        languages: [String!]!
-    }
-
-    type Currency {
-        copperPieces: Int!
-        silverPieces: Int!
-        electrumPieces: Int!
-        goldPieces: Int!
-        platinumPieces: Int!
+        proficiencies: [String!]!
+        savingThrows: [String!]!
     }
 
     type Character {
         _id: ID!
         player: User!
-        name: String!
-        class: String!
-        race: String!
-        level: Int!
-        maximumHealth: Int!
-        currentHealth: Int!
-        armorClass: Int!
-        attributes: Attributes
+        basicInfo: BasicInfo!
+        attributes: Attributes!
+        combat: Combat
         skills: Skills
-        savingThrows: SavingThrows
-        weapons: [Weapon!]!
-        equipment: [Equipment!]!
-        feats: [Feat!]!
-        inventory: [Item!]!
-        spells: [Spell!]!
-        biography: Biography
-        currency: Currency
+        equipment: [String!]
+        spells: [String!]
         createdAt: String!
         updatedAt: String!
     }
@@ -136,49 +71,8 @@ const typeDefs = `
     type Mutation {
         loginUser(email: String!, password: String!): Auth
         addUser(username: String!, email: String!, password: String!): Auth
-
-        addCharacter(
-            player: ID!
-            name: String!
-            class: String!
-            race: String!
-            level: Int!
-            maximumHealth: Int!
-            currentHealth: Int!
-            armorClass: Int!
-            attributes: AttributesInput
-            skills: SkillsInput
-            savingThrows: SavingThrowsInput
-            weapons: [WeaponInput]
-            equipment: [EquipmentInput]
-            feats: [FeatInput]
-            inventory: [ItemInput]
-            spells: [SpellInput]
-            biography: BiographyInput
-            currency: CurrencyInput
-        ): Character
-
-        updateCharacter(
-            id: ID!
-            name: String
-            class: String
-            race: String
-            level: Int
-            maximumHealth: Int
-            currentHealth: Int
-            armorClass: Int
-            attributes: AttributesInput
-            skills: SkillsInput
-            savingThrows: SavingThrowsInput
-            weapons: [WeaponInput]
-            equipment: [EquipmentInput]
-            feats: [FeatInput]
-            inventory: [ItemInput]
-            spells: [SpellInput]
-            biography: BiographyInput
-            currency: CurrencyInput
-        ): Character
-
+        addCharacter(input: AddCharacterInput!): Character
+        updateCharacter(input: UpdateCharacterInput!): Character
         deleteCharacter(id: ID!): Character
 
         addCampaign(
@@ -197,88 +91,53 @@ const typeDefs = `
         deleteCampaign(id: ID!): Campaign
     }
 
+    input BasicInfoInput {
+        name: String!
+        race: String!
+        class: String!
+        level: Int!
+        background: String
+        alignment: String
+    }
+
     input AttributesInput {
-        strength: Int
-        dexterity: Int
-        constitution: Int
-        intelligence: Int
-        wisdom: Int
-        charisma: Int
+        strength: Int!
+        dexterity: Int!
+        constitution: Int!
+        intelligence: Int!
+        wisdom: Int!
+        charisma: Int!
+    }
+
+    input CombatInput {
+        armorClass: Int!
+        hitPoints: Int!
+        initiative: Int!
+        speed: Int!
     }
 
     input SkillsInput {
-        acrobatics: Int
-        animalHandling: Int
-        arcana: Int
-        athletics: Int
-        deception: Int
-        history: Int
-        insight: Int
-        intimidation: Int
-        investigation: Int
-        medicine: Int
-        nature: Int
-        perception: Int
-        performance: Int
-        persuasion: Int
-        religion: Int
-        sleightOfHand: Int
-        stealth: Int
-        survival: Int
+        proficiencies: [String!]!
+        savingThrows: [String!]!
     }
 
-    input SavingThrowsInput {
-        strength: Int
-        dexterity: Int
-        constitution: Int
-        intelligence: Int
-        wisdom: Int
-        charisma: Int
+    input AddCharacterInput {
+        basicInfo: BasicInfoInput!
+        attributes: AttributesInput!
+        combat: CombatInput
+        skills: SkillsInput
+        equipment: [String!]
+        spells: [String!]
     }
 
-    input WeaponInput {
-        name: String
-        desc: String
-        damage: String
-        damageType: String
-        range: String
-    }
-
-    input EquipmentInput {
-        name: String
-        desc: String
-    }
-
-    input FeatInput {
-        name: String
-        desc: [String!]
-    }
-
-    input ItemInput {
-        name: String
-        desc: String
-    }
-
-    input SpellInput {
-        name: String
-        desc: [String!]
-        level: Int
-        damage: String
-        range: String
-    }
-
-    input BiographyInput {
-        alignment: String
-        background: String
-        languages: [String!]
-    }
-
-    input CurrencyInput {
-        copperPieces: Int
-        silverPieces: Int
-        electrumPieces: Int
-        goldPieces: Int
-        platinumPieces: Int
+    input UpdateCharacterInput {
+        id: ID!
+        basicInfo: BasicInfoInput
+        attributes: AttributesInput
+        combat: CombatInput
+        skills: SkillsInput
+        equipment: [String!]
+        spells: [String!]
     }
 
     type Auth {

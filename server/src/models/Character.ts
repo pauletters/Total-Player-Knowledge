@@ -1,4 +1,12 @@
 import { Schema, model } from 'mongoose';
+interface BasicInfo {
+    name: string;
+    race: string;
+    class: string;
+    level: number;
+    background: string;
+    alignment: string;
+}
 
 interface Attributes {
     strength: number;
@@ -9,36 +17,19 @@ interface Attributes {
     charisma: number;
 }
 
+interface Combat {
+    armorClass: number;
+    hitPoints: number;
+    initiative: number;
+    speed: number;
+}
+
 interface Skills {
-    acrobatics: number;
-    animalHandling: number;
-    arcana: number;
-    athletics: number;
-    deception: number;
-    history: number;
-    insight: number;
-    intimidation: number;
-    investigation: number;
-    medicine: number;
-    nature: number;
-    perception: number;
-    performance: number;
-    persuasion: number;
-    religion: number;
-    sleightOfHand: number;
-    stealth: number;
-    survival: number;
+    proficiencies: string[];
+    savingThrows: string [];
 }
 
-interface SavingThrows {
-    strength: number;
-    dexterity: number;
-    constitution: number;
-    intelligence: number;
-    wisdom: number;
-    charisma: number;
-}
-
+/*
 interface Weapon {
     name: string;
     desc: string;
@@ -70,12 +61,6 @@ interface Spell {
     range: string;
 }
 
-interface Biography {
-    alignment: string;
-    background: string;
-    languages: string[];
-}
-
 interface Currency {
     copperPieces: number;
     silverPieces: number;
@@ -83,27 +68,17 @@ interface Currency {
     goldPieces: number;
     platinumPieces: number;
 }
+*/
 
 interface CharacterDocument {
     _id: string;
     player: Schema.Types.ObjectId;
-    name: string;
-    class: string;
-    race: string;
-    level: number;
-    maximumHealth: number;
-    currentHealth: number;
-    armorClass: number;
-    attributes?: Attributes;
+    basicInfo: BasicInfo;
+    attributes: Attributes;
+    combat?: Combat;
     skills?: Skills;
-    savingThrows?: SavingThrows;
-    weapons?: Weapon[];
-    equipment?: Equipment[];
-    feats?: Feat[];
-    inventory?: Item[];
-    spells?: Spell[];
-    biography?: Biography;
-    currency?: Currency;
+    equipment?: String[];
+    spells?: String[];
 
     createdAt?: Date;
     updatedAt?: Date;
@@ -111,87 +86,34 @@ interface CharacterDocument {
 
 const characterSchema = new Schema<CharacterDocument>({
     player: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    name: { type: String, required: true },
-    class: { type: String, required: true },
-    race: { type: String, required: true },
-    level: { type: Number, required: true, min: 1, max: 20 },
-    maximumHealth: { type: Number, required: true },
-    currentHealth: { type: Number, required: true },
-    armorClass: { type: Number, required: true },
+    basicInfo: {
+        name: { type: String, required: true },
+        class: { type: String, required: true },
+        race: { type: String, required: true },
+        level: { type: Number, required: true, min: 1, max: 20 },
+        background: { type: String },
+        alignment: { type: String },        
+    },
     attributes: {
-        strength: Number,
-        dexterity: Number,
-        constitution: Number,
-        intelligence: Number,
-        wisdom: Number,
-        charisma: Number,
+        strength: { type: Number, default: 10 },
+        dexterity: { type: Number, default: 10 },
+        constitution: { type: Number, default: 10 },
+        intelligence: { type: Number, default: 10 },
+        wisdom: { type: Number, default: 10 },
+        charisma: { type: Number, default: 10 },
+    },
+    combat: {
+        armorClass: { type: Number, default: 10 },
+        hitPoints: { type: Number, default: 10 },
+        initiative: { type: Number, default: 0 },
+        speed: { type: Number, default: 30 },
     },
     skills: {
-        acrobatics: Number,
-        animalHandling: Number,
-        arcana: Number,
-        athletics: Number,
-        deception: Number,
-        history: Number,
-        insight: Number,
-        intimidation: Number,
-        investigation: Number,
-        medicine: Number,
-        nature: Number,
-        perception: Number,
-        performance: Number,
-        persuasion: Number,
-        religion: Number,
-        sleightOfHand: Number,
-        stealth: Number,
-        survival: Number,
+        proficiencies: [{ type: String }],
+        savingThrows: [{ type: String }],
     },
-    savingThrows: {
-        strength: Number,
-        dexterity: Number,
-        constitution: Number,
-        intelligence: Number,
-        wisdom: Number,
-        charisma: Number,
-    },
-    weapons: [{
-        name: String,
-        desc: String,
-        damage: String,
-        damageType: String,
-        range: String,
-    }],
-    equipment: [{
-        name: String,
-        desc: String,
-    }],
-    feats: [{
-        name: String,
-        desc: [String],
-    }],
-    inventory: [{
-        name: String,
-        desc: String,
-    }],
-    spells: [{
-        name: String,
-        desc: [String],
-        level: Number,
-        damage: Schema.Types.Mixed,
-        range: String,
-    }],
-    biography: {
-        alignment: String,
-        background: String,
-        languages: [String],
-    },
-    currency: {
-        copperPieces: { type: Number, default: 0},
-        silverPieces: { type: Number, default: 0},
-        electrumPieces: { type: Number, default: 0},
-        goldPieces: { type: Number, default: 0},
-        platinumPieces: { type: Number, default: 0},
-    },
+    equipment: [{ type: String }],
+    spells: [{ type: String }],
     createdAt: {type: Date, default: Date.now},
     updatedAt: {type: Date, default: Date.now},
 },
