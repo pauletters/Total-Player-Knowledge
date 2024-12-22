@@ -1,10 +1,14 @@
 // CharacterDetails.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Card, Row, Col, Button, Nav } from 'react-bootstrap';
-import { useQuery } from '@apollo/client';
+import { useQuery, useMutation } from '@apollo/client';
 import { GET_CHARACTER } from '../utils/queries';
+import { UPDATE_CHARACTER_SPELL, TOGGLE_SPELL_PREPARED } from '../utils/mutations';
 import { CharacterData } from './types';
+import SpellCard from './Spells/SpellCard';
+import SpellModal from './Spells/SpellSelection';
+import { spellCache } from '../utils/spellCache';
 
 interface CharacterParams {
   characterId: string;
@@ -13,9 +17,69 @@ interface CharacterParams {
 const CharacterDetails: React.FC = () => {
   const { characterId } = useParams<keyof CharacterParams>() as CharacterParams;
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
+  const { loading: isLoading, error, data } = useQuery<{ character: CharacterData }>(GET_CHARACTER, {
+    variables: { id: characterId },
+  });
+  const [updateCharacter] = useMutation(UPDATE_CHARACTER);
   type TabKey = 'details' | 'spells' | 'equipment' | 'background';
   const [activeTab, setActiveTab] = useState<TabKey>('details');
+  const [showSpellModal, setShowSpellModal] = useState(false);
+  const [updateCharacterSpells] = useMutation(UPDATE_CHARACTER_SPELLS);
+  const [toggleSpellPrepared] = useMutation(TOGGLE_SPELL_PREPARED);
+
+  const handleAddSpells = async (newSpells: ApiSpell[]) => {
+    if (!data?.character) return;
+    
+    try {
+      await updateCharacterSpells({
+        variables: {
+          id: characterId,
+          spells: newSpells.map(spell => ({
+            name: spell.name,
+            level: spell.level,
+            prepared: false
+          }))
+        },
+        refetchQueries: [{ query: GET_CHARACTER, variables: { id: characterId } }]
+      });
+    } catch (error) {
+      console.error('Error updating spells:', error);
+    }
+  };
+
+  const handleRemoveSpell = async (spellName: string) => {
+    if (!data?.character) return;
+    
+    const updatedSpells = data.character.spells.filter(spell => spell !== spellName);
+    
+    try {
+      await updateCharacterSpells({
+        variables: {
+          id: characterId,
+          spells: updatedSpells
+        },
+        refetchQueries: [{ query: GET_CHARACTER, variables: { id: characterId } }]
+      });
+    } catch (error) {
+      console.error('Error removing spell:', error);
+    }
+  };
+
+  const handleToggleSpellPrepared = async (spellName: string) => {
+    if (!data?.character) return;
+    
+    try {
+      await toggleSpellPrepared({
+        variables: {
+          id: characterId,
+          spellName
+        },
+        refetchQueries: [{ query: GET_CHARACTER, variables: { id: characterId } }]
+      });
+    } catch (error) {
+      console.error('Error toggling spell prepared status:', error);
+    }
+  };
 
   const { loading: isLoading, error, data } = useQuery<{ character: CharacterData }>(GET_CHARACTER, {
     variables: { id: characterId },
@@ -143,19 +207,23 @@ const CharacterDetails: React.FC = () => {
               <Card.Header>
                 <div className="d-flex justify-content-between align-items-center">
                   <span>Spells</span>
-                  <Button variant="primary" size="sm">Add Spell</Button>
+                  <Button variant="primary" size="sm" onClick={() => setShowSpellModal(true)}>
+                    Add Spell
+                  </Button>
                 </div>
               </Card.Header>
               <Card.Body>
-                {character.spells && character.spells.length > 0 ? (
+                {data.character.spells && data.character.spells.length > 0 ? (
                   <Row xs={1} md={2} lg={3} className="g-4">
-                    {character.spells.map((spell, index) => (
-                      <Col key={index}>
-                        <Card>
-                          <Card.Body>
-                            <p><strong>{spell}</strong></p>
-                          </Card.Body>
-                        </Card>
+                    {data.character.spells.map((spell) => (
+                      <Col key={spell.name}>
+                        <SpellCard
+                          name={spell.name}
+                          level={spell.level}
+                          prepared={spell.prepared}
+                          onRemove={() => handleRemoveSpell(spell.name)}
+                          onTogglePrepared={() => handleToggleSpellPrepared(spell.name)}
+                        />
                       </Col>
                     ))}
                   </Row>
@@ -237,6 +305,15 @@ const CharacterDetails: React.FC = () => {
           </Nav>
         </div>
       </div>
+
+      {character && (
+    <SpellModal
+      show={showSpellModal}
+      onClose={() => setShowSpellModal(false)}
+      onAddSpells={handleAddSpells}
+      characterClass={character?.class}
+    />
+  )}
     </Container>
   );
 };

@@ -61,3 +61,29 @@ export const ADD_CHARACTER = gql`
     }
   }
 `;
+
+export const UPDATE_CHARACTER_SPELLS = gql`
+  mutation UpdateCharacterSpells($id: ID!, $spells: [SpellInput]!) {
+    updateCharacterSpells(id: $id, spells: $spells) {
+      _id
+      spells {
+        name
+        level
+        prepared
+      }
+    }
+  }
+`;
+
+export const TOGGLE_SPELL_PREPARED = gql`
+  mutation ToggleSpellPrepared($id: ID!, $spellName: String!) {
+    toggleSpellPrepared(id: $id, spellName: $spellName) {
+      _id
+      spells {
+        name
+        level
+        prepared
+      }
+    }
+  }
+`;

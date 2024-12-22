@@ -70,6 +70,12 @@ interface Currency {
 }
 */
 
+interface ISpell {
+    name: string;
+    level: number;
+    prepared: boolean;
+}
+
 interface CharacterDocument {
     _id: string;
     player: Schema.Types.ObjectId;
@@ -78,11 +84,17 @@ interface CharacterDocument {
     combat?: Combat;
     skills?: Skills;
     equipment?: String[];
-    spells?: String[];
+    spells: (ISpell | String)[];
 
     createdAt?: Date;
     updatedAt?: Date;
 }
+
+const spellSchema = new Schema({
+    name: { type: String, required: true },
+    level: { type: Number, required: true },
+    prepared: { type: Boolean, default: false }
+  });
 
 const characterSchema = new Schema<CharacterDocument>({
     player: { type: Schema.Types.ObjectId, ref: 'User', required: true },
@@ -113,7 +125,7 @@ const characterSchema = new Schema<CharacterDocument>({
         savingThrows: [{ type: String }],
     },
     equipment: [{ type: String }],
-    spells: [{ type: String }],
+    spells: [spellSchema],
     createdAt: {type: Date, default: Date.now},
     updatedAt: {type: Date, default: Date.now},
 },
