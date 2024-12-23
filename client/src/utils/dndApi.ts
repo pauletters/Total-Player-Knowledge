@@ -7,11 +7,29 @@ export interface ApiResponse<T> {
 }
 
 async function fetchFromApi<T>(endpoint: string): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`);
-  if (!response.ok) {
-    throw new Error(`API call failed: ${response.statusText}`);
+  const url = `${API_BASE_URL}${endpoint}`;
+  console.log('Making API request to:', url);
+  
+  try {
+    const response = await fetch(url);
+    console.log('Response status:', response.status);
+    
+    if (!response.ok) {
+      console.error('API error - Status:', response.status);
+      console.error('Response:', response);
+      throw new Error(`API call failed: ${response.statusText}`);
+    }
+
+    const contentType = response.headers.get('content-type');
+    console.log('Content-Type:', contentType);
+
+    const data = await response.json();
+    console.log('API response data:', data);
+    return data;
+  } catch (error) {
+    console.error('Error in fetchFromApi:', error);
+    throw error;
   }
-  return response.json();
 }
 
 export const dndApi = {
@@ -29,8 +47,30 @@ export const dndApi = {
   getMagicItems: () => fetchFromApi('/magic-items'),
   
   // Spells and magic
-  getSpells: () => fetchFromApi('/spells'),
-  getSpell: (index: string) => fetchFromApi(`/spells/${index}`),
+  async getSpells() {
+    console.log('getSpells called');
+    try {
+      console.log('Fetching all spells from /spells endpoint');
+      const data = await fetchFromApi<ApiResponse<any>>('/spells');
+      console.log('All spells response data:', data);
+      return data;
+    } catch (error) {
+      console.error('Error in getSpells:', error);
+      throw error;
+    }
+  },
+  
+  async getSpell(index: string) {
+    console.log('getSpell called with index:', index);
+    try {
+      const data = await fetchFromApi<any>(`/spells/${index}`);
+      console.log('Individual spell data:', data);
+      return data;
+    } catch (error) {
+      console.error('Error in getSpell:', error);
+      throw error;
+    }
+  },
 
   // Rules and mechanics
   getConditions: () => fetchFromApi('/conditions'),

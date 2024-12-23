@@ -57,7 +57,11 @@ export const ADD_CHARACTER = gql`
         savingThrows
       }
       equipment
-      spells
+      spells {
+        name
+        level
+        prepared
+      }
     }
   }
 `;

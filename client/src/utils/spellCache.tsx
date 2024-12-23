@@ -16,6 +16,17 @@ interface CachedSpell {
 class SpellCache {
   private cache: Map<string, CachedSpell> = new Map();
 
+  private formatSpellIndex(spellName: string): string {
+    return spellName
+      .toLowerCase()
+      // Replace specific spell name patterns
+      .replace(/\//g, '-') // Replace "/" with "-"
+      .replace(/[']/g, '') // Remove apostrophes
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/[()]/g, '') // Remove parentheses
+      .trim();
+  }
+
   async getSpell(spellName: string): Promise<CachedSpell | null> {
     // Check cache first
     const cachedSpell = this.cache.get(spellName);
@@ -25,7 +36,12 @@ class SpellCache {
 
     try {
       // Convert spell name to API index format
-      const spellIndex = spellName.toLowerCase().replace(/\s+/g, '-');
+      const spellIndex = this.formatSpellIndex(spellName);
+      console.log('Fetching spell:', spellIndex);
+
+      // Add a small delay to help with rate limiting
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
       // Add type assertion here
       const response = await dndApi.getSpell(spellIndex);
       

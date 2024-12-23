@@ -44,36 +44,58 @@ const SpellModal: React.FC<SpellModalProps> = ({
   const [selectedSpells, setSelectedSpells] = useState<Set<string>>(new Set());
   const [spellDetails, setSpellDetails] = useState<Record<string, Spell>>({});
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
-
- // Reset selections when modal closes
- useEffect(() => {
-    if (!show) {
-      setSelectedSpells(new Set());
-      setSearchTerm('');
-      setSelectedLevel('all');
-    }
-  }, [show]);
+  const [isFullyLoaded, setIsFullyLoaded] = useState(false);
 
   useEffect(() => {
-    const fetchSpells = async () => {
+    const fetchAllSpells = async () => {
       if (!show) return;
       
       try {
         setLoading(true);
         const response = await dndApi.getSpells() as SpellApiResponse;
-        if (response.results) {
-          const initialSpellsPromises = response.results.map(async spellRef => {
-            const cachedSpell = await spellCache.getSpell(spellRef.name);
-            if (cachedSpell) {
-              return cachedSpell;
-            }
-            return dndApi.getSpell(spellRef.index) as Promise<Spell>;
-          });
-
-          const initialSpells = (await Promise.all(initialSpellsPromises))
-            .filter((spell): spell is Spell => spell !== null);
+        
+        if (response?.results) {
+          // Get all spell names
+          const spellNames = response.results.map(spell => spell.name);
           
-          setSpells(initialSpells);
+          // Fetch details for all spells with controlled concurrency
+          const fetchSpellDetails = async (names: string[]) => {
+            const batchSize = 10;
+            const spellDetails: Spell[] = [];
+
+            for (let i = 0; i < names.length; i += batchSize) {
+              const batch = names.slice(i, i + batchSize);
+              
+              const batchPromises = batch.map(async (name) => {
+                try {
+                  // First try to get from cache
+                  const cachedSpell = await spellCache.getSpell(name);
+                  if (cachedSpell) return cachedSpell;
+                  
+                  // If not in cache, fetch from API
+                  const spellIndex = name.toLowerCase().replace(/\s+/g, '-');
+                  return await dndApi.getSpell(spellIndex) as Spell;
+                } catch (error) {
+                  console.warn(`Could not load spell ${name}:`, error);
+                  return null;
+                }
+              });
+
+              // Wait for batch to complete
+              const batchResults = await Promise.all(batchPromises);
+              spellDetails.push(...batchResults.filter((spell): spell is Spell => spell !== null));
+
+              // Optional: add a small delay between batches to avoid rate limiting
+              await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            return spellDetails;
+          };
+
+          const allSpellDetails = await fetchSpellDetails(spellNames);
+          
+          setSpells(allSpellDetails);
+          setIsFullyLoaded(true);
         }
       } catch (error) {
         console.error('Error fetching spells:', error);
@@ -82,17 +104,10 @@ const SpellModal: React.FC<SpellModalProps> = ({
       }
     };
 
-    fetchSpells();
+    fetchAllSpells();
   }, [show]);
 
-  useEffect(() => {
-    if (!show) {
-      setSelectedSpells(new Set());
-      setSearchTerm('');
-      setSelectedLevel('all');
-    }
-  }, [show]);
-
+  // Modify the existing methods to work with the new approach
   const handleSpellClick = async (spellIndex: string) => {
     const newSelected = new Set(selectedSpells);
     
@@ -118,21 +133,45 @@ const SpellModal: React.FC<SpellModalProps> = ({
     setSelectedSpells(newSelected);
   };
 
-  const handleAddSpells = () => {
-    const selectedSpellsList = spells.filter(spell => 
-      selectedSpells.has(spell.index)
-    );
-    onAddSpells(selectedSpellsList);
-    onClose();
-  };
+const handleAddSpells = () => {
+  const selectedSpellsList = spells.filter(spell => 
+    selectedSpells.has(spell.index)
+  );
+  onAddSpells(selectedSpellsList);
+  onClose();
+};
 
-  const filteredSpells = spells.filter(spell => {
-    const matchesSearch = spell.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesClass = !characterClass || 
-      spell.classes.some(c => c.name.toLowerCase() === characterClass.toLowerCase());
-    const matchesLevel = selectedLevel === 'all' || spell.level === parseInt(selectedLevel);
-    return matchesSearch && matchesClass && matchesLevel;
-  });
+const filteredSpells = spells.filter(spell => {
+  const matchesSearch = searchTerm === '' || spell.name.toLowerCase().includes(searchTerm.toLowerCase());
+  const matchesClass = !characterClass || 
+    spell.classes.some(c => c.name.toLowerCase() === characterClass.toLowerCase()) || characterClass.toLowerCase() === 
+    spell.classes[0]?.name.toLowerCase();
+  const matchesLevel = selectedLevel === 'all' || spell.level === parseInt(selectedLevel);
+  return matchesSearch && matchesClass && matchesLevel;
+});
+
+useEffect(() => {
+  console.log('Filtered Spells Debug:');
+  console.log('Total Spells:', spells.length);
+  console.log('Character Class:', characterClass);
+  console.log('Selected Level:', selectedLevel);
+  console.log('Search Term:', searchTerm);
+  
+  const debugFiltered = spells.map(spell => ({
+    name: spell.name,
+    level: spell.level,
+    classes: spell.classes.map(c => c.name),
+    matchesSearch: searchTerm === '' || spell.name.toLowerCase().includes(searchTerm.toLowerCase()),
+    matchesClass: !characterClass || 
+      spell.classes.some(c => 
+        c.name.toLowerCase() === characterClass.toLowerCase() ||
+        characterClass.toLowerCase() === spell.classes[0]?.name.toLowerCase()
+      ),
+    matchesLevel: selectedLevel === 'all' || spell.level === parseInt(selectedLevel)
+  }));
+  
+  console.log('Detailed Spell Filtering:', debugFiltered);
+}, [spells, characterClass, selectedLevel, searchTerm]);
 
   return (
     <Modal show={show} onHide={onClose} size="lg">
@@ -171,6 +210,16 @@ const SpellModal: React.FC<SpellModalProps> = ({
         {loading ? (
           <div className="text-center p-4">
             <Spinner animation="border" />
+            <p>
+              {isFullyLoaded 
+                ? 'Creating spell list. This may take a moment...' 
+                : 'Loading spells (this may take a moment)...'}
+            </p>
+            <p>Loaded: {spells.length} spells</p>
+          </div>
+        ) : filteredSpells.length === 0 ? (
+          <div className="text-center p-4">
+            <p>No spells found matching your search criteria.</p>
           </div>
         ) : (
           <div className="spell-list" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
@@ -192,6 +241,9 @@ const SpellModal: React.FC<SpellModalProps> = ({
                       <Card.Subtitle className="mb-2 text-muted">
                         {spell.school.name}
                       </Card.Subtitle>
+                      <Card.Text className="small">
+                      Classes: {spell.classes.map(c => c.name).join(', ')}
+                    </Card.Text>
                       {spellDetails[spell.index]?.desc && (
                         <Card.Text className="small">
                           {spellDetails[spell.index].desc[0].substring(0, 100)}...

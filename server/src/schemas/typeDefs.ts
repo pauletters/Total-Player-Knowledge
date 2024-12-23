@@ -138,7 +138,7 @@ const typeDefs = `
         combat: CombatInput
         skills: SkillsInput
         equipment: [String!]
-        spells: [String!]
+        spells: [SpellInput!]
     }
 
     input UpdateCharacterInput {
@@ -148,7 +148,7 @@ const typeDefs = `
         combat: CombatInput
         skills: SkillsInput
         equipment: [String!]
-        spells: [String!]
+        spells: [SpellInput!]
     }
 
     input SpellInput {

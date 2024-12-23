@@ -1,11 +1,11 @@
 // CharacterDetails.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Card, Row, Col, Button, Nav } from 'react-bootstrap';
 import { useQuery, useMutation } from '@apollo/client';
 import { GET_CHARACTER } from '../utils/queries';
-import { UPDATE_CHARACTER_SPELL, TOGGLE_SPELL_PREPARED } from '../utils/mutations';
-import { CharacterData } from './types';
+import { UPDATE_CHARACTER_SPELLS, TOGGLE_SPELL_PREPARED } from '../utils/mutations';
+import { CharacterData, ApiSpell } from './types';
 import SpellCard from './Spells/SpellCard';
 import SpellModal from './Spells/SpellSelection';
 import { spellCache } from '../utils/spellCache';
@@ -17,20 +17,55 @@ interface CharacterParams {
 const CharacterDetails: React.FC = () => {
   const { characterId } = useParams<keyof CharacterParams>() as CharacterParams;
   const navigate = useNavigate();
+
   const { loading: isLoading, error, data } = useQuery<{ character: CharacterData }>(GET_CHARACTER, {
     variables: { id: characterId },
   });
-  const [updateCharacter] = useMutation(UPDATE_CHARACTER);
+
+  const [spellDetails, setSpellDetails] = useState<Record<string, ApiSpell>>({});
   type TabKey = 'details' | 'spells' | 'equipment' | 'background';
   const [activeTab, setActiveTab] = useState<TabKey>('details');
   const [showSpellModal, setShowSpellModal] = useState(false);
   const [updateCharacterSpells] = useMutation(UPDATE_CHARACTER_SPELLS);
   const [toggleSpellPrepared] = useMutation(TOGGLE_SPELL_PREPARED);
 
+  // Load spell details from cache when spells change
+  useEffect(() => {
+    const loadSpellDetails = async () => {
+      if (data?.character?.spells) {
+        const spellsToLoad = data.character.spells.filter(
+          spell => !spellDetails[spell.name]
+        );
+
+        for (const spell of spellsToLoad) {
+          const cachedSpell = await spellCache.getSpell(spell.name);
+          if (cachedSpell) {
+            setSpellDetails(prev => ({
+              ...prev,
+              [spell.name]: cachedSpell
+            }));
+          }
+        }
+      }
+    };
+
+    loadSpellDetails();
+  }, [data?.character?.spells]);
+
   const handleAddSpells = async (newSpells: ApiSpell[]) => {
     if (!data?.character) return;
     
     try {
+       // Add spells to cache before updating character
+       for (const spell of newSpells) {
+        if (!spellDetails[spell.name]) {
+          setSpellDetails(prev => ({
+            ...prev,
+            [spell.name]: spell
+          }));
+        }
+      }
+
       await updateCharacterSpells({
         variables: {
           id: characterId,
@@ -48,11 +83,19 @@ const CharacterDetails: React.FC = () => {
   };
 
   const handleRemoveSpell = async (spellName: string) => {
-    if (!data?.character) return;
+    if (!data?.character?.spells) return;
     
-    const updatedSpells = data.character.spells.filter(spell => spell !== spellName);
     
+
     try {
+      const updatedSpells = data.character.spells.filter(spell => spell.name !== spellName)
+      .map(spell => ({
+        name: spell.name,
+        level: spell.level,
+        prepared: spell.prepared
+      })
+      );
+    
       await updateCharacterSpells({
         variables: {
           id: characterId,
@@ -80,10 +123,6 @@ const CharacterDetails: React.FC = () => {
       console.error('Error toggling spell prepared status:', error);
     }
   };
-
-  const { loading: isLoading, error, data } = useQuery<{ character: CharacterData }>(GET_CHARACTER, {
-    variables: { id: characterId },
-  });
 
   const getModifier = (score: number): string => {
     const modifier = Math.floor((score - 10) / 2);
@@ -213,16 +252,25 @@ const CharacterDetails: React.FC = () => {
                 </div>
               </Card.Header>
               <Card.Body>
-                {data.character.spells && data.character.spells.length > 0 ? (
-                  <Row xs={1} md={2} lg={3} className="g-4">
-                    {data.character.spells.map((spell) => (
-                      <Col key={spell.name}>
-                        <SpellCard
-                          name={spell.name}
-                          level={spell.level}
-                          prepared={spell.prepared}
-                          onRemove={() => handleRemoveSpell(spell.name)}
-                          onTogglePrepared={() => handleToggleSpellPrepared(spell.name)}
+              {data?.character?.spells && data.character.spells.length > 0 ? (
+                <Row xs={1} md={2} lg={3} className="g-4">
+                  {data.character.spells.map((spell) => (
+                    <Col key={spell.name}>
+                      <SpellCard
+                        name={spell.name}
+                        level={spell.level}
+                        prepared={spell.prepared}
+                        description={spellDetails[spell.name]?.desc?.[0] || ''}
+                        school={spellDetails[spell.name]?.school?.name || ''}
+                        fullSpellDetails={spellDetails[spell.name] ? {
+                          range: spellDetails[spell.name].range,
+                          castingTime: spellDetails[spell.name].casting_time,
+                          duration: spellDetails[spell.name].duration,
+                          components: spellDetails[spell.name].components,
+                          classes: spellDetails[spell.name].classes?.map(c => c.name)
+                        } : undefined}
+                        onRemove={() => handleRemoveSpell(spell.name)}
+                        onTogglePrepared={() => handleToggleSpellPrepared(spell.name)}
                         />
                       </Col>
                     ))}
@@ -311,7 +359,7 @@ const CharacterDetails: React.FC = () => {
       show={showSpellModal}
       onClose={() => setShowSpellModal(false)}
       onAddSpells={handleAddSpells}
-      characterClass={character?.class}
+      characterClass={character.basicInfo.class}
     />
   )}
     </Container>

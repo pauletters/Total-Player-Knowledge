@@ -1,0 +1,14 @@
+.spell-name-container {
+    flex-grow: 1;
+    min-width: 0; /* This allows the spell name to overflow if it's too long */
+  }
+  
+  .spell-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .btn-spaced {
+    margin-left: .2rem;
+  }
