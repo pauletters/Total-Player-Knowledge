@@ -43,7 +43,7 @@ interface AddCharacterArgs {
     savingThrows: string[];
   };
   equipment?: string[];
-  spells?: string[];
+  spells: CharacterSpell[];
 }
 
 interface UpdateCharacterArgs extends Partial<AddCharacterArgs> {
@@ -69,6 +69,23 @@ interface Context {
     username: string;
     email: string;
   };
+}
+
+interface CharacterSpell {
+  name: string;
+  level: number;
+  prepared: boolean;
+}
+
+interface SpellInput {
+  name: string;
+  level: number;
+  prepared: boolean;
+}
+
+interface UpdateSpellsArgs {
+  id: string;
+  spells: SpellInput[];
 }
 
 const resolvers = {
@@ -143,7 +160,7 @@ const resolvers = {
           select: 'basicInfo.name',
         })
         .select('-password -__v');
-    },
+    }
   },
 
   Mutation: {
@@ -184,6 +201,88 @@ const resolvers = {
         { new: true }
       );
     },
+
+    updateCharacterSpells: async (
+      _parent: unknown,
+      { id, spells }: UpdateSpellsArgs,
+      context: Context
+    ) => {
+      if (!context.user) {
+        throw new AuthenticationError('Not logged in');
+      }
+
+      const character = await Character.findOneAndUpdate(
+        { _id: id, player: context.user._id },
+        { $set: { spells } },
+        { new: true }
+      ).lean();
+
+      if (!character) {
+        throw new GraphQLError('Character not found or unauthorized', {
+          extensions: { code: 'NOT_FOUND' },
+        });
+      }
+
+      return character;
+    },
+
+    toggleSpellPrepared: async (
+      _parent: unknown,
+      { id, spellName }: { id: string; spellName: string },
+      context: Context
+    ) => {
+      if (!context.user) {
+        throw new AuthenticationError('Not logged in');
+      }
+
+      const character = await Character.findOne({ 
+        _id: id, 
+        player: context.user._id 
+      });
+
+      if (!character) {
+        throw new GraphQLError('Character not found or unauthorized', {
+          extensions: { code: 'NOT_FOUND' },
+        });
+      }
+
+      try {
+        const spellArray = (character.spells || []).map(spell => 
+          spell instanceof String? spell.toString() : spell);
+        
+          const currentSpells = spellArray.map((spell) => {
+            if (typeof spell === 'string') {
+              return {
+                name: spell,
+                level: 0,
+                prepared: false
+              };
+            }
+            return {
+              name: spell.name,
+              level: spell.level,
+              prepared: spell.prepared
+            };
+          });
+
+        const updatedSpells = currentSpells.map(spell => 
+          spell.name === spellName
+            ? { ...spell, prepared: !spell.prepared }
+            : spell
+        );
+
+        return Character.findOneAndUpdate(
+          { _id: id },
+          { $set: { spells: updatedSpells } },
+          { new: true }
+        ).lean();
+      } catch (error) {
+        console.error('Error updating spell:', error);
+        throw new GraphQLError('Error updating spell', {
+          extensions: { code: 'INTERNAL_SERVER_ERROR' },
+        });
+    }
+  },
 
     deleteCharacter: async (_parent: unknown, { id }: { id: string }, context: Context) => {
       if (!context.user) {

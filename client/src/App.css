@@ -3,6 +3,7 @@
 @import './styles/auth.css';
 @import './styles/usermenu.css';
 @import './styles/characterdetails.css';
+@import './styles/spellcard.css';
 
 /* General Styles */
 body {

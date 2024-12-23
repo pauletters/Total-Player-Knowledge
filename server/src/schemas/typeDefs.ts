@@ -37,6 +37,12 @@ const typeDefs = `
         savingThrows: [String!]!
     }
 
+    type Spell {
+        name: String!
+        level: Int!
+        prepared: Boolean!
+    }
+
      type Character {
         _id: ID!
         player: User!
@@ -45,7 +51,7 @@ const typeDefs = `
         combat: Combat
         skills: Skills
         equipment: [String!]
-        spells: [String!]
+        spells: [Spell!]
         createdAt: String!
         updatedAt: String!
     }
@@ -76,6 +82,8 @@ const typeDefs = `
         addUser(username: String!, email: String!, password: String!): Auth
         addCharacter(input: AddCharacterInput!): Character
         updateCharacter(input: UpdateCharacterInput!): Character
+        updateCharacterSpells(id: ID!, spells: [SpellInput]!): Character!
+        toggleSpellPrepared(id: ID!, spellName: String!): Character!
         deleteCharacter(id: ID!): Character
 
         addCampaign(
@@ -130,7 +138,7 @@ const typeDefs = `
         combat: CombatInput
         skills: SkillsInput
         equipment: [String!]
-        spells: [String!]
+        spells: [SpellInput!]
     }
 
     input UpdateCharacterInput {
@@ -140,7 +148,13 @@ const typeDefs = `
         combat: CombatInput
         skills: SkillsInput
         equipment: [String!]
-        spells: [String!]
+        spells: [SpellInput!]
+    }
+
+    input SpellInput {
+        name: String!
+        level: Int!
+        prepared: Boolean!
     }
 
     type Auth {
