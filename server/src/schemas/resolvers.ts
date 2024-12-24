@@ -44,6 +44,7 @@ interface AddCharacterArgs {
   };
   equipment?: string[];
   spells: CharacterSpell[];
+  private?: boolean; // New optional field
 }
 
 interface UpdateCharacterArgs extends Partial<AddCharacterArgs> {
@@ -98,12 +99,10 @@ const resolvers = {
     },
 
     characters: async (_parent: unknown, _args: unknown, context: Context) => {
-      console.log("logged in user", context.user);
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
       const characters = await Character.find({ player: context.user._id });
-      console.log("characters", characters);
       return characters;
     },
 
@@ -143,6 +142,7 @@ const resolvers = {
       return Campaign.findById(id)
         .populate({
           path: 'players',
+          match: { private: false }, // Include only public characters
           populate: {
             path: 'player',
             select: 'username',
@@ -155,16 +155,16 @@ const resolvers = {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-    
+
       const users = await User.find({
         username: { $regex: term, $options: 'i' },
       })
         .populate({
           path: 'characters',
-          select: 'basicInfo.name',
+          select: 'basicInfo.name private',
         })
         .select('-password -__v');
-    
+
       console.log('Search results:', users);
       return users;
     },
@@ -195,18 +195,22 @@ const resolvers = {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-    
-      const newCharacter = await Character.create({ ...input, player: context.user._id });
-    
-      // Update the user's characters array
+
+      const newCharacter = await Character.create({
+        ...input,
+        player: context.user._id,
+        private: input.private ?? true, // Default to true if not provided
+      });
+
       await User.findByIdAndUpdate(
         context.user._id,
         { $push: { characters: newCharacter._id } },
         { new: true }
       );
-    
+
       return newCharacter;
     },
+
     updateCharacter: async (_parent: unknown, { input }: { input: UpdateCharacterArgs }, context: Context) => {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
@@ -251,10 +255,7 @@ const resolvers = {
         throw new AuthenticationError('Not logged in');
       }
 
-      const character = await Character.findOne({ 
-        _id: id, 
-        player: context.user._id 
-      });
+      const character = await Character.findOne({ _id: id, player: context.user._id });
 
       if (!character) {
         throw new GraphQLError('Character not found or unauthorized', {
@@ -263,26 +264,8 @@ const resolvers = {
       }
 
       try {
-        const spellArray = (character.spells || []).map(spell => 
-          spell instanceof String? spell.toString() : spell);
-        
-          const currentSpells = spellArray.map((spell) => {
-            if (typeof spell === 'string') {
-              return {
-                name: spell,
-                level: 0,
-                prepared: false
-              };
-            }
-            return {
-              name: spell.name,
-              level: spell.level,
-              prepared: spell.prepared
-            };
-          });
-
-        const updatedSpells = currentSpells.map(spell => 
-          spell.name === spellName
+        const updatedSpells = character.spells.map((spell) =>
+          typeof spell === 'object' && spell.name === spellName
             ? { ...spell, prepared: !spell.prepared }
             : spell
         );
@@ -297,8 +280,8 @@ const resolvers = {
         throw new GraphQLError('Error updating spell', {
           extensions: { code: 'INTERNAL_SERVER_ERROR' },
         });
-    }
-  },
+      }
+    },
 
     deleteCharacter: async (_parent: unknown, { id }: { id: string }, context: Context) => {
       if (!context.user) {

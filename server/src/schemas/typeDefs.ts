@@ -43,7 +43,7 @@ const typeDefs = `
         prepared: Boolean!
     }
 
-     type Character {
+    type Character {
         _id: ID!
         player: User!
         basicInfo: BasicInfo!
@@ -52,6 +52,7 @@ const typeDefs = `
         skills: Skills
         equipment: [String!]
         spells: [Spell!]
+        private: Boolean! # New field for privacy control
         createdAt: String!
         updatedAt: String!
     }
@@ -139,6 +140,7 @@ const typeDefs = `
         skills: SkillsInput
         equipment: [String!]
         spells: [SpellInput!]
+        private: Boolean # Optional, defaults to true if not provided
     }
 
     input UpdateCharacterInput {
@@ -149,6 +151,7 @@ const typeDefs = `
         skills: SkillsInput
         equipment: [String!]
         spells: [SpellInput!]
+        private: Boolean # Allow updating the private field
     }
 
     input SpellInput {
