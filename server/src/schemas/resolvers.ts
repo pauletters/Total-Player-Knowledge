@@ -98,10 +98,13 @@ const resolvers = {
     },
 
     characters: async (_parent: unknown, _args: unknown, context: Context) => {
+      console.log("logged in user", context.user);
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-      return Character.find({ player: context.user._id });
+      const characters = await Character.find({ player: context.user._id });
+      console.log("characters", characters);
+      return characters;
     },
 
     character: async (_parent: unknown, { id }: { id: string }, context: Context) => {
@@ -152,7 +155,8 @@ const resolvers = {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-      return User.find({
+    
+      const users = await User.find({
         username: { $regex: term, $options: 'i' },
       })
         .populate({
@@ -160,7 +164,10 @@ const resolvers = {
           select: 'basicInfo.name',
         })
         .select('-password -__v');
-    }
+    
+      console.log('Search results:', users);
+      return users;
+    },
   },
 
   Mutation: {
@@ -188,9 +195,18 @@ const resolvers = {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-      return Character.create({ ...input, player: context.user._id });
+    
+      const newCharacter = await Character.create({ ...input, player: context.user._id });
+    
+      // Update the user's characters array
+      await User.findByIdAndUpdate(
+        context.user._id,
+        { $push: { characters: newCharacter._id } },
+        { new: true }
+      );
+    
+      return newCharacter;
     },
-
     updateCharacter: async (_parent: unknown, { input }: { input: UpdateCharacterArgs }, context: Context) => {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');

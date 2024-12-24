@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLazyQuery, useMutation, gql } from '@apollo/client';
 import { Modal, Button, Form, InputGroup, Dropdown, DropdownButton } from 'react-bootstrap';
 
@@ -59,26 +59,56 @@ const ADD_CAMPAIGN = gql`
   }
 `;
 
-const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({ show, onClose, onCampaignCreated }) => {
+// Custom debounce implementation
+const useDebounce = (callback: (...args: any[]) => void, delay: number) => {
+  const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  return useCallback(
+    (...args: any[]) => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => {
+        callback(...args);
+      }, delay);
+    },
+    [callback, delay]
+  );
+};
+
+const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
+  show,
+  onClose,
+  onCampaignCreated,
+}) => {
   const [campaignName, setCampaignName] = useState('');
   const [campaignDescription, setCampaignDescription] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedPlayers, setSelectedPlayers] = useState<{ id: string; characterName: string; username: string }[]>([]);
+  const [selectedPlayers, setSelectedPlayers] = useState<
+    { id: string; characterName: string; username: string }[]
+  >([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [searchUsers, { data: searchResults }] = useLazyQuery(SEARCH_USERS);
-  const [addCampaign, { loading: addingCampaign }] = useMutation(ADD_CAMPAIGN);
+  const [searchUsers, { data: searchResults, error: searchError }] = useLazyQuery(SEARCH_USERS, {
+    fetchPolicy: 'network-only',
+  });
+  const [addCampaign, { loading: addingCampaign, error: addCampaignError }] = useMutation(
+    ADD_CAMPAIGN
+  );
+
+  const debouncedSearch = useDebounce((term: string) => {
+    if (term.trim() !== '') {
+      searchUsers({ variables: { term } });
+    }
+  }, 300);
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
-    if (term.trim() === '') {
-      return;
-    }
-    searchUsers({ variables: { term } });
+    if (term.trim()) debouncedSearch(term);
   };
 
   const handleSelectUser = (user: User) => {
     setSelectedUser(user);
-    setSearchTerm('');
+    setSearchTerm(''); // Clear search term
   };
 
   const handleSelectCharacter = (characterId: string, characterName: string) => {
@@ -88,8 +118,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({ show, onClose
         { id: characterId, characterName, username: selectedUser.username },
       ]);
     }
-    // Reset the user selection after selecting a character
-    setSelectedUser(null);
+    setSelectedUser(null); // Reset user selection
   };
 
   const handleCreate = async () => {
@@ -102,8 +131,8 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({ show, onClose
             players: selectedPlayers.map((player) => player.id),
           },
         });
-        onCampaignCreated(); // Trigger re-render of campaign list
-        onClose(); // Close the modal
+        onCampaignCreated();
+        onClose();
       } catch (error) {
         console.error('Error creating campaign:', error);
       }
@@ -112,58 +141,76 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({ show, onClose
     }
   };
 
+  useEffect(() => {
+    if (searchError) {
+      console.error('Error fetching users:', searchError);
+    }
+  }, [searchError]);
+
+  useEffect(() => {
+    if (addCampaignError) {
+      console.error('Error adding campaign:', addCampaignError);
+    }
+  }, [addCampaignError]);
+
   return (
     <Modal show={show} onHide={onClose} centered>
+      {/* Modal Header */}
       <Modal.Header closeButton>
         <Modal.Title>Create Campaign</Modal.Title>
       </Modal.Header>
+      {/* Modal Body */}
       <Modal.Body>
-        <Form>
-          <Form.Group className="mb-3">
-            <Form.Label>Campaign Name</Form.Label>
+        {/* Campaign Name */}
+        <Form.Group className="mb-3">
+          <Form.Label>Campaign Name</Form.Label>
+          <Form.Control
+            type="text"
+            placeholder="Enter campaign name"
+            value={campaignName}
+            onChange={(e) => setCampaignName(e.target.value)}
+            required
+          />
+        </Form.Group>
+        {/* Campaign Description */}
+        <Form.Group className="mb-3">
+          <Form.Label>Campaign Description</Form.Label>
+          <Form.Control
+            as="textarea"
+            rows={2}
+            maxLength={100}
+            placeholder="Enter a short description (max 100 characters)"
+            value={campaignDescription}
+            onChange={(e) => setCampaignDescription(e.target.value)}
+          />
+          <Form.Text>{100 - campaignDescription.length} characters remaining</Form.Text>
+        </Form.Group>
+        {/* Search Users */}
+        <Form.Group className="mb-3">
+          <Form.Label>Search for Users</Form.Label>
+          <InputGroup>
             <Form.Control
               type="text"
-              placeholder="Enter campaign name"
-              value={campaignName}
-              onChange={(e) => setCampaignName(e.target.value)}
-              required
+              placeholder="Search users by name"
+              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
             />
-          </Form.Group>
+          </InputGroup>
+          {searchTerm && searchResults?.searchUsers && (
+            <Dropdown.Menu show>
+              {searchResults.searchUsers.map((user: User) => (
+                <Dropdown.Item key={user._id} onClick={() => handleSelectUser(user)}>
+                  {user.username}
+                </Dropdown.Item>
+              ))}
+            </Dropdown.Menu>
+          )}
+        </Form.Group>
+        {/* Select Characters */}
+        {selectedUser && (
           <Form.Group className="mb-3">
-            <Form.Label>Campaign Description</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={2}
-              maxLength={100}
-              placeholder="Enter a short description (max 100 characters)"
-              value={campaignDescription}
-              onChange={(e) => setCampaignDescription(e.target.value)}
-            />
-            <Form.Text>{100 - campaignDescription.length} characters remaining</Form.Text>
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>Search for Users</Form.Label>
-            <InputGroup>
-              <Form.Control
-                type="text"
-                placeholder="Search users by name"
-                value={searchTerm}
-                onChange={(e) => handleSearch(e.target.value)}
-              />
-            </InputGroup>
-            {searchTerm && searchResults?.searchUsers && (
-              <Dropdown.Menu show>
-                {searchResults.searchUsers.map((user: User) => (
-                  <Dropdown.Item key={user._id} onClick={() => handleSelectUser(user)}>
-                    {user.username}
-                  </Dropdown.Item>
-                ))}
-              </Dropdown.Menu>
-            )}
-          </Form.Group>
-          {selectedUser && (
-            <Form.Group className="mb-3">
-              <Form.Label>Select a Character from {selectedUser.username}</Form.Label>
+            <Form.Label>Select a Character from {selectedUser.username}</Form.Label>
+            {selectedUser.characters.length > 0 ? (
               <DropdownButton title="Select Character" className="mb-3">
                 {selectedUser.characters.map((character) => (
                   <Dropdown.Item
@@ -176,24 +223,28 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({ show, onClose
                   </Dropdown.Item>
                 ))}
               </DropdownButton>
-            </Form.Group>
-          )}
-          {selectedPlayers.length > 0 && (
-            <Form.Group className="mt-3">
-              <Form.Label>Selected Characters</Form.Label>
-              <ul>
-                {selectedPlayers.map((player) => (
-                  <li key={player.id}>
-                    <strong>{player.characterName}</strong>
-                    <br />
-                    <small>Player: {player.username}</small>
-                  </li>
-                ))}
-              </ul>
-            </Form.Group>
-          )}
-        </Form>
+            ) : (
+              <p>No characters available for {selectedUser.username}.</p>
+            )}
+          </Form.Group>
+        )}
+        {/* Selected Players */}
+        {selectedPlayers.length > 0 && (
+          <Form.Group className="mt-3">
+            <Form.Label>Selected Characters</Form.Label>
+            <ul>
+              {selectedPlayers.map((player) => (
+                <li key={player.id}>
+                  <strong>{player.characterName}</strong>
+                  <br />
+                  <small>Player: {player.username}</small>
+                </li>
+              ))}
+            </ul>
+          </Form.Group>
+        )}
       </Modal.Body>
+      {/* Modal Footer */}
       <Modal.Footer>
         <Button variant="secondary" onClick={onClose} disabled={addingCampaign}>
           Cancel
