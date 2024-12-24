@@ -1,7 +1,7 @@
 // CharacterDetails.tsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Card, Row, Col, Button, Nav } from 'react-bootstrap';
+import { Container, Card, Row, Col, Button, Nav} from 'react-bootstrap';
 import { useQuery, useMutation } from '@apollo/client';
 import { GET_CHARACTER } from '../utils/queries';
 import { UPDATE_CHARACTER_SPELLS, TOGGLE_SPELL_PREPARED } from '../utils/mutations';
@@ -9,6 +9,7 @@ import { CharacterData, ApiSpell } from './types';
 import SpellCard from './Spells/SpellCard';
 import SpellModal from './Spells/SpellSelection';
 import { spellCache } from '../utils/spellCache';
+import DiceRoller from './DiceRoller';
 
 interface CharacterParams {
   characterId: string;
@@ -17,14 +18,14 @@ interface CharacterParams {
 const CharacterDetails: React.FC = () => {
   const { characterId } = useParams<keyof CharacterParams>() as CharacterParams;
   const navigate = useNavigate();
-
+  const [loading, setLoading] = useState(true);
+  type TabKey = 'details' | 'spells' | 'equipment' | 'background' | 'diceRoller';
+  const [activeTab, setActiveTab] = useState<TabKey>('details');
   const { loading: isLoading, error, data } = useQuery<{ character: CharacterData }>(GET_CHARACTER, {
     variables: { id: characterId },
   });
 
-  const [spellDetails, setSpellDetails] = useState<Record<string, ApiSpell>>({});
-  type TabKey = 'details' | 'spells' | 'equipment' | 'background';
-  const [activeTab, setActiveTab] = useState<TabKey>('details');
+  const [spellDetails, setSpellDetails] = useState<Record<string, ApiSpell>>({}); // Cache spell details
   const [showSpellModal, setShowSpellModal] = useState(false);
   const [updateCharacterSpells] = useMutation(UPDATE_CHARACTER_SPELLS);
   const [toggleSpellPrepared] = useMutation(TOGGLE_SPELL_PREPARED);
@@ -199,7 +200,7 @@ const CharacterDetails: React.FC = () => {
                 <Card>
                   <Card.Header>Attributes</Card.Header>
                   <Card.Body>
-                    {Object.entries(character.attributes).map(([attr, value]) => (
+                    {Object.entries(character.attributes).filter(([attr]) => attr !== '__typename').map(([attr, value]) => (
                       <p key={attr}>
                         <strong>{attr.charAt(0).toUpperCase() + attr.slice(1)}:</strong>{' '}
                         {value} ({getModifier(value)})
@@ -267,7 +268,7 @@ const CharacterDetails: React.FC = () => {
                           castingTime: spellDetails[spell.name].casting_time,
                           duration: spellDetails[spell.name].duration,
                           components: spellDetails[spell.name].components,
-                          classes: spellDetails[spell.name].classes?.map(c => c.name)
+                          classes: spellDetails[spell.name].classes?.map((c: { name: string }) => c.name)
                         } : undefined}
                         onRemove={() => handleRemoveSpell(spell.name)}
                         onTogglePrepared={() => handleToggleSpellPrepared(spell.name)}
@@ -314,6 +315,19 @@ const CharacterDetails: React.FC = () => {
               </Card.Body>
             </Card>
           )}
+
+        {activeTab === 'diceRoller' && (
+            <Card>
+              <Card.Header>
+                <div className="d-flex justify-content-between align-items-center">
+                  <span>Dice Roller</span>
+                </div>
+              </Card.Header>
+              <Card.Body>
+                <DiceRoller />
+              </Card.Body>
+            </Card>
+          )}
           </div>
 
         <div className="character-tabs">
@@ -350,10 +364,18 @@ const CharacterDetails: React.FC = () => {
                 Background
               </Nav.Link>
             </Nav.Item>
+            <Nav.Item>
+              <Nav.Link 
+                active={activeTab === 'diceRoller'}
+                onClick={() => setActiveTab('diceRoller')}
+              >
+                Dice Roller
+              </Nav.Link>
+            </Nav.Item>
           </Nav>
+
         </div>
       </div>
-
       {character && (
     <SpellModal
       show={showSpellModal}

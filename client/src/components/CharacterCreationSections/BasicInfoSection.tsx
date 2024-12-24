@@ -2,20 +2,26 @@ import React, { useMemo } from 'react';
 import { SectionProps } from '../types';
 
 const raceOptions = [
-  'Human', 'Elf', 'Dwarf', 'Halfling', 'Gnome', 
-  'Half-Elf', 'Half-Orc', 'Tiefling', 'Dragonborn'
+  'Dragonborn', 'Dwarf', 'Elf', 'Gnome', 'Half-Elf', 'Halfling', 
+  'Half-Orc', 'Human', 'Tiefling'
 ];
 
 const classOptions = [
-  'Fighter', 'Wizard', 'Rogue', 'Cleric', 'Bard', 
-  'Ranger', 'Paladin', 'Sorcerer', 'Monk', 
-  'Druid', 'Warlock', 'Barbarian'
+  'Barbarian', 'Bard', 'Cleric', 'Druid', 'Fighter',
+  'Monk', 'Paladin', 'Ranger', 'Rogue', 'Sorcerer',
+  'Warlock', 'Wizard'
 ];
 
 const backgroundOptions = [
   'Acolyte', 'Charlatan', 'Criminal', 'Entertainer',
   'Folk Hero', 'Guild Artisan', 'Hermit', 'Noble',
   'Outlander', 'Sage', 'Sailor', 'Soldier', 'Urchin'
+];
+
+const alignmentOptions = [
+  'Lawful Good', 'Neutral Good', 'Chaotic Good',
+  'Lawful Neutral', 'True Neutral', 'Chaotic Neutral',
+  'Lawful Evil', 'Neutral Evil', 'Chaotic Evil'
 ];
 
 const classSkillProficiencies = {
@@ -99,21 +105,42 @@ export const BasicInfoSection: React.FC<SectionProps> = ({ character, onInputCha
             ))}
           </select>
           <div className="absolute left-1/2 transform -translate-x-1/2 mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Background
-            </label>
-            <select 
-              value={character.basicInfo.background}
-              onChange={(e) => onInputChange('basicInfo', 'background', e.target.value)}
-              className="block w-40 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-            >
-              <option value="">Select Background</option>
-              {backgroundOptions.map(background => (
-                <option key={background.toLowerCase()} value={background.toLowerCase()}>
-                  {background}
-                </option>
-              ))}
-            </select>
+            <div className="flex gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Background
+                </label>
+                <select 
+                  value={character.basicInfo.background}
+                  onChange={(e) => onInputChange('basicInfo', 'background', e.target.value)}
+                  className="block w-40 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                >
+                  <option value="">Select Background</option>
+                  {backgroundOptions.map(background => (
+                    <option key={background.toLowerCase()} value={background.toLowerCase()}>
+                      {background}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Alignment
+                </label>
+                <select 
+                  value={character.basicInfo.alignment}
+                  onChange={(e) => onInputChange('basicInfo', 'alignment', e.target.value)}
+                  className="block w-40 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                >
+                  <option value="">Select Alignment</option>
+                  {alignmentOptions.map(alignment => (
+                    <option key={alignment.toLowerCase()} value={alignment.toLowerCase()}>
+                      {alignment}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
         </div>
         <div>

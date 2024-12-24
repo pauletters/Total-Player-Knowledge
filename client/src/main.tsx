@@ -10,6 +10,7 @@ import CharacterCreation from './components/CharacterCreation.js'
 import CharacterDetails from './components/CharacterDetails.js'
 import ProtectedRoute from './components/ProtectedRoute.js'
 import AuthService from './utils/auth.js'
+import DiceRoller from './components/DiceRoller.js'
 
 const router = createBrowserRouter([
   {
@@ -46,6 +47,14 @@ const router = createBrowserRouter([
             element: (
               <ProtectedRoute>
                 <CharacterDetails />
+              </ProtectedRoute>
+            )
+          },
+          {
+            path: 'dice-roller',
+            element: (
+              <ProtectedRoute>
+                <DiceRoller />
               </ProtectedRoute>
             )
           }
