@@ -25,7 +25,7 @@ const startApolloServer = async () => {
 console.log('Connected to the database!');
 
   const app = express();
-  const PORT = process.env.PORT || 3000;
+  const PORT = process.env.PORT || 3001;
 
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
