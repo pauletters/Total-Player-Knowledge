@@ -1,18 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from 'react-bootstrap';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import AuthService from '../utils/auth';
 
 interface PersistentDiceRollerProps {
   DiceRoller: React.ComponentType;
 }
 
 const PersistentDiceRoller: React.FC<PersistentDiceRollerProps> = ({ DiceRoller }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    // Only show the dice roller if user is logged in
+    const checkAuth = () => {
+      setIsVisible(AuthService.loggedIn());
+    };
+
+    // Initial check
+    checkAuth();
+
+    // Set up event listener for auth changes
+    window.addEventListener('storage', checkAuth);
+
+    return () => {
+      window.removeEventListener('storage', checkAuth);
+    };
+  }, []);
+
+  if (!isVisible) {
+    return null;
+  }
 
   return (
     <div 
       className="position-fixed end-0"
-      style={{ top: '155px', zIndex: 1050 }} 
+      style={{ 
+        top: '155px', 
+        zIndex: 1050,
+        transition: 'transform 0.3s ease-in-out',
+        transform: `translateX(${isCollapsed ? 'calc(100% - 50px)' : '0'})` 
+      }} 
     >
       <div className="d-flex">
         <button
@@ -27,6 +55,7 @@ const PersistentDiceRoller: React.FC<PersistentDiceRollerProps> = ({ DiceRoller 
             color: isCollapsed ? 'white' : 'black'
           }}
           aria-label={isCollapsed ? "Expand dice roller" : "Collapse dice roller"}
+          data-testid="dice-roller-toggle"
         >
           {isCollapsed ? <ChevronLeft size={50} /> : <ChevronRight size={50} />}
           <div 
@@ -43,9 +72,8 @@ const PersistentDiceRoller: React.FC<PersistentDiceRollerProps> = ({ DiceRoller 
 
         <div 
           style={{
-            width: isCollapsed ? 0 : '400px',
-            overflow: 'hidden',
-            transition: 'width 0.3s ease-in-out'
+            width: '400px',
+            overflow: 'hidden'
           }}
         >
           <Card 

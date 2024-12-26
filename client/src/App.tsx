@@ -12,8 +12,8 @@ import { onError } from '@apollo/client/link/error';
 import { useEffect } from 'react';
 import Navbar from './components/Navbar';
 import AuthService from './utils/auth';
-import DiceRoller from './components/DiceRoller';
 import PersistentDiceRoller from './components/PersistentDiceRoller';
+import DiceRoller from './components/DiceRoller';
 
 // Construct our main GraphQL API endpoint
 // This is the entry point for our application
@@ -80,8 +80,8 @@ function App() {
   return (
     <ApolloProvider client={client}>
       <Navbar />
-      <PersistentDiceRoller DiceRoller={DiceRoller} />
-      <Outlet /> 
+      <Outlet />
+      {AuthService.loggedIn() && <PersistentDiceRoller DiceRoller={DiceRoller} />}
     </ApolloProvider>
   );
 }
