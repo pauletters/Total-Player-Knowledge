@@ -45,6 +45,7 @@ const SpellModal: React.FC<SpellModalProps> = ({
   const [spellDetails, setSpellDetails] = useState<Record<string, Spell>>({});
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
   const [isFullyLoaded, setIsFullyLoaded] = useState(false);
+  const [expandedSpellId, setExpandedSpellId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAllSpells = async () => {
@@ -174,7 +175,7 @@ useEffect(() => {
 }, [spells, characterClass, selectedLevel, searchTerm]);
 
   return (
-    <Modal show={show} onHide={onClose} size="lg">
+    <Modal show={show} onHide={onClose} size="lg" closeButton>
       <Modal.Header closeButton>
         <Modal.Title>Add Spells</Modal.Title>
       </Modal.Header>
@@ -224,14 +225,17 @@ useEffect(() => {
         ) : (
           <div className="spell-list" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
             <Row xs={1} md={2} className="g-4">
-              {filteredSpells.map((spell) => (
-                <Col key={spell.index}>
-                  <Card 
-                    className={`h-100 ${selectedSpells.has(spell.index) ? 'border-primary' : ''}`}
+                {filteredSpells.map((spell) => (
+              <Col key={spell.index}>
+                <Card 
+                  className={`h-100 ${selectedSpells.has(spell.index) ? 'border-primary' : ''}`}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <Card.Body 
                     onClick={() => handleSpellClick(spell.index)}
-                    style={{ cursor: 'pointer' }}
+                    className="d-flex flex-column"
                   >
-                    <Card.Body>
+                    <div>
                       <Card.Title className="d-flex justify-content-between">
                         {spell.name}
                         <span className="text-muted">
@@ -242,19 +246,54 @@ useEffect(() => {
                         {spell.school.name}
                       </Card.Subtitle>
                       <Card.Text className="small">
-                      Classes: {spell.classes.map(c => c.name).join(', ')}
-                    </Card.Text>
-                      {spellDetails[spell.index]?.desc && (
-                        <Card.Text className="small">
-                          {spellDetails[spell.index].desc[0].substring(0, 100)}...
-                        </Card.Text>
-                      )}
-                    </Card.Body>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
-          </div>
+                        Classes: {spell.classes.map(c => c.name).join(', ')}
+                      </Card.Text>
+                    </div>
+                    
+                    {spell.desc && spell.desc.length > 0 && (
+                      <div 
+                        className="mt-2 d-flex flex-column flex-grow-1"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div 
+                          style={{ 
+                            maxHeight: spell.index === expandedSpellId ? 'none' : '3.6em',
+                            overflow: 'hidden',
+                          }}
+                        >
+                          <Card.Text className="small text-muted mb-0">
+                            {spell.desc[0]}
+                          </Card.Text>
+                        </div>
+                        <div className="mt-auto pt-2 text-end">
+                          {spell.index !== expandedSpellId ? (
+                            <button
+                              className="btn btn-link btn-sm p-0 text-primary"
+                              style={{
+                                border: 'none',
+                                textDecoration: 'none'
+                              }}
+                              onClick={() => setExpandedSpellId(spell.index)}
+                            >
+                              Read More
+                            </button>
+                          ) : (
+                            <button 
+                              className="btn btn-link btn-sm p-0 text-muted"
+                              onClick={() => setExpandedSpellId(null)}
+                            >
+                              Show Less
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </Card.Body>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        </div>
         )}
       </Modal.Body>
       <Modal.Footer>

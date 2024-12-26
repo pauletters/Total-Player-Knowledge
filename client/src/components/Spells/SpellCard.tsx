@@ -30,7 +30,6 @@ const SpellCard: React.FC<SpellCardProps> = ({
 }) => {
   const [showFullDetails, setShowFullDetails] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isFullDetailsButtonHovered, setIsFullDetailsButtonHovered] = useState(false);
 
   const renderDescription = () => {
     if (!description) return null;
@@ -85,22 +84,29 @@ const SpellCard: React.FC<SpellCardProps> = ({
           {renderDescription()}
             
             <div className="d-flex justify-content-between align-items-center">
-          <Button
-            variant={prepared ? "success" : "outline-secondary"}
-            size="sm"
-            onClick={onTogglePrepared}
-            className="flex-grow-1 mr-3 btn-sm"
-          >
-            {prepared ? 'Prepared' : 'Not Prepared'}
-          </Button>
+            <Button
+              variant={prepared ? "success" : "outline-secondary"}
+              size="sm"
+              onClick={(e) => {
+                e.preventDefault();
+                console.log('Toggle button clicked:', {
+                  spellName: name,
+                  currentPreparedStatus: prepared,
+                  level,
+                  toggleAction: 'Setting prepared to ' + (!prepared)
+                });
+                onTogglePrepared();
+              }}
+              className="flex-grow-1 mr-3 btn-sm"
+            >
+              {prepared ? 'Prepared' : 'Not Prepared'}
+            </Button>
           {description && (
                 <Button
-                  variant={isFullDetailsButtonHovered ? "primary" : "outline-primary"}
-                  size="sm"
-                  onClick={() => setShowFullDetails(true)}
-                  onMouseEnter={() => setIsFullDetailsButtonHovered(true)}
-                  onMouseLeave={() => setIsFullDetailsButtonHovered(false)}
-                  className="ml-3 btn-sm btn-spaced"
+                variant="outline-primary"
+                size="sm"
+                onClick={() => setShowFullDetails(true)}
+                className="btn-outline-primary ml-3 btn-sm btn-spaced"
                 >
                   Full Details
                 </Button>
@@ -109,7 +115,12 @@ const SpellCard: React.FC<SpellCardProps> = ({
         </Card.Body>
       </Card>
 
-      <Modal show={showFullDetails} onHide={() => setShowFullDetails(false)} centered>
+      <Modal
+        show={showFullDetails} 
+        onHide={() => {
+          setShowFullDetails(false);
+      }} 
+      centered>
       <Modal.Header closeButton>
         <Modal.Title>{name}</Modal.Title>
       </Modal.Header>
@@ -145,11 +156,6 @@ const SpellCard: React.FC<SpellCardProps> = ({
         
         <p>{description}</p>
       </Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={() => setShowFullDetails(false)}>
-          Close
-        </Button>
-      </Modal.Footer>
       </Modal>
     </>
   );

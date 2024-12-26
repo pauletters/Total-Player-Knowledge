@@ -18,6 +18,18 @@ const startApolloServer = async () => {
     resolvers,
     csrfPrevention: true,
     cache: 'bounded',
+    formatError: (error) => {
+      console.error('GraphQL Error:', error);
+      return error;
+    },
+    plugins: [{
+      requestDidStart: async () => ({
+        willSendResponse: async (requestContext) => {
+          console.log('GraphQL Response:', requestContext.response);
+          return Promise.resolve();
+        },
+      }),
+    }],
   });
 
   await server.start();
