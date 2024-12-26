@@ -1,5 +1,6 @@
 import User from '../models/User.js';
 import Character from '../models/Character.js';
+import { ISpell } from '../models/Character.js';
 import Campaign from '../models/Campaign.js';
 import { signToken, AuthenticationError } from '../utils/auth.js';
 import { GraphQLError } from 'graphql';
@@ -251,32 +252,55 @@ const resolvers = {
       { id, spellName }: { id: string; spellName: string },
       context: Context
     ) => {
+      console.log('1. Starting toggleSpellPrepared:', { id, spellName });
+    
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-
-      const character = await Character.findOne({ _id: id, player: context.user._id });
-
-      if (!character) {
-        throw new GraphQLError('Character not found or unauthorized', {
-          extensions: { code: 'NOT_FOUND' },
-        });
-      }
-
+    
       try {
-        const updatedSpells = character.spells.map((spell) =>
-          typeof spell === 'object' && spell.name === spellName
-            ? { ...spell, prepared: !spell.prepared }
-            : spell
-        );
-
-        return Character.findOneAndUpdate(
-          { _id: id },
-          { $set: { spells: updatedSpells } },
-          { new: true }
-        ).lean();
+        console.log('2. Finding character...');
+        const character = await Character.findOne({ 
+          _id: id, 
+          player: context.user._id 
+        });
+    
+        if (!character) {
+          throw new GraphQLError('Character not found', {
+            extensions: { code: 'NOT_FOUND' },
+          });
+        }
+    
+        console.log('3. Character found:', character._id);
+        console.log('4. Current spells:', character.spells);
+    
+        // Find the spell
+        const spellToUpdate = character.spells.find(spell => spell.name === spellName);
+        if (!spellToUpdate) {
+          throw new GraphQLError('Spell not found', {
+            extensions: { code: 'NOT_FOUND' },
+          });
+        }
+    
+        console.log('5. Found spell to update:', spellToUpdate);
+        console.log('6. Current prepared status:', spellToUpdate.prepared);
+    
+        // Update the spell's prepared status directly
+        spellToUpdate.prepared = !spellToUpdate.prepared;
+        console.log('7. New prepared status:', spellToUpdate.prepared);
+    
+        // Save the character
+        console.log('8. Saving character...');
+        await character.save();
+        console.log('9. Character saved successfully');
+    
+        // Return the updated character
+        const updatedCharacter = await Character.findById(id);
+        console.log('10. Final character state:', updatedCharacter);
+        return updatedCharacter;
+    
       } catch (error) {
-        console.error('Error updating spell:', error);
+        console.error('ERROR in toggleSpellPrepared:', error);
         throw new GraphQLError('Error updating spell', {
           extensions: { code: 'INTERNAL_SERVER_ERROR' },
         });

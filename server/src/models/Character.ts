@@ -30,7 +30,7 @@ interface Skills {
   savingThrows: string[];
 }
 
-interface ISpell {
+export interface ISpell {
   name: string;
   level: number;
   prepared: boolean;
@@ -44,7 +44,7 @@ interface CharacterDocument {
   combat?: Combat;
   skills?: Skills;
   equipment?: string[];
-  spells: (ISpell | string)[];
+  spells: ISpell[];
   private: boolean; // New property
   createdAt?: Date;
   updatedAt?: Date;
@@ -53,7 +53,9 @@ interface CharacterDocument {
 const spellSchema = new Schema({
   name: { type: String, required: true },
   level: { type: Number, required: true },
-  prepared: { type: Boolean, default: false },
+  prepared: { type: Boolean, required:true, default: false }
+}, { 
+  _id: false // Disable _id for subdocuments
 });
 
 const characterSchema = new Schema<CharacterDocument>(

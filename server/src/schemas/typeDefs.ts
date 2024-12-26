@@ -51,7 +51,7 @@ const typeDefs = `
         combat: Combat
         skills: Skills
         equipment: [String!]
-        spells: [Spell!]
+        spells: [Spell!]!
         private: Boolean! # New field for privacy control
         createdAt: String!
         updatedAt: String!

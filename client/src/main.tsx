@@ -1,7 +1,5 @@
 import ReactDOM from 'react-dom/client'
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
-import 'bootstrap/dist/css/bootstrap.min.css'
-
 import App from './App.jsx'
 import About from './pages/about.js'
 import MyCharacters from './pages/MyCharacters.js'

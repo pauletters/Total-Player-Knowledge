@@ -18,7 +18,6 @@ interface CharacterParams {
 const CharacterDetails: React.FC = () => {
   const { characterId } = useParams<keyof CharacterParams>() as CharacterParams;
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
   type TabKey = 'details' | 'spells' | 'equipment' | 'background' | 'diceRoller';
   const [activeTab, setActiveTab] = useState<TabKey>('details');
   const { loading: isLoading, error, data } = useQuery<{ character: CharacterData }>(GET_CHARACTER, {
@@ -112,14 +111,21 @@ const CharacterDetails: React.FC = () => {
   const handleToggleSpellPrepared = async (spellName: string) => {
     if (!data?.character) return;
     
+    console.log('Attempting to toggle spell:', spellName);
     try {
-      await toggleSpellPrepared({
+      const { data: mutationData } = await toggleSpellPrepared({
         variables: {
           id: characterId,
           spellName
         },
         refetchQueries: [{ query: GET_CHARACTER, variables: { id: characterId } }]
       });
+      console.log('Toggle spell result:', JSON.stringify(mutationData, null, 2));
+      if (mutationData?.toggleSpellPrepared?.spells) {
+        console.log('Updated spells:', mutationData.toggleSpellPrepared.spells);
+      } else {
+        console.log('No spells data in mutation response');
+      }
     } catch (error) {
       console.error('Error toggling spell prepared status:', error);
     }
