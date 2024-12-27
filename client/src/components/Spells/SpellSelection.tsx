@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, Form, Spinner, Card, Row, Col } from 'react-bootstrap';
+import { Modal, Button, Form, Spinner, Card, Row, Col, Pagination } from 'react-bootstrap';
 import { dndApi } from '../../utils/dndApi';
 import { spellCache } from '../../utils/spellCache';
 
@@ -18,12 +18,12 @@ interface Spell {
   level: number;
   school: {
     name: string;
-  };
+    };
   classes: {
-    name: string;
-  }[];
-  desc: string[];
-}
+      name: string;
+    }[];
+    desc: string[];
+  };
 
 interface SpellModalProps {
   show: boolean;
@@ -44,59 +44,80 @@ const SpellModal: React.FC<SpellModalProps> = ({
   const [selectedSpells, setSelectedSpells] = useState<Set<string>>(new Set());
   const [spellDetails, setSpellDetails] = useState<Record<string, Spell>>({});
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
-  const [isFullyLoaded, setIsFullyLoaded] = useState(false);
   const [expandedSpellId, setExpandedSpellId] = useState<string | null>(null);
+
+   // Pagination state
+   const [currentPage, setCurrentPage] = useState(1);
+   const spellsPerPage = 12;
+
+   // Progress tracking
+  const [totalSpells, setTotalSpells] = useState(0);
+  const [loadedSpells, setLoadedSpells] = useState(0);
+  const [loadingPhase, setLoadingPhase] = useState<'initial' | 'details'>('initial');
 
   useEffect(() => {
     const fetchAllSpells = async () => {
-      if (!show) return;
+      if (!show || !characterClass) return;
       
       try {
         setLoading(true);
-        const response = await dndApi.getSpells() as SpellApiResponse;
+        setLoadingPhase('initial');
+        setLoadedSpells(0);
+
+        const classResponse = await dndApi.getSpellsByClass(characterClass) as SpellApiResponse;
         
-        if (response?.results) {
-          // Get all spell names
-          const spellNames = response.results.map(spell => spell.name);
+        if (classResponse?.results) {
+          setTotalSpells(classResponse.results.length);
+          setLoadingPhase('details');
           
           // Fetch details for all spells with controlled concurrency
-          const fetchSpellDetails = async (names: string[]) => {
-            const batchSize = 10;
-            const spellDetails: Spell[] = [];
+          const fetchSpellDetails = async (spellResults: typeof classResponse.results) => {
+            const validSpells: Spell[] = [];
 
-            for (let i = 0; i < names.length; i += batchSize) {
-              const batch = names.slice(i, i + batchSize);
-              
-              const batchPromises = batch.map(async (name) => {
+            let loadedCount = 0;
+
+            for (const spell of spellResults) {
+              loadedCount++;
                 try {
                   // First try to get from cache
-                  const cachedSpell = await spellCache.getSpell(name);
-                  if (cachedSpell) return cachedSpell;
+                  const cachedSpell = await spellCache.getSpell(spell.name);
+                  if (cachedSpell) {
+                    validSpells.push({
+                      ...cachedSpell,
+                      school: { name: cachedSpell.school.name },
+                      classes: cachedSpell.classes || [] 
+                    });
+                    setLoadedSpells(loadedCount);
+                    continue;
+                  }
                   
                   // If not in cache, fetch from API
-                  const spellIndex = name.toLowerCase().replace(/\s+/g, '-');
-                  return await dndApi.getSpell(spellIndex) as Spell;
+                  const spellIndex = spell.name.toLowerCase().replace(/\s+/g, '-');
+                  const fetchedSpell =  await dndApi.getSpell(spellIndex) as Spell;
+                  if (fetchedSpell) {
+                    validSpells.push({
+                      index: fetchedSpell.index,
+                      name: fetchedSpell.name,
+                      level: fetchedSpell.level,
+                      school: { name: fetchedSpell.school.name },
+                      classes: fetchedSpell.classes || [],
+                      desc: fetchedSpell.desc
+                    });
+                  }
+
+                  // Adds small delay between requests
+                  await new Promise(resolve => setTimeout(resolve, 100));
                 } catch (error) {
-                  console.warn(`Could not load spell ${name}:`, error);
-                  return null;
+                  console.warn(`Could not load spell ${spell.name}:`, error);
+                  setLoadedSpells(loadedCount);
                 }
-              });
+              }
 
-              // Wait for batch to complete
-              const batchResults = await Promise.all(batchPromises);
-              spellDetails.push(...batchResults.filter((spell): spell is Spell => spell !== null));
+              return validSpells;
+            };
 
-              // Optional: add a small delay between batches to avoid rate limiting
-              await new Promise(resolve => setTimeout(resolve, 500));
-            }
-
-            return spellDetails;
-          };
-
-          const allSpellDetails = await fetchSpellDetails(spellNames);
-          
-          setSpells(allSpellDetails);
-          setIsFullyLoaded(true);
+          const pageSpellDetails = await fetchSpellDetails(classResponse.results);
+          setSpells(pageSpellDetails || []);
         }
       } catch (error) {
         console.error('Error fetching spells:', error);
@@ -106,7 +127,12 @@ const SpellModal: React.FC<SpellModalProps> = ({
     };
 
     fetchAllSpells();
-  }, [show]);
+  }, [show, currentPage, spellsPerPage, characterClass]);
+
+   // Reset pagination when filters change
+   useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedLevel]);
 
   // Modify the existing methods to work with the new approach
   const handleSpellClick = async (spellIndex: string) => {
@@ -145,34 +171,104 @@ const handleAddSpells = () => {
 const filteredSpells = spells.filter(spell => {
   const matchesSearch = searchTerm === '' || spell.name.toLowerCase().includes(searchTerm.toLowerCase());
   const matchesClass = !characterClass || 
-    spell.classes.some(c => c.name.toLowerCase() === characterClass.toLowerCase()) || characterClass.toLowerCase() === 
-    spell.classes[0]?.name.toLowerCase();
+    spell.classes.some(c => c.name.toLowerCase() === characterClass.toLowerCase());
   const matchesLevel = selectedLevel === 'all' || spell.level === parseInt(selectedLevel);
   return matchesSearch && matchesClass && matchesLevel;
 });
 
-useEffect(() => {
-  console.log('Filtered Spells Debug:');
-  console.log('Total Spells:', spells.length);
-  console.log('Character Class:', characterClass);
-  console.log('Selected Level:', selectedLevel);
-  console.log('Search Term:', searchTerm);
-  
-  const debugFiltered = spells.map(spell => ({
-    name: spell.name,
-    level: spell.level,
-    classes: spell.classes.map(c => c.name),
-    matchesSearch: searchTerm === '' || spell.name.toLowerCase().includes(searchTerm.toLowerCase()),
-    matchesClass: !characterClass || 
-      spell.classes.some(c => 
-        c.name.toLowerCase() === characterClass.toLowerCase() ||
-        characterClass.toLowerCase() === spell.classes[0]?.name.toLowerCase()
-      ),
-    matchesLevel: selectedLevel === 'all' || spell.level === parseInt(selectedLevel)
-  }));
-  
-  console.log('Detailed Spell Filtering:', debugFiltered);
-}, [spells, characterClass, selectedLevel, searchTerm]);
+const totalPages = Math.ceil(filteredSpells.length / spellsPerPage);
+
+// Get current page's spells
+const indexOfLastSpell = currentPage * spellsPerPage;
+const indexOfFirstSpell = indexOfLastSpell - spellsPerPage;
+const currentSpells = filteredSpells.slice(indexOfFirstSpell, indexOfLastSpell);
+
+  const renderPagination = () => {
+    const items = [];
+    
+    // Previous button
+    items.push(
+      <Pagination.Prev 
+        key="prev"
+        disabled={currentPage === 1}
+        onClick={() => setCurrentPage(curr => Math.max(curr - 1, 1))}
+      />
+    );
+
+    // First page
+    items.push(
+      <Pagination.Item
+        key={1}
+        active={currentPage === 1}
+        onClick={() => setCurrentPage(1)}
+      >
+        1
+      </Pagination.Item>
+    );
+
+    // Ellipsis and middle pages
+    if (totalPages > 5) {
+      if (currentPage > 3) {
+        items.push(<Pagination.Ellipsis key="ellipsis1" />);
+      }
+
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+
+      for (let i = start; i <= end; i++) {
+        items.push(
+          <Pagination.Item
+            key={i}
+            active={currentPage === i}
+            onClick={() => setCurrentPage(i)}
+          >
+            {i}
+          </Pagination.Item>
+        );
+      }
+
+      if (currentPage < totalPages - 2) {
+        items.push(<Pagination.Ellipsis key="ellipsis2" />);
+      }
+    } else {
+      // If fewer pages, show all
+      for (let i = 2; i < totalPages; i++) {
+        items.push(
+          <Pagination.Item
+            key={i}
+            active={currentPage === i}
+            onClick={() => setCurrentPage(i)}
+          >
+            {i}
+          </Pagination.Item>
+        );
+      }
+    }
+
+    // Last page
+    if (totalPages > 1) {
+      items.push(
+        <Pagination.Item
+          key={totalPages}
+          active={currentPage === totalPages}
+          onClick={() => setCurrentPage(totalPages)}
+        >
+          {totalPages}
+        </Pagination.Item>
+      );
+    }
+
+    // Next button
+    items.push(
+      <Pagination.Next
+        key="next"
+        disabled={currentPage === totalPages}
+        onClick={() => setCurrentPage(curr => Math.min(curr + 1, totalPages))}
+      />
+    );
+
+    return <Pagination className="justify-content-center mt-4">{items}</Pagination>;
+  };
 
   return (
     <Modal show={show} onHide={onClose} size="lg" closeButton>
@@ -210,22 +306,44 @@ useEffect(() => {
 
         {loading ? (
           <div className="text-center p-4">
-            <Spinner animation="border" />
-            <p>
-              {isFullyLoaded 
-                ? 'Creating spell list. This may take a moment...' 
-                : 'Loading spells (this may take a moment)...'}
+            <div className="mb-4">
+              <h4 className="mb-3">
+                {loadingPhase === 'initial' ? 'Loading Class Spells...' : 'Loading Spell Details'}
+              </h4>
+              <div className="progress mb-3" style={{ height: '25px' }}>
+                <div 
+                  className="progress-bar progress-bar-striped progress-bar-animated bg-danger"
+                  role="progressbar"
+                  style={{ width: `${(loadedSpells / Math.max(totalSpells, 1)) * 100}%` }}
+                  aria-valuenow={(loadedSpells / Math.max(totalSpells, 1)) * 100}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                >
+                  {Math.round((loadedSpells / Math.max(totalSpells, 1)) * 100)}%
+                </div>
+              </div>
+              <div className="d-flex justify-content-between align-items-center">
+                <Spinner animation="border" size="sm" className="me-2" />
+                <span className="text-muted fw-bold">
+                  {loadedSpells} / {totalSpells} spells
+                </span>
+              </div>
+            </div>
+            <p className="text-muted small fst-italic">
+              {loadingPhase === 'initial' 
+                ? `Loading available spells for ${characterClass}...` 
+                : 'Loading detailed information for each spell. This may take a moment.'}
             </p>
-            <p>Loaded: {spells.length} spells</p>
           </div>
         ) : filteredSpells.length === 0 ? (
           <div className="text-center p-4">
             <p>No spells found matching your search criteria.</p>
           </div>
         ) : (
+          <>
           <div className="spell-list" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
             <Row xs={1} md={2} className="g-4">
-                {filteredSpells.map((spell) => (
+                {currentSpells.map((spell) => (
               <Col key={spell.index}>
                 <Card 
                   className={`h-100 ${selectedSpells.has(spell.index) ? 'border-primary' : ''}`}
@@ -294,6 +412,8 @@ useEffect(() => {
             ))}
           </Row>
         </div>
+        {renderPagination()}
+        </>
         )}
       </Modal.Body>
       <Modal.Footer>
