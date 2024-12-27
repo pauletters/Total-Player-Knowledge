@@ -72,6 +72,17 @@ export const dndApi = {
     }
   },
 
+    async getSpellsByClass(className: string) {
+      try {
+        const formattedClassName = className.toLowerCase();
+        const response = await fetchFromApi<ApiResponse<any>>(`/classes/${formattedClassName}/spells`);
+        return response;
+      } catch (error) {
+        console.error(`Error fetching spells for class ${className}:`, error);
+        throw error;
+      }
+    },
+
   // Rules and mechanics
   getConditions: () => fetchFromApi('/conditions'),
   getRules: () => fetchFromApi('/rules'),
