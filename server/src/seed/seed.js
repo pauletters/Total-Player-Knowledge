@@ -54,6 +54,7 @@ const seedDatabase = async () => {
         skills: { proficiencies: ['Athletics', 'Perception'], savingThrows: ['Strength', 'Constitution'] },
         equipment: ['Sword', 'Shield'],
         spells: [],
+        private: i % 2 === 0, // Alternate private flag
       });
 
       const char2 = await Character.create({
@@ -70,7 +71,11 @@ const seedDatabase = async () => {
         combat: { armorClass: 14, hitPoints: 30, initiative: 1, speed: 30 },
         skills: { proficiencies: ['Arcana', 'Investigation'], savingThrows: ['Intelligence', 'Wisdom'] },
         equipment: ['Staff', 'Spellbook'],
-        spells: ['Fireball', 'Magic Missile'],
+        spells: [
+          { name: 'Fireball', level: 3, prepared: true },
+          { name: 'Magic Missile', level: 1, prepared: false },
+        ],
+        private: i % 2 !== 0, // Alternate private flag
       });
 
       characters.push(char1, char2);

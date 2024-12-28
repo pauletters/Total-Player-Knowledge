@@ -73,8 +73,8 @@ const typeDefs = `
         me: User
         characters: [Character!]!
         character(id: ID!): Character
-        campaigns: [Campaign!]!
-        campaign(id: ID!): Campaign
+        campaigns(private: Boolean): [Campaign!]! # Optional filtering by privacy
+        campaign(id: ID!, includePrivate: Boolean = false): Campaign # Optionally include private characters
         searchUsers(term: String!): [User!]!
     }
 
