@@ -1,16 +1,6 @@
 import { Schema, model } from 'mongoose';
 
-// Basic Information
-interface BasicInfo {
-  name: string;
-  race: string;
-  class: string;
-  level: number;
-  background: string;
-  alignment: string;
-}
-
-// Attributes
+// Attributes Interface
 interface Attributes {
   strength: number;
   dexterity: number;
@@ -20,7 +10,31 @@ interface Attributes {
   charisma: number;
 }
 
-// Combat Information
+// Skills Interface
+interface Skills {
+  acrobatics?: number;
+  animalHandling?: number;
+  arcana?: number;
+  athletics?: number;
+  deception?: number;
+  history?: number;
+  insight?: number;
+  intimidation?: number;
+  investigation?: number;
+  medicine?: number;
+  nature?: number;
+  perception?: number;
+  performance?: number;
+  persuasion?: number;
+  religion?: number;
+  sleightOfHand?: number;
+  stealth?: number;
+  survival?: number;
+  proficiencies?: string[];
+  savingThrows?: string[];
+}
+
+// Combat Interface
 interface Combat {
   armorClass: number;
   hitPoints: number;
@@ -28,20 +42,27 @@ interface Combat {
   speed: number;
 }
 
-// Skills
-interface Skills {
-  proficiencies: string[];
-  savingThrows: string[];
+// Basic Info Interface
+interface BasicInfo {
+  name: string;
+  race: string;
+  class: string;
+  level: number;
+  background: string;
+  alignment: string;
 }
 
-// Spells
+// Spells Interface
 export interface ISpell {
   name: string;
+  desc?: string[];
   level: number;
+  damage?: any;
+  range?: string;
   prepared: boolean;
 }
 
-// Equipment
+// Equipment Interface
 interface Equipment {
   name: string;
   category: string;
@@ -50,21 +71,55 @@ interface Equipment {
     unit: string;
   };
   weight?: number;
-  description?: string[];
+  description?: string[]; // Retained for local compatibility
+  desc?: string[]; // Added from GitHub for compatibility
   properties?: string[];
+}
+
+// Currency Interface
+interface Currency {
+  copperPieces?: number;
+  silverPieces?: number;
+  electrumPieces?: number;
+  goldPieces?: number;
+  platinumPieces?: number;
+}
+
+// Feats Interface
+interface Feat {
+  name: string;
+  desc: string[];
+}
+
+// Biography Interface
+interface Biography {
+  alignment: string;
+  background: string;
+  languages: string[];
 }
 
 // Character Document Interface
 interface CharacterDocument {
   _id: string;
   player: Schema.Types.ObjectId;
-  basicInfo: BasicInfo;
-  attributes: Attributes;
+  basicInfo?: BasicInfo;
+  attributes?: Attributes;
   combat?: Combat;
   skills?: Skills;
   equipment?: Equipment[];
-  spells: ISpell[];
-  private: boolean; // New property
+  spells?: ISpell[];
+  weapons?: {
+    name: string;
+    desc: string;
+    damage: string;
+    damageType: string;
+    range: string;
+  }[];
+  feats?: Feat[];
+  inventory?: { name: string; desc: string }[];
+  currency?: Currency;
+  biography?: Biography;
+  private: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -75,6 +130,9 @@ const spellSchema = new Schema(
     name: { type: String, required: true },
     level: { type: Number, required: true },
     prepared: { type: Boolean, required: true, default: false },
+    desc: [String],
+    damage: Schema.Types.Mixed,
+    range: String,
   },
   {
     _id: false, // Disable _id for subdocuments
@@ -91,7 +149,8 @@ const equipmentSchema = new Schema(
       unit: String,
     },
     weight: Number,
-    description: [String],
+    description: [String], // Retained for local compatibility
+    desc: [String], // Added from GitHub
     properties: [String],
   }
 );
@@ -102,8 +161,8 @@ const characterSchema = new Schema<CharacterDocument>(
     player: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     basicInfo: {
       name: { type: String, required: true },
-      class: { type: String, required: true },
       race: { type: String, required: true },
+      class: { type: String, required: true },
       level: { type: Number, required: true, min: 1, max: 20 },
       background: { type: String },
       alignment: { type: String },
@@ -123,12 +182,63 @@ const characterSchema = new Schema<CharacterDocument>(
       speed: { type: Number, default: 30 },
     },
     skills: {
-      proficiencies: [{ type: String }],
-      savingThrows: [{ type: String }],
+      acrobatics: Number,
+      animalHandling: Number,
+      arcana: Number,
+      athletics: Number,
+      deception: Number,
+      history: Number,
+      insight: Number,
+      intimidation: Number,
+      investigation: Number,
+      medicine: Number,
+      nature: Number,
+      perception: Number,
+      performance: Number,
+      persuasion: Number,
+      religion: Number,
+      sleightOfHand: Number,
+      stealth: Number,
+      survival: Number,
+      proficiencies: [String],
+      savingThrows: [String],
     },
-    equipment: [equipmentSchema], // Structured equipment schema
+    equipment: [equipmentSchema],
     spells: [spellSchema],
-    private: { type: Boolean, default: true }, // New property with default value
+    weapons: [
+      {
+        name: String,
+        desc: String,
+        damage: String,
+        damageType: String,
+        range: String,
+      },
+    ],
+    feats: [
+      {
+        name: String,
+        desc: [String],
+      },
+    ],
+    inventory: [
+      {
+        name: String,
+        desc: String,
+      },
+    ],
+    biography: {
+      alignment: String,
+      background: String,
+      languages: [String],
+    },
+    currency: {
+      copperPieces: { type: Number, default: 0 },
+      silverPieces: { type: Number, default: 0 },
+      electrumPieces: { type: Number, default: 0 },
+      goldPieces: { type: Number, default: 0 },
+      platinumPieces: { type: Number, default: 0 },
+    },
+    private: { type: Boolean, default: true },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
   },
