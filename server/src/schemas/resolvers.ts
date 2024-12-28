@@ -259,13 +259,6 @@ const resolvers = {
         { new: true }
       ).exec();
 
-      const playerOwners = await Character.find({ _id: { $in: players } }).distinct('player').exec();
-      await User.updateMany(
-        { _id: { $in: playerOwners } },
-        { $push: { campaigns: newCampaign._id } },
-        { new: true }
-      ).exec();
-
       return Campaign.findById(newCampaign._id)
         .populate({
           path: 'players',

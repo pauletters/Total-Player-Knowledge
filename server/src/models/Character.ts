@@ -126,7 +126,7 @@ const characterSchema = new Schema<CharacterDocument>(
       proficiencies: [{ type: String }],
       savingThrows: [{ type: String }],
     },
-    equipment: [equipmentSchema], // Using structured schema for equipment
+    equipment: [equipmentSchema], // Structured equipment schema
     spells: [spellSchema],
     private: { type: Boolean, default: true }, // New property with default value
     createdAt: { type: Date, default: Date.now },
