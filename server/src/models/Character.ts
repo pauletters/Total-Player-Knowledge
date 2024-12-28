@@ -36,6 +36,18 @@ export interface ISpell {
   prepared: boolean;
 }
 
+interface Equipment {
+  name: string;
+  category: string;
+  cost?: {
+    quantity: number;
+    unit: string;
+  };
+  weight?: number;
+  description?: string[];
+  properties?: string[];
+}
+
 interface CharacterDocument {
   _id: string;
   player: Schema.Types.ObjectId;
@@ -43,7 +55,7 @@ interface CharacterDocument {
   attributes: Attributes;
   combat?: Combat;
   skills?: Skills;
-  equipment?: string[];
+  equipment?: Equipment[];
   spells: ISpell[];
   private: boolean; // New property
   createdAt?: Date;
@@ -57,6 +69,18 @@ const spellSchema = new Schema({
 }, { 
   _id: false // Disable _id for subdocuments
 });
+
+const equipmentSchema = new Schema({
+  name: { type: String, required: true },
+      category: { type: String, required: true },
+      cost: {
+        quantity: Number,
+        unit: String
+      },
+      weight: Number,
+      description: [String],
+      properties: [String]
+    });
 
 const characterSchema = new Schema<CharacterDocument>(
   {
@@ -87,7 +111,7 @@ const characterSchema = new Schema<CharacterDocument>(
       proficiencies: [{ type: String }],
       savingThrows: [{ type: String }],
     },
-    equipment: [{ type: String }],
+    equipment: [equipmentSchema],
     spells: [spellSchema],
     private: { type: Boolean, default: true }, // New property with default value
     createdAt: { type: Date, default: Date.now },

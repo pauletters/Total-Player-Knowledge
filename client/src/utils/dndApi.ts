@@ -43,6 +43,7 @@ export const dndApi = {
 
   // Equipment endpoints
   getEquipment: () => fetchFromApi('/equipment'),
+  getEquipmentItem: (index: string) => fetchFromApi(`/equipment/${index}`),
   getEquipmentCategories: () => fetchFromApi('/equipment-categories'),
   getMagicItems: () => fetchFromApi('/magic-items'),
   
