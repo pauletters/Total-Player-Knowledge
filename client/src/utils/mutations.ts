@@ -91,3 +91,22 @@ export const TOGGLE_SPELL_PREPARED = gql`
     }
   }
 `;
+
+export const UPDATE_CHARACTER_EQUIPMENT = gql`
+  mutation UpdateCharacterEquipment($id: ID!, $equipment: [EquipmentInput!]!) {
+    updateCharacterEquipment(id: $id, equipment: $equipment) {
+      _id
+      equipment {
+        name
+        category
+        cost {
+          quantity
+          unit
+        }
+        weight
+        description
+        properties
+      }
+    }
+  }
+`;

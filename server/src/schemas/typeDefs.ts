@@ -50,7 +50,7 @@ const typeDefs = `
         attributes: Attributes!
         combat: Combat
         skills: Skills
-        equipment: [String!]
+        equipment: [Equipment!]
         spells: [Spell!]!
         private: Boolean! # New field for privacy control
         createdAt: String!
@@ -84,6 +84,7 @@ const typeDefs = `
         addCharacter(input: AddCharacterInput!): Character
         updateCharacter(input: UpdateCharacterInput!): Character
         updateCharacterSpells(id: ID!, spells: [SpellInput]!): Character!
+        updateCharacterEquipment(id: ID!, equipment: [EquipmentInput!]!): Character!
         toggleSpellPrepared(id: ID!, spellName: String!): Character!
         deleteCharacter(id: ID!): Character
 
@@ -158,6 +159,34 @@ const typeDefs = `
         name: String!
         level: Int!
         prepared: Boolean!
+    }
+
+    type Cost {
+        quantity: Float!
+        unit: String!
+    }
+
+    type Equipment {
+        name: String!
+        category: String!
+        cost: Cost
+        weight: Float
+        description: [String!]
+        properties: [String!]
+    }
+
+    input CostInput {
+        quantity: Float!
+        unit: String!
+    }
+
+    input EquipmentInput {
+        name: String!
+        category: String!
+        cost: CostInput
+        weight: Float
+        description: [String!]
+        properties: [String!]
     }
 
     type Auth {

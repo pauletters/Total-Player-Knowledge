@@ -4,15 +4,40 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Card, Row, Col, Button, Nav} from 'react-bootstrap';
 import { useQuery, useMutation } from '@apollo/client';
 import { GET_CHARACTER } from '../utils/queries';
-import { UPDATE_CHARACTER_SPELLS, TOGGLE_SPELL_PREPARED } from '../utils/mutations';
+import { 
+  UPDATE_CHARACTER_SPELLS, 
+  TOGGLE_SPELL_PREPARED, 
+  UPDATE_CHARACTER_EQUIPMENT 
+} from '../utils/mutations';
 import { CharacterData, ApiSpell } from './types';
 import SpellCard from './Spells/SpellCard';
 import SpellModal from './Spells/SpellSelection';
 import { spellCache } from '../utils/spellCache';
+import EquipmentCard from './Equipment/EquipmentCard';
+import EquipmentModal from './Equipment/EquipmentSelection';
 import DiceRoller from './DiceRoller';
 
 interface CharacterParams {
   characterId: string;
+}
+
+interface APIEquipmentProperty {
+  name: string;
+}
+
+interface APIEquipment {
+  index: string;
+  name: string;
+  equipment_category: {
+    name: string;
+  };
+  cost?: {
+    quantity: number;
+    unit: string;
+  };
+  weight?: number;
+  desc?: string[];
+  properties?: APIEquipmentProperty[];
 }
 
 const CharacterDetails: React.FC = () => {
@@ -28,6 +53,9 @@ const CharacterDetails: React.FC = () => {
   const [showSpellModal, setShowSpellModal] = useState(false);
   const [updateCharacterSpells] = useMutation(UPDATE_CHARACTER_SPELLS);
   const [toggleSpellPrepared] = useMutation(TOGGLE_SPELL_PREPARED);
+
+  const [showEquipmentModal, setShowEquipmentModal] = useState(false);
+  const [updateCharacterEquipment] = useMutation(UPDATE_CHARACTER_EQUIPMENT);
 
   // Load spell details from cache when spells change
   useEffect(() => {
@@ -128,6 +156,83 @@ const CharacterDetails: React.FC = () => {
       }
     } catch (error) {
       console.error('Error toggling spell prepared status:', error);
+    }
+  };
+
+  // Handler for adding equipment
+  const handleAddEquipment = async (newEquipment: APIEquipment[]) => {
+    if (!data?.character) return;
+
+    try {
+      // First, clean up the new equipment data
+      const cleanNewEquipment = newEquipment.map(item => ({
+        name: item.name,
+        category: item.equipment_category.name,
+        cost: item.cost ? {
+          quantity: item.cost.quantity,
+          unit: item.cost.unit
+        } : undefined,
+        weight: item.weight || null,
+        description: item.desc || [],
+        properties: item.properties?.map(p => p.name) || []
+      }));
+  
+      // Then, clean up the existing equipment data
+      const cleanExistingEquipment = data.character.equipment.map(item => ({
+        name: item.name,
+        category: item.category,
+        cost: item.cost ? {
+          quantity: item.cost.quantity,
+          unit: item.cost.unit
+        } : undefined,
+        weight: item.weight || null,
+        description: item.description || [],
+        properties: item.properties || []
+      }));
+  
+      // Combine the cleaned equipment arrays
+      const combinedEquipment = [...cleanExistingEquipment, ...cleanNewEquipment];
+
+      await updateCharacterEquipment({
+        variables: {
+          id: characterId,
+          equipment: combinedEquipment
+        },
+        refetchQueries: [{ query: GET_CHARACTER, variables: { id: characterId } }]
+      });
+    } catch (error) {
+      console.error('Error updating equipment:', error);
+    }
+  };
+
+  // Handler for removing equipment
+  const handleRemoveEquipment = async (equipmentName: string) => {
+    if (!data?.character) return;
+
+    try {
+      const updatedEquipment = data.character.equipment
+        .filter(item => item.name !== equipmentName)
+        .map(item => ({
+          name: item.name,
+          category: item.category,
+          cost: item.cost ? {
+            quantity: item.cost.quantity,
+            unit: item.cost.unit
+          } : undefined,
+          weight: item.weight || null,
+          description: item.description || [],
+          properties: item.properties || []
+        }));
+
+      await updateCharacterEquipment({
+        variables: {
+          id: characterId,
+          equipment: updatedEquipment
+        },
+        refetchQueries: [{ query: GET_CHARACTER, variables: { id: characterId } }]
+      });
+    } catch (error) {
+      console.error('Error removing equipment:', error);
     }
   };
 
@@ -294,15 +399,35 @@ const CharacterDetails: React.FC = () => {
               <Card.Header>
                 <div className="d-flex justify-content-between align-items-center">
                   <span>Equipment</span>
-                  <Button variant="primary" size="sm">Add Equipment</Button>
+                  <Button 
+                  variant="primary" 
+                  size="sm"
+                  onClick={() => setShowEquipmentModal(true)}
+                  >
+                    Add Equipment
+                  </Button>
                 </div>
               </Card.Header>
               <Card.Body>
-                <ul className="list-unstyled">
-                  {character.equipment.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
+              {character.equipment && character.equipment.length > 0 ? (
+                  <Row xs={1} md={2} lg={3} className="g-4">
+                    {character.equipment.map((item) => (
+                      <Col key={item.name}>
+                        <EquipmentCard
+                          name={item.name}
+                          category={item.category}
+                          cost={item.cost}
+                          weight={item.weight}
+                          description={item.description}
+                          properties={item.properties}
+                          onRemove={() => handleRemoveEquipment(item.name)}
+                        />
+                      </Col>
+                    ))}
+                  </Row>
+                ) : (
+                  <p className="text-center">No equipment added yet.</p>
+                )}
               </Card.Body>
             </Card>
           )}
@@ -390,6 +515,16 @@ const CharacterDetails: React.FC = () => {
       characterClass={character.basicInfo.class}
     />
   )}
+
+{character && (
+  <>
+    <EquipmentModal
+      show={showEquipmentModal}
+      onClose={() => setShowEquipmentModal(false)}
+      onAddEquipment={(equipment: APIEquipment[]) => handleAddEquipment(equipment)}
+    />
+  </>
+)}
     </Container>
   );
 };
