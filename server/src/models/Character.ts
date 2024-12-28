@@ -71,6 +71,7 @@ interface Equipment {
     unit: string;
   };
   weight?: number;
+  description?: string[]; // Retained for local compatibility
   desc?: string[]; // Added from GitHub for compatibility
   properties?: string[];
 }
@@ -148,6 +149,7 @@ const equipmentSchema = new Schema(
       unit: String,
     },
     weight: Number,
+    description: [String], // Retained for local compatibility
     desc: [String], // Added from GitHub
     properties: [String],
   }
