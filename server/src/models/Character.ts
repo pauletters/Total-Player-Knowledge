@@ -62,7 +62,7 @@ export interface ISpell {
   prepared: boolean;
 }
 
-
+// Equipment Interface
 interface Equipment {
   name: string;
   category: string;
@@ -71,11 +71,33 @@ interface Equipment {
     unit: string;
   };
   weight?: number;
-
-  description?: string[];
+  desc?: string[]; // Only using `desc` from GitHub
   properties?: string[];
 }
 
+// Currency Interface
+interface Currency {
+  copperPieces?: number;
+  silverPieces?: number;
+  electrumPieces?: number;
+  goldPieces?: number;
+  platinumPieces?: number;
+}
+
+// Feats Interface
+interface Feat {
+  name: string;
+  desc: string[];
+}
+
+// Biography Interface
+interface Biography {
+  alignment: string;
+  background: string;
+  languages: string[];
+}
+
+// Character Document Interface
 interface CharacterDocument {
   _id: string;
   player: Schema.Types.ObjectId;
@@ -84,9 +106,18 @@ interface CharacterDocument {
   combat?: Combat;
   skills?: Skills;
   equipment?: Equipment[];
-
-  spells: ISpell[];
-
+  spells?: ISpell[];
+  weapons?: {
+    name: string;
+    desc: string;
+    damage: string;
+    damageType: string;
+    range: string;
+  }[];
+  feats?: Feat[];
+  inventory?: { name: string; desc: string }[];
+  currency?: Currency;
+  biography?: Biography;
   private: boolean; // New property
   createdAt?: Date;
   updatedAt?: Date;
@@ -122,19 +153,7 @@ const equipmentSchema = new Schema(
   }
 );
 
-
-const equipmentSchema = new Schema({
-  name: { type: String, required: true },
-      category: { type: String, required: true },
-      cost: {
-        quantity: Number,
-        unit: String
-      },
-      weight: Number,
-      description: [String],
-      properties: [String]
-    });
-
+// Character Schema
 const characterSchema = new Schema<CharacterDocument>(
   {
     player: { type: Schema.Types.ObjectId, ref: 'User', required: true },
