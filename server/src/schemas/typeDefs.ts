@@ -4,7 +4,7 @@ const typeDefs = `
         username: String!
         email: String!
         characters: [Character!]!
-        campaigns: [Campaign!]! # Added to match the User model
+        campaigns: [Campaign!]!
     }
 
     type BasicInfo {
@@ -43,6 +43,20 @@ const typeDefs = `
         prepared: Boolean!
     }
 
+    type Cost {
+        quantity: Float!
+        unit: String!
+    }
+
+    type Equipment {
+        name: String!
+        category: String!
+        cost: Cost
+        weight: Float
+        description: [String!]
+        properties: [String!]
+    }
+
     type Character {
         _id: ID!
         player: User!
@@ -52,7 +66,7 @@ const typeDefs = `
         skills: Skills
         equipment: [Equipment!]
         spells: [Spell!]!
-        private: Boolean! # New field for privacy control
+        private: Boolean!
         createdAt: String!
         updatedAt: String!
     }
@@ -61,9 +75,9 @@ const typeDefs = `
         _id: ID!
         name: String!
         description: String
-        players: [Character!]! # Updated to match the model
+        players: [Character!]!
         milestones: [String!]!
-        createdBy: User! # Reflects the User model reference
+        createdBy: User!
         playerCount: Int!
         createdAt: String!
         updatedAt: String!
@@ -73,8 +87,8 @@ const typeDefs = `
         me: User
         characters: [Character!]!
         character(id: ID!): Character
-        campaigns: [Campaign!]!
-        campaign(id: ID!): Campaign
+        campaigns(private: Boolean): [Campaign!]!
+        campaign(id: ID!, includePrivate: Boolean = false): Campaign
         searchUsers(term: String!): [User!]!
     }
 
@@ -139,9 +153,9 @@ const typeDefs = `
         attributes: AttributesInput!
         combat: CombatInput
         skills: SkillsInput
-        equipment: [String!]
+        equipment: [EquipmentInput!]!
         spells: [SpellInput!]
-        private: Boolean # Optional, defaults to true if not provided
+        private: Boolean
     }
 
     input UpdateCharacterInput {
@@ -150,9 +164,9 @@ const typeDefs = `
         attributes: AttributesInput
         combat: CombatInput
         skills: SkillsInput
-        equipment: [String!]
+        equipment: [EquipmentInput!]!
         spells: [SpellInput!]
-        private: Boolean # Allow updating the private field
+        private: Boolean
     }
 
     input SpellInput {
@@ -160,6 +174,7 @@ const typeDefs = `
         level: Int!
         prepared: Boolean!
     }
+
 
     type Cost {
         quantity: Float!
@@ -174,6 +189,7 @@ const typeDefs = `
         description: [String!]
         properties: [String!]
     }
+
 
     input CostInput {
         quantity: Float!

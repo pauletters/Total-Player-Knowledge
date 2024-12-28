@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, gql } from '@apollo/client';
 import { Container, Card, Row, Col, Button } from 'react-bootstrap';
-import { useNavigate, Outlet } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import UserMenu from '../components/UserMenu';
 import CreateCampaignModal from '../components/CreateCampaignModal';
 
@@ -53,6 +53,7 @@ const MyCampaigns: React.FC = () => {
   const campaigns = data?.campaigns || [];
 
   const handleViewCampaign = (campaignId: string) => {
+    // Navigate to the CampaignDashboard route with the campaignId
     navigate(`/my-campaigns/${campaignId}`);
   };
 
@@ -97,20 +98,19 @@ const MyCampaigns: React.FC = () => {
                     </ul>
                   </Card.Text>
                   <div className="d-flex justify-content-between">
-                    <button
-                      className="btn btn-outline-primary btn-sm"
+                    <Button
+                      variant="outline-primary"
+                      size="sm"
                       onClick={() => handleViewCampaign(campaign._id)}
                     >
                       View
-                    </button>
+                    </Button>
                   </div>
                 </Card.Body>
               </Card>
             </Col>
           ))}
         </Row>
-
-        <Outlet />
       </Container>
 
       {/* Create Campaign Modal */}

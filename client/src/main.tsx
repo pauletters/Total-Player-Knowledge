@@ -9,6 +9,7 @@ import CharacterDetails from './components/CharacterDetails.js'
 import ProtectedRoute from './components/ProtectedRoute.js'
 import AuthService from './utils/auth.js'
 import DiceRoller from './components/DiceRoller.js'
+import CampaignDashboardWrapper from './components/CampaignDashboardWrapper.js'
 
 const router = createBrowserRouter([
   {
@@ -73,7 +74,16 @@ const router = createBrowserRouter([
             <MyCampaigns />
           </ProtectedRoute>
         )
-      }
+      },
+      {
+        path: 'my-campaigns/:campaignId',
+        element: (
+          <ProtectedRoute>
+            <CampaignDashboardWrapper />
+          </ProtectedRoute>
+        ),
+      },
+      
     ]
   }
 ]);
