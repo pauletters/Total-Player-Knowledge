@@ -1,7 +1,5 @@
 import ReactDOM from 'react-dom/client'
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
-import 'bootstrap/dist/css/bootstrap.min.css'
-
 import App from './App.jsx'
 import About from './pages/about.js'
 import MyCharacters from './pages/MyCharacters.js'
@@ -10,6 +8,8 @@ import CharacterCreation from './components/CharacterCreation.js'
 import CharacterDetails from './components/CharacterDetails.js'
 import ProtectedRoute from './components/ProtectedRoute.js'
 import AuthService from './utils/auth.js'
+import DiceRoller from './components/DiceRoller.js'
+import CampaignDashboardWrapper from './components/CampaignDashboardWrapper.js'
 
 const router = createBrowserRouter([
   {
@@ -48,6 +48,14 @@ const router = createBrowserRouter([
                 <CharacterDetails />
               </ProtectedRoute>
             )
+          },
+          {
+            path: 'dice-roller',
+            element: (
+              <ProtectedRoute>
+                <DiceRoller />
+              </ProtectedRoute>
+            )
           }
         ]
       },
@@ -66,7 +74,16 @@ const router = createBrowserRouter([
             <MyCampaigns />
           </ProtectedRoute>
         )
-      }
+      },
+      {
+        path: 'my-campaigns/:campaignId',
+        element: (
+          <ProtectedRoute>
+            <CampaignDashboardWrapper />
+          </ProtectedRoute>
+        ),
+      },
+      
     ]
   }
 ]);

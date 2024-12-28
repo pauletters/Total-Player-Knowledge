@@ -1,39 +1,41 @@
 import { useState } from 'react';
-import { Container, Button, Card, Row, Col } from 'react-bootstrap';
+import { Container, Button, Card, Row, Col, Modal } from 'react-bootstrap';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
+import { useQuery } from '@apollo/client';
+import { GET_CHARACTERS } from '../utils/queries';
 import UserMenu from '../components/UserMenu';
+import DiceRoller from '../components/DiceRoller';
 
-// You might want to create a type for your characters
 interface Character {
-  id: string;
-  name: string;
-  class: string;
-  level: number;
+  _id: string;
+  basicInfo: {
+    name: string;
+    class: string;
+    level: number;
+  };
 }
 
 const MyCharacters = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // Placeholder for characters - in a real app, this would come from state management or API
-  const [characters] = useState<Character[]>([
-    // Example characters
-    { id: '1', name: 'Aragorn', class: 'Ranger', level: 5 },
-    { id: '2', name: 'Gandalf', class: 'Wizard', level: 20 },
-  ]);
+  const [showDiceRoller, setShowDiceRoller] = useState(false);
+  const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
 
+  const { data } = useQuery<{ characters: Character[] }>(GET_CHARACTERS);
+  
   const handleCreateCharacter = () => {
-    // Navigate to the character creation page
     navigate('/my-characters/character-creation');
   };
 
-  const handleViewCharacter = (characterId: string) => {
-    navigate(`/my-characters/${characterId}`);
+  const handleViewCharacter = (character: Character) => {
+    setSelectedCharacter(character);
+    setShowDiceRoller(true);
   };
 
-   // Check if we're on the character creation route or viewing a character
-   const isCreatingCharacter = location.pathname.includes('/character-creation');
-   const isViewingCharacter = location.pathname.split('/').length > 2 && !isCreatingCharacter;
+  const isCreatingCharacter = location.pathname.includes('/character-creation');
+  const isViewingCharacter = location.pathname.split('/').length > 2 && !isCreatingCharacter;
+
+  const characters = data?.characters || [];
 
   return (
     <>
@@ -43,10 +45,7 @@ const MyCharacters = () => {
           <>
             <div className="d-flex justify-content-between align-items-center mb-4">
               <h1>My Characters</h1>
-              <Button 
-                variant="primary" 
-                onClick={handleCreateCharacter}
-              >
+              <Button variant="primary" onClick={handleCreateCharacter}>
                 Create New Character
               </Button>
             </div>
@@ -54,30 +53,27 @@ const MyCharacters = () => {
             {characters.length === 0 ? (
               <div className="text-center">
                 <p>You haven't created any characters yet.</p>
-                <Button 
-                  variant="outline-primary" 
-                  onClick={handleCreateCharacter}
-                >
+                <Button variant="outline-primary" onClick={handleCreateCharacter}>
                   Create Your First Character
                 </Button>
               </div>
             ) : (
               <Row xs={1} md={2} lg={3} className="g-4">
                 {characters.map((character) => (
-                  <Col key={character.id}>
+                  <Col key={character._id}>
                     <Card>
                       <Card.Body>
-                        <Card.Title>{character.name}</Card.Title>
+                        <Card.Title>{character.basicInfo.name}</Card.Title>
                         <Card.Text>
-                          Level {character.level} {character.class}
+                          Level {character.basicInfo.level} {character.basicInfo.class}
                         </Card.Text>
-                        <div className="d-flex justify-content-between">
+                        <div className="d-flex justify-content-between gap-2">
                           <Button 
                             variant="outline-primary" 
                             size="sm"
-                            onClick={() => handleViewCharacter(character.id)}
+                            onClick={() => navigate(`/my-characters/${character._id}`)}
                           >
-                            View
+                            View Character
                           </Button>
                         </div>
                       </Card.Body>
@@ -89,7 +85,22 @@ const MyCharacters = () => {
           </>
         )}
 
-        {/* Add Outlet to render nested routes */}
+        <Modal 
+          show={showDiceRoller} 
+          onHide={() => setShowDiceRoller(false)}
+          size="lg"
+          centered
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>
+              {selectedCharacter ? `Dice Roller - ${selectedCharacter.basicInfo.name}` : 'Dice Roller'}
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <DiceRoller />
+          </Modal.Body>
+        </Modal>
+
         <Outlet />
       </Container>
     </>

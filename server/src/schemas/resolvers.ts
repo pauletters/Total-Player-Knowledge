@@ -1,9 +1,11 @@
 import User from '../models/User.js';
 import Character from '../models/Character.js';
+import { ISpell } from '../models/Character.js';
 import Campaign from '../models/Campaign.js';
 import { signToken, AuthenticationError } from '../utils/auth.js';
 import { GraphQLError } from 'graphql';
 
+// Interfaces
 interface AddUserArgs {
   username: string;
   email: string;
@@ -16,87 +18,35 @@ interface LoginArgs {
 }
 
 interface AddCharacterArgs {
-  name: string;
-  class: string;
-  race: string;
-  level: number;
-  maximumHealth: number;
-  currentHealth: number;
-  armorClass: number;
-  attributes?: {
+  basicInfo: {
+    name: string;
+    race: string;
+    class: string;
+    level: number;
+    background?: string;
+    alignment?: string;
+  };
+  attributes: {
     strength: number;
     dexterity: number;
     constitution: number;
     intelligence: number;
     wisdom: number;
     charisma: number;
+  };
+  combat?: {
+    armorClass: number;
+    hitPoints: number;
+    initiative: number;
+    speed: number;
   };
   skills?: {
-    acrobatics: number;
-    animalHandling: number;
-    arcana: number;
-    athletics: number;
-    deception: number;
-    history: number;
-    insight: number;
-    intimidation: number;
-    investigation: number;
-    medicine: number;
-    nature: number;
-    perception: number;
-    performance: number;
-    persuasion: number;
-    religion: number;
-    sleightOfHand: number;
-    stealth: number;
-    survival: number;
+    proficiencies: string[];
+    savingThrows: string[];
   };
-  savingThrows?: {
-    strength: number;
-    dexterity: number;
-    constitution: number;
-    intelligence: number;
-    wisdom: number;
-    charisma: number;
-  };
-  weapons?: {
-    name: string;
-    desc: string;
-    damage: string;
-    damageType: string;
-    range: string;
-  }[];
-  equipment?: {
-    name: string;
-    desc: string;
-  }[];
-  feats?: {
-    name: string;
-    desc: string[];
-  }[];
-  inventory?: {
-    name: string;
-    desc: string;
-  }[];
-  spells?: {
-    name: string;
-    desc: string[];
-    level: number;
-    damage: any;
-    range: string;
-  }[];
-  biography?: {
-    alignment: string;
-    background: string;
-    languages: string[];
-  };
-  currency?: {
-    copperPieces: number;
-    silverPieces: number;
-    electrumPieces: number;
-    goldPieces: number;
-    platinumPieces: number;
-  };
+  equipment?: string[];
+  spells: CharacterSpell[];
+  private?: boolean; // Optional field
 }
 
 interface UpdateCharacterArgs extends Partial<AddCharacterArgs> {
@@ -106,14 +56,14 @@ interface UpdateCharacterArgs extends Partial<AddCharacterArgs> {
 interface AddCampaignArgs {
   name: string;
   description?: string;
-  members: string[]; // Character IDs
+  players: string[]; // Character IDs
 }
 
 interface UpdateCampaignArgs {
   id: string;
   name?: string;
   description?: string;
-  members?: string[];
+  players?: string[];
 }
 
 interface Context {
@@ -124,21 +74,40 @@ interface Context {
   };
 }
 
+interface CharacterSpell {
+  name: string;
+  level: number;
+  prepared: boolean;
+}
+
+interface SpellInput {
+  name: string;
+  level: number;
+  prepared: boolean;
+}
+
+interface UpdateSpellsArgs {
+  id: string;
+  spells: SpellInput[];
+}
+
+// Resolvers
 const resolvers = {
   Query: {
     me: async (_parent: unknown, _args: unknown, context: Context) => {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-      const user = await User.findById(context.user._id).select('-__v -password');
-      return user;
+      return User.findById(context.user._id)
+        .populate('characters campaigns')
+        .exec();
     },
 
     characters: async (_parent: unknown, _args: unknown, context: Context) => {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-      return Character.find({ player: context.user._id });
+      return Character.find({ player: context.user._id }).exec();
     },
 
     character: async (_parent: unknown, { id }: { id: string }, context: Context) => {
@@ -158,20 +127,48 @@ const resolvers = {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-      return Campaign.find({ createdBy: context.user._id });
+
+      const userCharacters = await Character.find({ player: context.user._id }).select('_id').exec();
+      return Campaign.find({
+        $or: [
+          { createdBy: context.user._id },
+          { players: { $in: userCharacters.map((char) => char._id) } },
+        ],
+      })
+        .populate({
+          path: 'players',
+          populate: { path: 'player', select: 'username' },
+        })
+        .populate('createdBy', 'username')
+        .exec();
     },
 
     campaign: async (_parent: unknown, { id }: { id: string }, context: Context) => {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-      const campaign = await Campaign.findOne({ _id: id, createdBy: context.user._id });
-      if (!campaign) {
-        throw new GraphQLError('Campaign not found or unauthorized', {
-          extensions: { code: 'NOT_FOUND' },
-        });
+      return Campaign.findById(id)
+        .populate({
+          path: 'players',
+          match: { private: false }, // Include only public characters
+          populate: { path: 'player', select: 'username' },
+        })
+        .populate('createdBy', 'username')
+        .exec();
+    },
+
+    searchUsers: async (_parent: unknown, { term }: { term: string }, context: Context) => {
+      if (!context.user) {
+        throw new AuthenticationError('Not logged in');
       }
-      return campaign;
+
+      const users = await User.find({
+        username: { $regex: term, $options: 'i' },
+      })
+        .populate({ path: 'characters', select: 'basicInfo.name private' })
+        .select('-password -__v');
+
+      return users;
     },
   },
 
@@ -196,27 +193,77 @@ const resolvers = {
       return { token, user };
     },
 
-    addCharacter: async (_parent: unknown, args: AddCharacterArgs, context: Context) => {
+    addCharacter: async (_parent: unknown, { input }: { input: AddCharacterArgs }, context: Context) => {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-      return Character.create({ ...args, player: context.user._id });
-    },
 
-    updateCharacter: async (_parent: unknown, { id, ...updateData }: UpdateCharacterArgs, context: Context) => {
-      if (!context.user) {
-        throw new AuthenticationError('Not logged in');
-      }
-      const character = await Character.findOneAndUpdate(
-        { _id: id, player: context.user._id },
-        { $set: updateData },
+      const newCharacter = await Character.create({
+        ...input,
+        player: context.user._id,
+        private: input.private ?? true, // Default to true if not provided
+      });
+
+      await User.findByIdAndUpdate(
+        context.user._id,
+        { $push: { characters: newCharacter._id } },
         { new: true }
       );
+
+      return newCharacter;
+    },
+
+    updateCharacter: async (_parent: unknown, { input }: { input: UpdateCharacterArgs }, context: Context) => {
+      if (!context.user) {
+        throw new AuthenticationError('Not logged in');
+      }
+      const updatedCharacter = await Character.findOneAndUpdate(
+        { _id: input.id, player: context.user._id },
+        { $set: input },
+        { new: true }
+      ).exec();
+
+      if (!updatedCharacter) {
+        throw new GraphQLError('Character not found or unauthorized', {
+          extensions: { code: 'NOT_FOUND' },
+        });
+      }
+
+      return updatedCharacter;
+    },
+
+    updateCharacterEquipment: async (
+      _parent: unknown,
+      { id, equipment }: { id: string; equipment: any[] },
+      context: Context
+    ) => {
+      if (!context.user) {
+        throw new AuthenticationError('Not logged in');
+      }
+
+      const character = await Character.findOneAndUpdate(
+        { _id: id, player: context.user._id },
+        {
+          $set: {
+            equipment: equipment.map((item) => ({
+              name: item.name,
+              category: item.category,
+              cost: item.cost,
+              weight: item.weight,
+              desc: item.desc || [],
+              properties: item.properties || [],
+            })),
+          },
+        },
+        { new: true, runValidators: true }
+      ).populate('player', 'username email');
+
       if (!character) {
         throw new GraphQLError('Character not found or unauthorized', {
           extensions: { code: 'NOT_FOUND' },
         });
       }
+
       return character;
     },
 
@@ -224,64 +271,91 @@ const resolvers = {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-      const character = await Character.findOneAndDelete({ _id: id, player: context.user._id });
+      const character = await Character.findOneAndDelete({ _id: id, player: context.user._id }).exec();
+
       if (!character) {
         throw new GraphQLError('Character not found or unauthorized', {
           extensions: { code: 'NOT_FOUND' },
         });
       }
+
       return character;
     },
 
-    addCampaign: async (_parent: unknown, { name, description, members }: AddCampaignArgs, context: Context) => {
+    addCampaign: async (_parent: unknown, { name, description, players }: AddCampaignArgs, context: Context) => {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-      return Campaign.create({
+
+      const validCharacters = await Character.find({ _id: { $in: players } }).exec();
+      if (validCharacters.length !== players.length) {
+        throw new GraphQLError('Some character IDs are invalid', {
+          extensions: { code: 'BAD_USER_INPUT' },
+        });
+      }
+
+      const newCampaign = await Campaign.create({
         name,
         description,
-        members,
+        players,
         createdBy: context.user._id,
       });
+
+      await User.findByIdAndUpdate(
+        context.user._id,
+        { $push: { campaigns: newCampaign._id } },
+        { new: true }
+      );
+
+      return Campaign.findById(newCampaign._id)
+        .populate({
+          path: 'players',
+          populate: { path: 'player', select: 'username' },
+        })
+        .populate('createdBy', 'username')
+        .exec();
     },
 
-    updateCampaign: async (
-      _parent: unknown,
-      { id, name, description, members }: UpdateCampaignArgs,
-      context: Context
-    ) => {
+    updateCampaign: async (_parent: unknown, { id, name, description, players }: UpdateCampaignArgs, context: Context) => {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-      const campaign = await Campaign.findOneAndUpdate(
+
+      const updatedCampaign = await Campaign.findOneAndUpdate(
         { _id: id, createdBy: context.user._id },
-        { $set: { name, description, members } },
+        { $set: { name, description, players } },
         { new: true }
       );
-      if (!campaign) {
+
+      if (!updatedCampaign) {
         throw new GraphQLError('Campaign not found or unauthorized', {
           extensions: { code: 'NOT_FOUND' },
         });
       }
-      return campaign;
+
+      return updatedCampaign;
     },
 
     deleteCampaign: async (_parent: unknown, { id }: { id: string }, context: Context) => {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-      const campaign = await Campaign.findOneAndDelete({ _id: id, createdBy: context.user._id });
-      if (!campaign) {
-        throw new GraphQLError('Campaign not found or unauthorized', {
-          extensions: { code: 'NOT_FOUND' },
-        });
+
+      const deletedCampaign = await Campaign.findOneAndDelete({ _id: id, createdBy: context.user._id }).exec();
+
+      if (deletedCampaign) {
+        await User.updateMany(
+          { campaigns: deletedCampaign._id },
+          { $pull: { campaigns: deletedCampaign._id } }
+        );
       }
-      return campaign;
+
+      return deletedCampaign;
     },
   },
 
   Campaign: {
-    playerCount: (parent: any) => parent.members.length,
+    playerCount: (parent: any) => parent.players.length,
   },
 };
 

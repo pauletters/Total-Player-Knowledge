@@ -41,25 +41,17 @@
   
   /* Hero section styling for the about page */
   .hero-section {
-    background: linear-gradient(to bottom, #3a3a3a, #2c2c2c);
-    color: white;
-    padding: 4rem 2rem;
+    color: Black;
+    padding: .5rem;
     text-align: center;
     position: relative;
-    box-shadow: 
-      0 4px 6px -1px rgba(0, 0, 0, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    border-bottom: 3px solid var(--primary-red);
     z-index: 1;
+    border-top: 3px solid var(--primary-red);
   }
 
   .hero-section::after {
     content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    position: relative;
     background: linear-gradient((to bottom, #3a3a3a, #2c2c2c), transparent);
   }
   
@@ -71,13 +63,21 @@
   .hero-title {
     font-size: 3.5rem;
     margin-bottom: 1rem;
-    color: white;
+    color: rgb(28, 28, 28);
   }
   
   .hero-subtitle {
-    font-size: 1.75rem;
+    font-size: 2.5rem;
     font-weight: 300;
-    color: var(--off-white);
+    color: rgb(28, 28, 28);
+    padding-bottom: 1.5rem;
+    padding-top: 2rem;
+  }
+
+  .hero-subtitle-2{
+    font-size: 1.25rem;
+    font-weight: 300;
+    color: rgb(28, 28, 28);
   }
   
   /* Content section styling */
@@ -92,3 +92,32 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.9);
     border: 1px solid rgba(0, 0, 0, 0.1);
   }
+
+/* Background styling for all main pages */
+.about-page,
+.character-sheet-container,
+.content-container,
+.container, /* Bootstrap container class */
+body > #root > div:not(.navbar):not(.user-menu) /* Target main content areas */ {
+    position: relative;
+}
+
+.about-page::before,
+.character-sheet-container::before,
+.content-container::before,
+.container::before,
+body > #root > div:not(.navbar):not(.user-menu)::before {
+    content: '';
+    position: fixed;
+    top: 10rem;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('../assets/tpkLogo.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 30%;
+    opacity: 0.1;
+    z-index: -1;
+    pointer-events: none;
+}

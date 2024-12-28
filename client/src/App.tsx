@@ -1,3 +1,4 @@
+import 'bootstrap/dist/css/bootstrap.min.css'
 import './App.css';
 import {
   ApolloClient,
@@ -12,6 +13,8 @@ import { onError } from '@apollo/client/link/error';
 import { useEffect } from 'react';
 import Navbar from './components/Navbar';
 import AuthService from './utils/auth';
+import PersistentDiceRoller from './components/PersistentDiceRoller';
+import DiceRoller from './components/DiceRoller';
 
 // Construct our main GraphQL API endpoint
 // This is the entry point for our application
@@ -79,6 +82,7 @@ function App() {
     <ApolloProvider client={client}>
       <Navbar />
       <Outlet />
+      {AuthService.loggedIn() && <PersistentDiceRoller DiceRoller={DiceRoller} />}
     </ApolloProvider>
   );
 }

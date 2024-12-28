@@ -1,4 +1,5 @@
 export interface CharacterData {
+  _id?: string;
   basicInfo: {
     name: string;
     race: string;
@@ -25,9 +26,14 @@ export interface CharacterData {
     proficiencies: string[];
     savingThrows: string[];
   };
-  equipment: any[];
-  spells: any[];
+  equipment: Equipment[];
+  spells: CharacterSpell[];
 }
+
+/*
+background: string;
+feats: string[];
+*/
 
 export interface SectionProps {
   character: CharacterData;
@@ -36,4 +42,39 @@ export interface SectionProps {
 
 export interface AttributesSectionProps extends SectionProps {
   calculateModifier: (score: number) => number;
+}
+
+export interface ApiSpell {
+  index: string;
+  name: string;
+  level: number;
+  school: {
+    name: string;
+  };
+  classes: {
+    name: string;
+  }[];
+  desc: string[];
+  range?: string;
+  casting_time?: string;
+  duration?: string;
+  components?: string[];
+}
+
+export interface CharacterSpell {
+  name: string;
+  level: number;
+  prepared: boolean;
+}
+
+export interface Equipment {
+  name: string;
+  category: string;
+  cost?: {
+    quantity: number;
+    unit: string;
+  };
+  weight?: number;
+  description?: string[];
+  properties?: string[];
 }

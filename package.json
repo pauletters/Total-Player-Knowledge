@@ -20,11 +20,16 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@testing-library/cypress": "^10.0.2",
+    "@types/cypress": "^1.1.6",
     "@types/node": "^22.10.2",
     "autoprefixer": "^10.4.20",
     "concurrently": "^8.2.0"
   },
   "engines": {
     "node": ">=18.0.0 <19.0.0"
+  },
+  "dependencies": {
+    "lucide-react": "^0.469.0"
   }
 }

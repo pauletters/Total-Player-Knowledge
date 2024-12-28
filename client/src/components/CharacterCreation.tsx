@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useMutation } from '@apollo/client';
 import { BasicInfoSection } from './CharacterCreationSections/BasicInfoSection';
 import { AttributesSection } from './CharacterCreationSections/AttributesSection';
 import { CombatSection } from './CharacterCreationSections/CombatSection';
 import { SkillsSection } from './CharacterCreationSections/SkillsSection';
 import { CharacterData } from './types';
+import { ADD_CHARACTER } from '../utils/mutations';
+import { GET_CHARACTERS } from '../utils/queries';
 
 const initialCharacterState: CharacterData = {
   basicInfo: {
@@ -40,13 +43,26 @@ const initialCharacterState: CharacterData = {
 const CharacterSheet: React.FC = () => {
   const [character, setCharacter] = useState<CharacterData>(initialCharacterState);
   const navigate = useNavigate();
+  const [addCharacter, { error }] = useMutation(ADD_CHARACTER, {
+    update(cache, { data: { addCharacter } }) {
+      try {
+        const { characters } = cache.readQuery({ query: GET_CHARACTERS }) || { characters: [] } as any;
+        cache.writeQuery({
+          query: GET_CHARACTERS,
+          data: { characters: [...characters, addCharacter] }
+        });
+      } catch (error) {
+        console.error('Error updating cache on addCharacter:', error);
+      }
+    }
+  }); 
 
   // Handler to update character information
   const handleInputChange = (category: keyof CharacterData, field: string, value: any) => {
     setCharacter(prevCharacter => ({
       ...prevCharacter,
       [category]: {
-        ...prevCharacter[category],
+        ...(typeof prevCharacter[category] === 'object' ? prevCharacter[category] : {}),
         [field]: value
       }
     }));
@@ -57,10 +73,27 @@ const CharacterSheet: React.FC = () => {
     return Math.floor((score - 10) / 2);
   };
 
-  const handleSaveCharacter = () => {
-    // TODO: Implement save functionality (e.g., local storage, API call)
+  const validateCharacter = () => {
+    const { basicInfo } = character;
+    if (!basicInfo.name || !basicInfo.race || !basicInfo.class) {
+      alert('Please fill in all required basic information (name, race, and class)');
+      return false;
+    }
+    return true;
+  };
+
+  const handleSaveCharacter = async () => {
+    if (!validateCharacter()) return;
+
     console.log('Saving character:', character);
-    navigate('/my-characters');
+    try {
+      const { data } = await addCharacter({ variables: { input: character } });
+      alert (`Character ${data.addCharacter.basicInfo.name} created.`)
+      navigate('/my-characters');
+    } catch (error) {
+      console.error('Error creating character', error);
+    }
+    
   };
 
   const handleCancelCharacter = () => {
@@ -70,6 +103,10 @@ const CharacterSheet: React.FC = () => {
       navigate('/my-characters');
     }
   };
+
+  if (error) {
+    console.error('Mutation error:', error);
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg">
