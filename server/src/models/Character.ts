@@ -71,8 +71,7 @@ interface Equipment {
     unit: string;
   };
   weight?: number;
-  description?: string[];
-  desc?: string[];
+  desc?: string[]; // Only using `desc` from GitHub
   properties?: string[];
 }
 
@@ -119,7 +118,7 @@ interface CharacterDocument {
   inventory?: { name: string; desc: string }[];
   currency?: Currency;
   biography?: Biography;
-  private: boolean;
+  private: boolean; // New property
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -130,7 +129,7 @@ const spellSchema = new Schema(
     name: { type: String, required: true },
     level: { type: Number, required: true },
     prepared: { type: Boolean, required: true, default: false },
-    desc: [String],
+    desc: [String], // Using `desc` field from GitHub
     damage: Schema.Types.Mixed,
     range: String,
   },
@@ -149,8 +148,7 @@ const equipmentSchema = new Schema(
       unit: String,
     },
     weight: Number,
-    description: [String],
-    desc: [String],
+    desc: [String], // Using `desc` field from GitHub
     properties: [String],
   }
 );

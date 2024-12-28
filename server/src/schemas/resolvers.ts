@@ -232,6 +232,41 @@ const resolvers = {
       return updatedCharacter;
     },
 
+    updateCharacterEquipment: async (
+      _parent: unknown,
+      { id, equipment }: { id: string; equipment: any[] },
+      context: Context
+    ) => {
+      if (!context.user) {
+        throw new AuthenticationError('Not logged in');
+      }
+
+      const character = await Character.findOneAndUpdate(
+        { _id: id, player: context.user._id },
+        {
+          $set: {
+            equipment: equipment.map((item) => ({
+              name: item.name,
+              category: item.category,
+              cost: item.cost,
+              weight: item.weight,
+              desc: item.desc || [],
+              properties: item.properties || [],
+            })),
+          },
+        },
+        { new: true, runValidators: true }
+      ).populate('player', 'username email');
+
+      if (!character) {
+        throw new GraphQLError('Character not found or unauthorized', {
+          extensions: { code: 'NOT_FOUND' },
+        });
+      }
+
+      return character;
+    },
+
     deleteCharacter: async (_parent: unknown, { id }: { id: string }, context: Context) => {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');

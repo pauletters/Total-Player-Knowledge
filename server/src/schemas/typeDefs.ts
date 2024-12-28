@@ -64,7 +64,7 @@ const typeDefs = `
         attributes: Attributes!
         combat: Combat
         skills: Skills
-        equipment: [Equipment!]!
+        equipment: [Equipment!]
         spells: [Spell!]!
         private: Boolean!
         createdAt: String!
