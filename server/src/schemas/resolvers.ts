@@ -45,7 +45,7 @@ interface AddCharacterArgs {
   };
   equipment?: string[];
   spells: CharacterSpell[];
-  private?: boolean;
+  private?: boolean; // Optional field
 }
 
 interface UpdateCharacterArgs extends Partial<AddCharacterArgs> {
@@ -55,7 +55,7 @@ interface UpdateCharacterArgs extends Partial<AddCharacterArgs> {
 interface AddCampaignArgs {
   name: string;
   description?: string;
-  players: string[];
+  players: string[]; // Character IDs
 }
 
 interface UpdateCampaignArgs {
@@ -107,20 +107,11 @@ const resolvers = {
       return Character.find({ player: context.user._id }).exec();
     },
 
-    campaign: async (_parent: unknown, { id }: { id: string }, context: Context) => {
+    character: async (_parent: unknown, { id }: { id: string }, context: Context) => {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-      return Campaign.findById(id)
-        .populate({
-          path: 'players',
-          populate: {
-            path: 'player',
-            select: 'username',
-          },
-        })
-        .populate('createdBy', 'username')
-        .exec();
+      return Character.findOne({ _id: id, player: context.user._id }).exec();
     },
 
     campaigns: async (_parent: unknown, _args: unknown, context: Context) => {
@@ -145,6 +136,39 @@ const resolvers = {
         .populate('createdBy', 'username')
         .exec();
     },
+
+    campaign: async (_parent: unknown, { id }: { id: string }, context: Context) => {
+      if (!context.user) {
+        throw new AuthenticationError('Not logged in');
+      }
+      return Campaign.findById(id)
+        .populate({
+          path: 'players',
+          populate: {
+            path: 'player',
+            select: 'username',
+          },
+        })
+        .populate('createdBy', 'username')
+        .exec();
+    },
+
+    searchUsers: async (_parent: unknown, { term }: { term: string }, context: Context) => {
+      if (!context.user) {
+        throw new AuthenticationError('Not logged in');
+      }
+
+      const users = await User.find({
+        username: { $regex: term, $options: 'i' },
+      })
+        .populate({
+          path: 'characters',
+          select: 'basicInfo.name private',
+        })
+        .select('-password -__v');
+
+      return users;
+    },
   },
 
   Mutation: {
@@ -166,6 +190,48 @@ const resolvers = {
       const user = await User.create({ username, email, password });
       const token = signToken(user.username, user.email, user._id);
       return { token, user };
+    },
+
+    addCharacter: async (_parent: unknown, { input }: { input: AddCharacterArgs }, context: Context) => {
+      if (!context.user) {
+        throw new AuthenticationError('Not logged in');
+      }
+
+      const newCharacter = await Character.create({
+        ...input,
+        player: context.user._id,
+        private: input.private ?? true, // Default to true if not provided
+      });
+
+      await User.findByIdAndUpdate(
+        context.user._id,
+        { $push: { characters: newCharacter._id } },
+        { new: true }
+      ).exec();
+
+      return newCharacter;
+    },
+
+    updateCharacter: async (_parent: unknown, { input }: { input: UpdateCharacterArgs }, context: Context) => {
+      if (!context.user) {
+        throw new AuthenticationError('Not logged in');
+      }
+      return Character.findOneAndUpdate(
+        { _id: input.id, player: context.user._id },
+        { $set: input },
+        { new: true }
+      ).exec();
+    },
+
+    updateCharacterSpells: async (_parent: unknown, { id, spells }: UpdateSpellsArgs, context: Context) => {
+      if (!context.user) {
+        throw new AuthenticationError('Not logged in');
+      }
+      return Character.findOneAndUpdate(
+        { _id: id, player: context.user._id },
+        { $set: { spells } },
+        { new: true }
+      ).exec();
     },
 
     addCampaign: async (_parent: unknown, { name, description, players }: AddCampaignArgs, context: Context) => {
@@ -210,6 +276,40 @@ const resolvers = {
         })
         .populate('createdBy', 'username')
         .exec();
+    },
+
+    updateCampaign: async (_parent: unknown, { id, name, description, players }: UpdateCampaignArgs, context: Context) => {
+      if (!context.user) {
+        throw new AuthenticationError('Not logged in');
+      }
+      return Campaign.findOneAndUpdate(
+        { _id: id, createdBy: context.user._id },
+        { $set: { name, description, players } },
+        { new: true }
+      ).exec();
+    },
+
+    deleteCharacter: async (_parent: unknown, { id }: { id: string }, context: Context) => {
+      if (!context.user) {
+        throw new AuthenticationError('Not logged in');
+      }
+      return Character.findOneAndDelete({ _id: id, player: context.user._id }).exec();
+    },
+
+    deleteCampaign: async (_parent: unknown, { id }: { id: string }, context: Context) => {
+      if (!context.user) {
+        throw new AuthenticationError('Not logged in');
+      }
+      const campaign = await Campaign.findOneAndDelete({ _id: id, createdBy: context.user._id }).exec();
+
+      if (campaign) {
+        await User.updateMany(
+          { campaigns: campaign._id },
+          { $pull: { campaigns: campaign._id } }
+        ).exec();
+      }
+
+      return campaign;
     },
   },
 };

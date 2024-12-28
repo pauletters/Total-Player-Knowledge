@@ -53,7 +53,17 @@ export const GET_CHARACTER = gql`
         proficiencies
         savingThrows
       }
-      equipment
+      equipment {
+        name
+        category
+        cost {
+          quantity
+          unit
+        }
+        weight
+        description
+        properties
+      }
       spells {
         name
         level

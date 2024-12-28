@@ -1,5 +1,6 @@
 import { Schema, model } from 'mongoose';
 
+// Basic Information
 interface BasicInfo {
   name: string;
   race: string;
@@ -9,6 +10,7 @@ interface BasicInfo {
   alignment: string;
 }
 
+// Attributes
 interface Attributes {
   strength: number;
   dexterity: number;
@@ -18,6 +20,7 @@ interface Attributes {
   charisma: number;
 }
 
+// Combat Information
 interface Combat {
   armorClass: number;
   hitPoints: number;
@@ -25,17 +28,33 @@ interface Combat {
   speed: number;
 }
 
+// Skills
 interface Skills {
   proficiencies: string[];
   savingThrows: string[];
 }
 
+// Spells
 export interface ISpell {
   name: string;
   level: number;
   prepared: boolean;
 }
 
+// Equipment
+interface Equipment {
+  name: string;
+  category: string;
+  cost?: {
+    quantity: number;
+    unit: string;
+  };
+  weight?: number;
+  description?: string[];
+  properties?: string[];
+}
+
+// Character Document Interface
 interface CharacterDocument {
   _id: string;
   player: Schema.Types.ObjectId;
@@ -43,21 +62,41 @@ interface CharacterDocument {
   attributes: Attributes;
   combat?: Combat;
   skills?: Skills;
-  equipment?: string[];
+  equipment?: Equipment[];
   spells: ISpell[];
   private: boolean; // New property
   createdAt?: Date;
   updatedAt?: Date;
 }
 
-const spellSchema = new Schema({
-  name: { type: String, required: true },
-  level: { type: Number, required: true },
-  prepared: { type: Boolean, required:true, default: false }
-}, { 
-  _id: false // Disable _id for subdocuments
-});
+// Spell Schema
+const spellSchema = new Schema(
+  {
+    name: { type: String, required: true },
+    level: { type: Number, required: true },
+    prepared: { type: Boolean, required: true, default: false },
+  },
+  {
+    _id: false, // Disable _id for subdocuments
+  }
+);
 
+// Equipment Schema
+const equipmentSchema = new Schema(
+  {
+    name: { type: String, required: true },
+    category: { type: String, required: true },
+    cost: {
+      quantity: Number,
+      unit: String,
+    },
+    weight: Number,
+    description: [String],
+    properties: [String],
+  }
+);
+
+// Character Schema
 const characterSchema = new Schema<CharacterDocument>(
   {
     player: { type: Schema.Types.ObjectId, ref: 'User', required: true },
@@ -87,7 +126,7 @@ const characterSchema = new Schema<CharacterDocument>(
       proficiencies: [{ type: String }],
       savingThrows: [{ type: String }],
     },
-    equipment: [{ type: String }],
+    equipment: [equipmentSchema], // Using structured schema for equipment
     spells: [spellSchema],
     private: { type: Boolean, default: true }, // New property with default value
     createdAt: { type: Date, default: Date.now },
