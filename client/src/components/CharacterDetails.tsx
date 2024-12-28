@@ -9,10 +9,10 @@ import {
   TOGGLE_SPELL_PREPARED, 
   UPDATE_CHARACTER_EQUIPMENT 
 } from '../utils/mutations';
+import { dndApi } from '../utils/dndApi';
 import { CharacterData, ApiSpell } from './types';
 import SpellCard from './Spells/SpellCard';
 import SpellModal from './Spells/SpellSelection';
-import { spellCache } from '../utils/spellCache';
 import EquipmentCard from './Equipment/EquipmentCard';
 import EquipmentModal from './Equipment/EquipmentSelection';
 import BackgroundTab from './BackgroundTab';
@@ -57,51 +57,57 @@ const CharacterDetails: React.FC = () => {
   const [showEquipmentModal, setShowEquipmentModal] = useState(false);
   const [updateCharacterEquipment] = useMutation(UPDATE_CHARACTER_EQUIPMENT);
 
-  // Load spell details from cache when spells change
   useEffect(() => {
     const loadSpellDetails = async () => {
       if (data?.character?.spells) {
         const spellsToLoad = data.character.spells.filter(
           spell => !spellDetails[spell.name]
         );
-
-        for (const spell of spellsToLoad) {
-          const cachedSpell = await spellCache.getSpell(spell.name);
-          if (cachedSpell) {
-            setSpellDetails(prev => ({
-              ...prev,
-              [spell.name]: cachedSpell
-            }));
+  
+        // Load all spells in parallel
+        const spellPromises = spellsToLoad.map(async (spell) => {
+          try {
+            const spellIndex = spell.name.toLowerCase().replace(/\s+/g, '-');
+            const fetchedSpell = await dndApi.getSpell(spellIndex);
+            return { name: spell.name, details: fetchedSpell };
+          } catch (error) {
+            console.error(`Error loading spell ${spell.name}:`, error);
+            return null;
           }
-        }
+        });
+  
+        const loadedSpells = await Promise.all(spellPromises);
+        
+        // Add all successfully loaded spells to the state
+        const newSpellDetails = { ...spellDetails };
+        loadedSpells.forEach(spell => {
+          if (spell && spell.details) {
+            newSpellDetails[spell.name] = spell.details;
+          }
+        });
+        
+        setSpellDetails(newSpellDetails);
       }
     };
 
     loadSpellDetails();
   }, [data?.character?.spells]);
 
-  const handleAddSpells = async (newSpells: ApiSpell[]) => {
+  const handleAddSpells = async (newSpellList: { name: string; level: number; prepared: boolean; }[]) => {
     if (!data?.character) return;
     
     try {
-       // Add spells to cache before updating character
-       for (const spell of newSpells) {
-        if (!spellDetails[spell.name]) {
-          setSpellDetails(prev => ({
-            ...prev,
-            [spell.name]: spell
-          }));
-        }
-      }
-
+      // Clean the spell data to ensure no __typename
+      const cleanSpells = newSpellList.map(spell => ({
+        name: spell.name,
+        level: spell.level,
+        prepared: spell.prepared
+      }));
+  
       await updateCharacterSpells({
         variables: {
           id: characterId,
-          spells: newSpells.map(spell => ({
-            name: spell.name,
-            level: spell.level,
-            prepared: false
-          }))
+          spells: cleanSpells
         },
         refetchQueries: [{ query: GET_CHARACTER, variables: { id: characterId } }]
       });
@@ -501,6 +507,7 @@ const CharacterDetails: React.FC = () => {
       onClose={() => setShowSpellModal(false)}
       onAddSpells={handleAddSpells}
       characterClass={character.basicInfo.class}
+      existingSpells={data.character.spells || []}
     />
   )}
 
