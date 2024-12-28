@@ -15,7 +15,7 @@ import SpellModal from './Spells/SpellSelection';
 import { spellCache } from '../utils/spellCache';
 import EquipmentCard from './Equipment/EquipmentCard';
 import EquipmentModal from './Equipment/EquipmentSelection';
-import DiceRoller from './DiceRoller';
+import BackgroundTab from './BackgroundTab';
 
 interface CharacterParams {
   characterId: string;
@@ -432,34 +432,30 @@ const CharacterDetails: React.FC = () => {
             </Card>
           )}
         
-
         {activeTab === 'background' && (
             <Card>
               <Card.Header>
                 <div className="d-flex justify-content-between align-items-center">
                   <span>Background</span>
-                  <Button variant="primary" size="sm">Add Background</Button>
                 </div>
               </Card.Header>
               <Card.Body>
-                  <p className="text-center">No background added yet.</p>
-              </Card.Body>
-            </Card>
+                <BackgroundTab 
+                    character={character}
+                    characterBackground={character.basicInfo.background}
+                    onBackstoryChange={(newBackstory) => {
+                    // Handle backstory update here with your mutation
+                    console.log('Backstory updated:', newBackstory);
+                }}
+                    onInputChange={(field, value) => {
+                    // Handle input change here
+                    console.log(`Field ${field} changed to ${value}`);
+                }}
+              />
+            </Card.Body>
+          </Card>
           )}
-
-        {activeTab === 'diceRoller' && (
-            <Card>
-              <Card.Header>
-                <div className="d-flex justify-content-between align-items-center">
-                  <span>Dice Roller</span>
-                </div>
-              </Card.Header>
-              <Card.Body>
-                <DiceRoller />
-              </Card.Body>
-            </Card>
-          )}
-          </div>
+        </div>
 
         <div className="character-tabs">
           <Nav variant="pills" className="flex-column">
@@ -493,14 +489,6 @@ const CharacterDetails: React.FC = () => {
                 onClick={() => setActiveTab('background')}
               >
                 Background
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link 
-                active={activeTab === 'diceRoller'}
-                onClick={() => setActiveTab('diceRoller')}
-              >
-                Dice Roller
               </Nav.Link>
             </Nav.Item>
           </Nav>
