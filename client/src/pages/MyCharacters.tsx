@@ -75,13 +75,6 @@ const MyCharacters = () => {
                           >
                             View Character
                           </Button>
-                          <Button 
-                            variant="outline-secondary" 
-                            size="sm"
-                            onClick={() => handleViewCharacter(character)}
-                          >
-                            Roll Dice
-                          </Button>
                         </div>
                       </Card.Body>
                     </Card>

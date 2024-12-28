@@ -189,3 +189,5 @@ export const BasicInfoSection: React.FC<SectionProps> = ({ character, onInputCha
     </section>
   );
 };
+
+export default backgroundOptions;
