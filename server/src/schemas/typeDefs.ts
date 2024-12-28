@@ -175,6 +175,22 @@ const typeDefs = `
         prepared: Boolean!
     }
 
+
+    type Cost {
+        quantity: Float!
+        unit: String!
+    }
+
+    type Equipment {
+        name: String!
+        category: String!
+        cost: Cost
+        weight: Float
+        description: [String!]
+        properties: [String!]
+    }
+
+
     input CostInput {
         quantity: Float!
         unit: String!
