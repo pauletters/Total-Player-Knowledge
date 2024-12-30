@@ -13,7 +13,6 @@ import { dndApi } from '../utils/dndApi';
 import { CharacterData, ApiSpell } from './types';
 import SpellCard from './Spells/SpellCard';
 import SpellModal from './Spells/SpellSelection';
-import EquipmentCard from './Equipment/EquipmentCard';
 import EquipmentModal from './Equipment/EquipmentSelection';
 import BackgroundTab from './BackgroundTab';
 
@@ -56,6 +55,7 @@ const CharacterDetails: React.FC = () => {
 
   const [showEquipmentModal, setShowEquipmentModal] = useState(false);
   const [updateCharacterEquipment] = useMutation(UPDATE_CHARACTER_EQUIPMENT);
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const loadSpellDetails = async () => {
@@ -414,29 +414,95 @@ const CharacterDetails: React.FC = () => {
                   </Button>
                 </div>
               </Card.Header>
-              <Card.Body>
+              <Card.Body className="p-0">
+                <div className="equipment-list">
               {character.equipment && character.equipment.length > 0 ? (
-                  <Row xs={1} md={2} lg={3} className="g-4">
-                    {character.equipment.map((item) => (
-                      <Col key={item.name}>
-                        <EquipmentCard
-                          name={item.name}
-                          category={item.category}
-                          cost={item.cost}
-                          weight={item.weight}
-                          description={item.description}
-                          properties={item.properties}
-                          onRemove={() => handleRemoveEquipment(item.name)}
-                        />
-                      </Col>
-                    ))}
-                  </Row>
-                ) : (
-                  <p className="text-center">No equipment added yet.</p>
-                )}
-              </Card.Body>
-            </Card>
-          )}
+                  <div className="list-group list-group-flush">
+                  {character.equipment.map((item) => (
+                    <div 
+                      key={item.name} 
+                      className="list-group-item"
+                      style={{ 
+                        cursor: 'pointer', 
+                        transition: 'all 0.2s ease',
+                        position: 'relative',
+                        backgroundColor: expandedItems.has(item.name) ? '#f8f9fa' : 'inherit'
+                      }}
+                      onClick={() => {
+                        setExpandedItems(prev => {
+                          const newExpanded = new Set(prev);
+                          if (newExpanded.has(item.name)) {
+                            newExpanded.delete(item.name);
+                          } else {
+                            newExpanded.add(item.name);
+                          }
+                          return newExpanded;
+                        });
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+                        e.currentTarget.style.backgroundColor = '#f8f9fa';
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.transform = 'none';
+                        e.currentTarget.style.boxShadow = 'none';
+                        e.currentTarget.style.backgroundColor = expandedItems.has(item.name) ? '#f8f9fa' : 'inherit';
+                      }}
+                    >
+                      <div className="d-flex justify-content-between align-items-start">
+                        <div className="ms-2 me-auto" style={{ flex: 1 }}>
+                          <div className="d-flex justify-content-between">
+                            <div>
+                              <div className="fw-bold">{item.name}</div>
+                              <div className="text-muted small">{item.category}</div>
+                            </div>
+                            <div className="text-end">
+                              {item.cost && (
+                                <div className="small">{item.cost.quantity} {item.cost.unit}</div>
+                              )}
+                              {item.weight && (
+                                <div className="text-muted small">{item.weight} lb</div>
+                              )}
+                            </div>
+                          </div>
+                          {expandedItems.has(item.name) && (
+                            <>
+                              {item.description && item.description.length > 0 && (
+                                <div className="small text-muted mt-1">
+                                  {item.description[0]}
+                                </div>
+                              )}
+                              {item.properties && item.properties.length > 0 && (
+                                <div className="small mt-1">
+                                  <strong>Properties:</strong> {item.properties.join(', ')}
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                        <Button 
+                          variant="outline-danger"
+                          size="sm"
+                          className="ms-3"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveEquipment(item.name);
+                          }}
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center my-4">No equipment added yet.</p>
+              )}
+            </div>
+          </Card.Body>
+        </Card>
+      )}
         
         {activeTab === 'background' && (
             <Card>
