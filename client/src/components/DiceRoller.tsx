@@ -51,7 +51,9 @@ const DiceRoller: React.FC = () => {
         friction: 0.8,
         restitution: 0.5,
         linearDamping: 0.5,
-        angularDamping: 0.4
+        angularDamping: 0.4,
+        sounds: true, // Enable sounds
+        volume: 100,  // Set volume (0 to 100)
       });
 
       await Box.init();
@@ -97,6 +99,11 @@ const DiceRoller: React.FC = () => {
     setIsRolling(true);
     const notation = `${numberOfDice}${selectedDie.name}`;
     diceBoxRef.current?.roll(notation);
+
+    // Play sound after rolling
+    const audio = new Audio('/assets/dice-box/sounds/surfaces/surface_wood_table5.mp3'); // Adjust the path as necessary
+    audio.play().catch(error => console.error("Error playing sound:", error));
+  
   };
 
   const clearHistory = () => {
