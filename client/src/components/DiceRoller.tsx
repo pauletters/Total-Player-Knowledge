@@ -100,10 +100,21 @@ const DiceRoller: React.FC = () => {
     const notation = `${numberOfDice}${selectedDie.name}`;
     diceBoxRef.current?.roll(notation);
 
-    // Play sound after rolling
-    const audio = new Audio('/assets/dice-box/sounds/surfaces/surface_wood_table5.mp3'); // Adjust the path as necessary
-    audio.play().catch(error => console.error("Error playing sound:", error));
-  
+    // Array of sound file paths
+    const sounds = [
+        '/assets/dice-box/sounds/surfaces/surface_wood_table7.mp3',
+        '/assets/dice-box/sounds/surfaces/surface_wood_tray2.mp3',
+        '/assets/dice-box/sounds/surfaces/surface_wood_table3.mp3',
+        '/assets/dice-box/sounds/surfaces/surface_wood_tray4.mp3',
+        '/assets/dice-box/sounds/surfaces/surface_wood_table5.mp3',
+        // Add more sounds as needed
+    ];
+
+    // Play sound for each die rolled
+    for (let i = 0; i < numberOfDice; i++) {
+        const audio = new Audio(sounds[i % sounds.length]); // Loop through sounds if there are more dice than sounds
+        audio.play().catch(error => console.error("Error playing sound:", error));
+    }
   };
 
   const clearHistory = () => {

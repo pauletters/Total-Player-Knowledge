@@ -151,7 +151,6 @@ const resolvers = {
       return Campaign.findById(id)
         .populate({
           path: 'players',
-          match: { private: false }, // Include only public characters
           populate: { path: 'player', select: 'username' },
         })
         .populate('createdBy', 'username')
