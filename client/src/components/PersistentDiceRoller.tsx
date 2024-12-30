@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Card } from 'react-bootstrap';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import AuthService from '../utils/auth';
+import '../styles/DiceBox.css';
+
 
 interface PersistentDiceRollerProps {
   DiceRoller: React.ComponentType;
@@ -71,15 +73,15 @@ const PersistentDiceRoller: React.FC<PersistentDiceRollerProps> = ({ DiceRoller 
         </button>
 
         <div 
-          style={{
-            width: '400px',
-            overflow: 'hidden'
-          }}
-        >
-          <Card 
-            className="border-start-0 rounded-0"
-            style={{ maxWidth: '400px' }}
+            style={{
+              width: '500px',  // Increased from 400px to give more room for 3D dice
+              overflow: 'hidden'
+            }}
           >
+          <Card 
+              className="border-start-0 rounded-0"
+              style={{ maxWidth: '500px' }}  // Increased to match
+            >
             <DiceRoller />
           </Card>
         </div>
