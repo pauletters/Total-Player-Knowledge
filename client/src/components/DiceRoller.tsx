@@ -127,7 +127,8 @@ const DiceRoller: React.FC = () => {
           >
             {[1, 2, 3, 4, 5].map(num => (
               <option key={num} value={num}>
-                {num} Die{num > 1 ? 's' : ''}
+                {num} Di
+                {num === 1 ? 'e' : 'ce'}
               </option>
             ))}
           </Form.Select>

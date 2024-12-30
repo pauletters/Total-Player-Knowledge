@@ -55,10 +55,7 @@ interface BasicInfo {
 // Spells Interface
 export interface ISpell {
   name: string;
-  desc?: string[];
   level: number;
-  damage?: any;
-  range?: string;
   prepared: boolean;
 }
 
@@ -126,15 +123,16 @@ interface CharacterDocument {
 // Spell Schema
 const spellSchema = new Schema(
   {
-    name: { type: String, required: true },
-    level: { type: Number, required: true },
+    name: { type: String, required: true, trim: true },
+    level: { type: Number, required: true, min: 0, max: 20 },
     prepared: { type: Boolean, required: true, default: false },
-    desc: [String], // Using `desc` field from GitHub
+    desc: [String],
     damage: Schema.Types.Mixed,
     range: String,
   },
   {
     _id: false, // Disable _id for subdocuments
+    strict: true
   }
 );
 
@@ -202,7 +200,11 @@ const characterSchema = new Schema<CharacterDocument>(
       savingThrows: [String],
     },
     equipment: [equipmentSchema],
-    spells: [spellSchema],
+    spells: {
+      type: [spellSchema],
+      default: [],
+      required: true,
+    },
     weapons: [
       {
         name: String,

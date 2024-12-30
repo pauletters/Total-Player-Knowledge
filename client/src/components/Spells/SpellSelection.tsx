@@ -134,33 +134,45 @@ const handleAddSpells = () => {
     prepared: false
   }));
 
-  // Filter out __typename from existing spells
-  const cleanedExistingSpells = existingSpells.map(spell => ({
-    name: spell.name,
-    level: spell.level,
-    prepared: spell.prepared
-  }));
-  
-  // Create a unique list of spells by name
-  const combinedSpells = [
-    ...cleanedExistingSpells,
-    ...newSpells
+  // Create a Map of existing spells for quick lookup
+  const existingSpellMap = new Map(
+    existingSpells.map(spell => [spell.name, spell])
+  );
+
+   // Combine spells, ensuring no duplicates and preserving existing prepared states
+   const combinedSpells = [
+    ...existingSpells.map(spell => ({
+      name: spell.name,
+      level: spell.level,
+      prepared: spell.prepared
+    }))
   ];
 
-  console.log('Existing spells:', existingSpells);
-  console.log('New spells:', newSpells);
-  console.log('Combined spells to save:', combinedSpells);
+  // Add new spells that don't already exist
+  newSpells.forEach(newSpell => {
+    if (!existingSpellMap.has(newSpell.name)) {
+      combinedSpells.push(newSpell);
+    }
+  });
 
+  // Sort spells by level and then name
+  const sortedSpells = combinedSpells.sort((a, b) => {
+    if (a.level !== b.level) {
+      return a.level - b.level;
+    }
+    return a.name.localeCompare(b.name);
+  });
 
-  onAddSpells(combinedSpells);
+  console.log('Final spell list to save:', sortedSpells);
+  onAddSpells(sortedSpells);
   setSelectedSpells(new Set());
   onClose();
 };
 
-const handleClose = () => {
-  setSelectedSpells(new Set()); 
-  onClose(); 
-};
+  const handleClose = () => {
+    setSelectedSpells(new Set());
+    onClose();
+  };
 
 const filteredSpells = spells.filter(spell => {
   const matchesSearch = searchTerm === '' || spell.name.toLowerCase().includes(searchTerm.toLowerCase());
