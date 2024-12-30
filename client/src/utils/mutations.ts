@@ -77,9 +77,12 @@ export const ADD_CHARACTER = gql`
 `;
 
 export const UPDATE_CHARACTER_SPELLS = gql`
-  mutation UpdateCharacterSpells($id: ID!, $spells: [SpellInput]!) {
+  mutation UpdateCharacterSpells($id: ID!, $spells: [SpellInput!]!) {
     updateCharacterSpells(id: $id, spells: $spells) {
       _id
+      basicInfo {
+        name
+      }
       spells {
         name
         level

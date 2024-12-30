@@ -94,25 +94,48 @@ const CharacterDetails: React.FC = () => {
   }, [data?.character?.spells]);
 
   const handleAddSpells = async (newSpellList: { name: string; level: number; prepared: boolean; }[]) => {
-    if (!data?.character) return;
+    if (!data?.character) {
+      console.error('No character data available');
+      return;
+    }
     
     try {
-      // Clean the spell data to ensure no __typename
-      const cleanSpells = newSpellList.map(spell => ({
-        name: spell.name,
-        level: spell.level,
-        prepared: spell.prepared
-      }));
+      // Ensure all required fields are present and properly formatted
+      const cleanSpells = newSpellList.map(spell => {
+        if (!spell.name || typeof spell.level !== 'number') {
+          throw new Error('Invalid spell data');
+        }
+        return {
+          name: spell.name.trim(),
+          level: spell.level,
+          prepared: Boolean(spell.prepared)
+        };
+      });
+
+      console.log('Sending spell update:', {
+        characterId,
+        spells: cleanSpells
+      });
   
-      await updateCharacterSpells({
+      const { data: updateData } = await updateCharacterSpells({
         variables: {
           id: characterId,
           spells: cleanSpells
         },
-        refetchQueries: [{ query: GET_CHARACTER, variables: { id: characterId } }]
+        refetchQueries: [{ query: GET_CHARACTER, variables: { id: characterId } }],
+        errorPolicy: 'all'
       });
+
+      if (!updateData?.updateCharacterSpells) {
+        console.error('No data returned from updateCharacterSpells mutation');
+        throw new Error('Failed to update character spells');
+      }
+
+      console.log('Spells updated successfully:', updateData.updateCharacterSpells);
+
     } catch (error) {
       console.error('Error updating spells:', error);
+      alert('Failed to update spells. Please try again.');
     }
   };
 

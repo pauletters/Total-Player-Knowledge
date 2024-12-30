@@ -4,6 +4,7 @@ import { ISpell } from '../models/Character.js';
 import Campaign from '../models/Campaign.js';
 import { signToken, AuthenticationError } from '../utils/auth.js';
 import { GraphQLError } from 'graphql';
+import mongoose from 'mongoose';
 
 // Interfaces
 interface AddUserArgs {
@@ -229,6 +230,88 @@ const resolvers = {
       }
 
       return updatedCharacter;
+    },
+
+    updateCharacterSpells: async (
+      _parent: unknown,
+      { id, spells }: UpdateSpellsArgs,
+      context: Context
+    ) => {
+      console.log('Starting updateCharacterSpells with:', { id, spells });
+
+      if (!context.user) {
+        throw new AuthenticationError('Not logged in');
+      }
+
+      if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+        throw new GraphQLError('Invalid character ID', {
+          extensions: { code: 'BAD_USER_INPUT' },
+        });
+      }
+
+      // Clean and validate each spell
+      const cleanedSpells = spells.map(spell => {
+        if (!spell || typeof spell !== 'object') {
+          throw new GraphQLError('Invalid spell object', {
+            extensions: { code: 'BAD_USER_INPUT' },
+          });
+        }
+
+        if (!spell.name || typeof spell.name !== 'string') {
+          throw new GraphQLError('Spell name is required and must be a string', {
+            extensions: { code: 'BAD_USER_INPUT' },
+          });
+        }
+
+        if (typeof spell.level !== 'number' || spell.level < 0 || spell.level > 9) {
+          throw new GraphQLError('Spell level must be a number between 0 and 9', {
+            extensions: { code: 'BAD_USER_INPUT' },
+          });
+        }
+
+        return {
+          name: spell.name.trim(),
+          level: spell.level,
+          prepared: Boolean(spell.prepared)
+        };
+      });
+
+      try {
+        console.log('Looking for character:', { id, userId: context.user._id });
+
+        const character = await Character.findOneAndUpdate(
+          { _id: id, player: context.user._id },
+          { $set: { spells: cleanedSpells } },
+          { 
+            new: true, 
+            runValidators: true,
+            lean: false 
+          }
+        );
+
+        if (!character) {
+          throw new GraphQLError('Character not found or unauthorized', {
+            extensions: { code: 'NOT_FOUND' },
+          });
+        }
+
+        console.log('Updated character:', {
+          id: character._id,
+          spellCount: character.spells?.length || 0
+        });
+
+        return character;
+
+      } catch (error) {
+        console.error('Error in updateCharacterSpells:', error);
+        if (error instanceof GraphQLError) {
+          throw error;
+        }
+        throw new GraphQLError(
+          'Failed to update spells: ' + (error instanceof Error ? error.message : 'Unknown error'),
+          { extensions: { code: 'INTERNAL_SERVER_ERROR' } }
+        );
+      }
     },
 
     updateCharacterEquipment: async (

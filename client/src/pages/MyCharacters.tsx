@@ -28,8 +28,8 @@ const MyCharacters = () => {
   };
 
   const handleViewCharacter = (character: Character) => {
+    navigate(`/my-characters/${character._id}`);
     setSelectedCharacter(character);
-    setShowDiceRoller(true);
   };
 
   const isCreatingCharacter = location.pathname.includes('/character-creation');
@@ -71,7 +71,7 @@ const MyCharacters = () => {
                           <Button 
                             variant="outline-primary" 
                             size="sm"
-                            onClick={() => navigate(`/my-characters/${character._id}`)}
+                            onClick={() => handleViewCharacter(character)}
                           >
                             View Character
                           </Button>
