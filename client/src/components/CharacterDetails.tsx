@@ -298,6 +298,16 @@ const CharacterDetails: React.FC = () => {
   return (
     <Container className="py-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
+           {/* Avatar Image */}
+           <div className="me-3">
+          {character.basicInfo.avatar && (
+            <img
+              src={character.basicInfo.avatar}
+              alt={`${character.basicInfo.name}'s Avatar`}
+              style={{ width: '100px', height: '100px', borderRadius: '50%' }}
+            />
+          )}
+        </div>
         <h1>{character.basicInfo.name}</h1>
         <Button variant="outline-secondary" onClick={() => navigate('/my-characters')}>
           Back to Characters

@@ -18,6 +18,7 @@ export const GET_CHARACTERS = gql`
         name
         class
         level
+        avatar
       }
     }
   }
@@ -34,6 +35,7 @@ export const GET_CHARACTER = gql`
         level
         background
         alignment
+        avatar
       }
       attributes {
         strength

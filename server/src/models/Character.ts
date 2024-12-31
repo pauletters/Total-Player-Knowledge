@@ -50,6 +50,7 @@ interface BasicInfo {
   level: number;
   background: string;
   alignment: string;
+  avatar: string;
 }
 
 // Spells Interface
@@ -162,6 +163,7 @@ const characterSchema = new Schema<CharacterDocument>(
       level: { type: Number, required: true, min: 1, max: 20 },
       background: { type: String },
       alignment: { type: String },
+      avatar: { type: String, required: false },
     },
     attributes: {
       strength: { type: Number, default: 10 },

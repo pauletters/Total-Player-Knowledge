@@ -1,5 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { SectionProps } from '../types';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import '../../styles/avatar.css';
 
 const raceOptions = [
   'Dragonborn', 'Dwarf', 'Elf', 'Gnome', 'Half-Elf', 'Halfling', 
@@ -58,6 +60,67 @@ const backgroundSkillProficiencies: Record<BackgroundType, string[]> = {
   urchin: ['Sleight of Hand', 'Stealth']
 };
 
+
+interface AvatarSelectorProps {
+  selectedAvatar: string;
+  onAvatarChange: (avatar: string) => void;
+}
+
+const AvatarSelector: React.FC<AvatarSelectorProps> = ({ onAvatarChange }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  
+  const avatars = [
+    '../assets/avatar1.png',
+    '../assets/avatar2.png',
+    '../assets/avatar3.png',
+    '../assets/avatar4.png',
+    '../assets/avatar5.png',
+    '../assets/avatar6.png',
+    '../assets/avatar7.png',
+    '../assets/avatar8.png',
+    '../assets/avatar9.png',
+    '../assets/avatar10.png',
+    '../assets/avatar11.png',
+    '../assets/avatar12.png',
+    '../assets/avatar13.png',
+    '../assets/avatar14.png',
+    '../assets/avatar15.png',
+    '../assets/avatar16.png',
+    '../assets/avatar17.png',
+    '../assets/avatar18.png'
+  ];
+
+  const handlePrevious = () => {
+    setCurrentIndex((prev) => (prev === 0 ? avatars.length - 1 : prev - 1));
+    onAvatarChange(avatars[currentIndex === 0 ? avatars.length - 1 : currentIndex - 1]);
+  };
+
+  const handleNext = () => {
+    setCurrentIndex((prev) => (prev === avatars.length - 1 ? 0 : prev + 1));
+    onAvatarChange(avatars[currentIndex === avatars.length - 1 ? 0 : currentIndex + 1]);
+  };
+
+  return (
+    <div className="avatar-selector-container">
+      <button onClick={handlePrevious} className="avatar-nav-button left">
+        <ChevronLeft className="avatar-nav-icon" />
+      </button>
+      
+      <div className="avatar-image-container">
+        <img
+          src={avatars[currentIndex]}
+          alt="Character Avatar"
+          className="avatar-image"
+        />
+      </div>
+      
+      <button onClick={handleNext} className="avatar-nav-button right">
+        <ChevronRight className="avatar-nav-icon" />
+      </button>
+    </div>
+  );
+};
+
 export const BasicInfoSection: React.FC<SectionProps> = ({ character, onInputChange }) => {
   const availableSkills = useMemo(() => {
     const classSkills = character.basicInfo.class ? 
@@ -88,62 +151,67 @@ export const BasicInfoSection: React.FC<SectionProps> = ({ character, onInputCha
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
           />
         </div>
-        <div className="relative">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Race
-          </label>
-          <select 
-            value={character.basicInfo.race}
-            onChange={(e) => onInputChange('basicInfo', 'race', e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-          >
-            <option value="">Select Race</option>
-            {raceOptions.map(race => (
-              <option key={race.toLowerCase()} value={race.toLowerCase()}>
-                {race}
-              </option>
-            ))}
-          </select>
-          <div className="absolute left-1/2 transform -translate-x-1/2 mt-4">
-            <div className="flex gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Background
-                </label>
-                <select 
-                  value={character.basicInfo.background}
-                  onChange={(e) => onInputChange('basicInfo', 'background', e.target.value)}
-                  className="block w-40 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                >
-                  <option value="">Select Background</option>
-                  {backgroundOptions.map(background => (
-                    <option key={background.toLowerCase()} value={background.toLowerCase()}>
-                      {background}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Alignment
-                </label>
-                <select 
-                  value={character.basicInfo.alignment}
-                  onChange={(e) => onInputChange('basicInfo', 'alignment', e.target.value)}
-                  className="block w-40 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                >
-                  <option value="">Select Alignment</option>
-                  {alignmentOptions.map(alignment => (
-                    <option key={alignment.toLowerCase()} value={alignment.toLowerCase()}>
-                      {alignment}
-                    </option>
-                  ))}
-                </select>
-              </div>
+        <div className="col-span-2 flex items-center justify-between">
+          <div className="flex gap-4 w-full">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Race
+              </label>
+              <select 
+                value={character.basicInfo.race}
+                onChange={(e) => onInputChange('basicInfo', 'race', e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+              >
+                <option value="">Select Race</option>
+                {raceOptions.map(race => (
+                  <option key={race.toLowerCase()} value={race.toLowerCase()}>
+                    {race}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <br/>
+                Background
+              </label>
+              <select 
+                value={character.basicInfo.background}
+                onChange={(e) => onInputChange('basicInfo', 'background', e.target.value)}
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+              >
+                <option value="">Select Background</option>
+                {backgroundOptions.map(background => (
+                  <option key={background.toLowerCase()} value={background.toLowerCase()}>
+                    {background}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex-1">
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                <br/>
+                Alignment
+              </label>
+              <select 
+                value={character.basicInfo.alignment}
+                onChange={(e) => onInputChange('basicInfo', 'alignment', e.target.value)}
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+              >
+                <option value="">Select Alignment</option>
+                {alignmentOptions.map(alignment => (
+                  <option key={alignment.toLowerCase()} value={alignment.toLowerCase()}>
+                    {alignment}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </div>
         <div>
+          
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Class
           </label>
@@ -159,10 +227,20 @@ export const BasicInfoSection: React.FC<SectionProps> = ({ character, onInputCha
               </option>
             ))}
           </select>
+          <div className="avatar-container">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <br/>
+            Please Select an Avatar
+          </label>
+          <AvatarSelector
+            selectedAvatar={character.basicInfo.avatar}
+            onAvatarChange={(avatar: string) => onInputChange('basicInfo', 'avatar', avatar)}
+          />
+        </div>
         </div>
       </div>
-      
-      {/* Compact Skill Proficiencies Display */}
+
+      {/* Skill Proficiencies section remains unchanged */}
       {(character.basicInfo.class || character.basicInfo.background) && (
         <div className="mt-4">
           <h5 className="text-xs font-medium text-gray-700 mb-1">Available Skill Proficiencies</h5>
@@ -190,4 +268,4 @@ export const BasicInfoSection: React.FC<SectionProps> = ({ character, onInputCha
   );
 };
 
-export default backgroundOptions;
+export default BasicInfoSection;

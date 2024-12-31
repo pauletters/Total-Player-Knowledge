@@ -7,6 +7,7 @@ export interface CharacterData {
     level: number;
     background: string;
     alignment: string;
+    avatar: string;
   };
   attributes: {
     strength: number;
