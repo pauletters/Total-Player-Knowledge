@@ -26,6 +26,7 @@ interface AddCharacterArgs {
     level: number;
     background?: string;
     alignment?: string;
+    avatar: string;
   };
   attributes: {
     strength: number;

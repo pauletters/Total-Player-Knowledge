@@ -17,6 +17,7 @@ const initialCharacterState: CharacterData = {
     level: 1,
     background: '',
     alignment: '',
+    avatar: '../assets/avatar1.png',
   },
   attributes: {
     strength: 10,

@@ -37,6 +37,7 @@ export const ADD_CHARACTER = gql`
         level
         background
         alignment
+        avatar
       }
       attributes {
         strength

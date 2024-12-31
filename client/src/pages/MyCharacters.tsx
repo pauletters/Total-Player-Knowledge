@@ -12,6 +12,7 @@ interface Character {
     name: string;
     class: string;
     level: number;
+    avatar: string; // Ensure avatar is correctly placed within basicInfo
   };
 }
 
@@ -63,6 +64,20 @@ const MyCharacters = () => {
                   <Col key={character._id}>
                     <Card>
                       <Card.Body>
+                        {/* Avatar Image */}
+                        <div className="d-flex justify-content-between align-items-center mb-4">
+                          <div className="me-3">
+                            {character.basicInfo.avatar && (
+                              <img
+                                src={character.basicInfo.avatar}
+                                alt={`${character.basicInfo.name}'s Avatar`}
+                                style={{ width: '100px', height: '100px', borderRadius: '50%' }}
+                              />
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Character Details */}
                         <Card.Title>{character.basicInfo.name}</Card.Title>
                         <Card.Text>
                           Level {character.basicInfo.level} {character.basicInfo.class}

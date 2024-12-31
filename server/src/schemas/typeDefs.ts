@@ -14,6 +14,7 @@ const typeDefs = `
         level: Int!
         background: String
         alignment: String
+        avatar: String
     }
 
     type Attributes {
@@ -125,6 +126,7 @@ const typeDefs = `
         level: Int!
         background: String
         alignment: String
+        avatar: String
     }
 
     input AttributesInput {
