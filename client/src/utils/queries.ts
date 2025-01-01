@@ -74,3 +74,18 @@ export const GET_CHARACTER = gql`
     }
   }
 `;
+
+export const SEARCH_USERS = gql`
+  query SearchUsers($term: String!) {
+    searchUsers(term: $term) {
+      _id
+      username
+      characters {
+        _id
+        basicInfo {
+          name
+        }
+      }
+    }
+  }
+`;

@@ -124,3 +124,43 @@ export const UPDATE_CHARACTER_EQUIPMENT = gql`
     }
   }
 `;
+
+export const UPDATE_CAMPAIGN = gql`
+  mutation UpdateCampaign(
+    $id: ID!
+    $name: String
+    $description: String
+    $addPlayers: [ID!]
+    $removePlayers: [ID!]
+    $addMilestones: [String!]
+    $removeMilestoneIndex: Int
+  ) {
+    updateCampaign(
+      id: $id
+      name: $name
+      description: $description
+      addPlayers: $addPlayers
+      removePlayers: $removePlayers
+      addMilestones: $addMilestones
+      removeMilestoneIndex: $removeMilestoneIndex
+    ) {
+      _id
+      name
+      description
+      milestones
+      players {
+        _id
+        basicInfo {
+          name
+        }
+        player {
+          username
+        }
+      }
+      createdBy {
+        _id
+        username
+      }
+    }
+  }
+`;
