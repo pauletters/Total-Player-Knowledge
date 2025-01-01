@@ -110,11 +110,14 @@ const typeDefs = `
         ): Campaign
 
         updateCampaign(
-            id: ID!
-            name: String
-            description: String
-            players: [ID!]
-        ): Campaign
+    id: ID!
+    name: String
+    description: String
+    addPlayers: [ID!]
+    removePlayers: [ID!]
+    addMilestones: [String!]
+    removeMilestoneIndex: Int
+  ): Campaign
 
         deleteCampaign(id: ID!): Campaign
     }
