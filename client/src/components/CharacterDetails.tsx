@@ -14,7 +14,7 @@ import { CharacterData, ApiSpell } from './types';
 import SpellCard from './Spells/SpellCard';
 import SpellModal from './Spells/SpellSelection';
 import EquipmentModal from './Equipment/EquipmentSelection';
-import BackgroundTab from './BackgroundTab';
+import BackgroundTab from './Background/BackgroundTab';
 
 interface CharacterParams {
   characterId: string;

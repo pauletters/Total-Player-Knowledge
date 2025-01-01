@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
-import { SectionProps } from '../types';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import '../../styles/avatar.css';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { SectionProps } from '../../types';
+import { ChevronLeft, ChevronRight, Upload } from 'lucide-react';
+import '../../../styles/avatar.css';
+import { AvatarData } from '../../types';
 
 const raceOptions = [
   'Dragonborn', 'Dwarf', 'Elf', 'Gnome', 'Half-Elf', 'Halfling', 
@@ -62,12 +63,25 @@ const backgroundSkillProficiencies: Record<BackgroundType, string[]> = {
 
 
 interface AvatarSelectorProps {
-  selectedAvatar: string;
-  onAvatarChange: (avatar: string) => void;
+  selectedAvatar: AvatarData;
+  onAvatarChange: (avatar: AvatarData) => void;
 }
 
-const AvatarSelector: React.FC<AvatarSelectorProps> = ({ onAvatarChange }) => {
+const AvatarSelector: React.FC<AvatarSelectorProps> = ({ selectedAvatar, onAvatarChange }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isUsingCustomImage, setIsUsingCustomImage] = useState(selectedAvatar.type === 'custom');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [error, setError] = useState<string>("");
+
+  // Initialize with default avatar if none is set
+  useEffect(() => {
+    if (!selectedAvatar.data) {
+      onAvatarChange({
+        type: 'preset',
+        data: '../assets/avatar1.png'
+      });
+    }
+  }, []);
   
   const avatars = [
     '../assets/avatar1.png',
@@ -91,32 +105,140 @@ const AvatarSelector: React.FC<AvatarSelectorProps> = ({ onAvatarChange }) => {
   ];
 
   const handlePrevious = () => {
-    setCurrentIndex((prev) => (prev === 0 ? avatars.length - 1 : prev - 1));
-    onAvatarChange(avatars[currentIndex === 0 ? avatars.length - 1 : currentIndex - 1]);
+    if (!isUsingCustomImage) {
+      setCurrentIndex((prev) => (prev === 0 ? avatars.length - 1 : prev - 1));
+      onAvatarChange({
+        type: 'preset',
+        data: avatars[currentIndex === 0 ? avatars.length - 1 : currentIndex - 1]
+      });
+    }
   };
 
   const handleNext = () => {
-    setCurrentIndex((prev) => (prev === avatars.length - 1 ? 0 : prev + 1));
-    onAvatarChange(avatars[currentIndex === avatars.length - 1 ? 0 : currentIndex + 1]);
+    if (!isUsingCustomImage) {
+      setCurrentIndex((prev) => (prev === avatars.length - 1 ? 0 : prev + 1));
+      onAvatarChange({
+        type: 'preset',
+        data: avatars[currentIndex === avatars.length - 1 ? 0 : currentIndex + 1]
+      });
+    }
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        setError("Please upload an image file");
+        return;
+      }
+
+      // Check file size (2MB limit)
+      if (file.size > 2 * 1024 * 1024) {
+        setError("Image must be smaller than 2MB");
+        return;
+      }
+
+      // FileReader is an API that handles the image uploads
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          setIsUsingCustomImage(true);
+          setError(''); // Clear any previous errors
+          onAvatarChange({
+            type: 'custom',
+            data: e.target.result as string,
+            contentType: file.type
+          });
+          // Reset file input after successful upload
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
+        }
+      };
+      reader.onerror = () => {
+        setError("Error reading file");
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const switchToPresets = () => {
+    setIsUsingCustomImage(false);
+    // Reset the file input value
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    onAvatarChange({
+      type: 'preset',
+      data: avatars[currentIndex]
+    });
   };
 
   return (
+    <div className="avatar-selection-container">
     <div className="avatar-selector-container">
+      {!isUsingCustomImage && (
       <button onClick={handlePrevious} className="avatar-nav-button left">
         <ChevronLeft className="avatar-nav-icon" />
       </button>
+      )}
       
       <div className="avatar-image-container">
         <img
-          src={avatars[currentIndex]}
+          src={selectedAvatar.data}
           alt="Character Avatar"
           className="avatar-image"
         />
       </div>
       
+      {!isUsingCustomImage && (
       <button onClick={handleNext} className="avatar-nav-button right">
         <ChevronRight className="avatar-nav-icon" />
       </button>
+      )}
+    </div>
+
+    <div className="avatar-controls mt-4">
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileUpload}
+          accept="image/*"
+          className="hidden"
+        />
+        
+        <div className="btn-group">
+          <button
+            type="button"
+            onClick={handleUploadClick}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors flex items-center gap-2 min-w-[180px]"
+          >
+            <Upload size={16} />
+            Upload Custom Avatar
+          </button>
+          
+          {isUsingCustomImage && (
+            <button
+              type="button"
+              onClick={switchToPresets}
+              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors min-w-[180px]"
+            >
+              Use Preset Avatars
+            </button>
+          )}
+        </div>
+
+        {error && (
+          <p className="text-red-500 text-sm mt-2 text-center">
+            {error}
+          </p>
+        )}
+      </div>
     </div>
   );
 };
@@ -234,7 +356,7 @@ export const BasicInfoSection: React.FC<SectionProps> = ({ character, onInputCha
           </label>
           <AvatarSelector
             selectedAvatar={character.basicInfo.avatar}
-            onAvatarChange={(avatar: string) => onInputChange('basicInfo', 'avatar', avatar)}
+            onAvatarChange={(avatar: AvatarData) => onInputChange('basicInfo', 'avatar', avatar)}
           />
         </div>
         </div>

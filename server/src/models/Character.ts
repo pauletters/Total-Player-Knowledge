@@ -50,7 +50,11 @@ interface BasicInfo {
   level: number;
   background: string;
   alignment: string;
-  avatar: string;
+  avatar: {
+    type: 'preset' | 'custom';         
+    data: string;         // URL for preset or base64 for custom
+    contentType?: string; // MIME type for custom images
+  };
 }
 
 // Spells Interface
@@ -163,7 +167,25 @@ const characterSchema = new Schema<CharacterDocument>(
       level: { type: Number, required: true, min: 1, max: 20 },
       background: { type: String },
       alignment: { type: String },
-      avatar: { type: String, required: false },
+      avatar: {
+        type: {
+          type: String,
+          enum: ['preset', 'custom'] as const,
+          default: 'preset',
+          required: true
+        },
+        data: {
+          type: String,
+          required: true
+        },
+        contentType: {
+          type: String,
+          // Only required when type is 'custom'
+          required: function(this: { type: string }) {
+            return this.type === 'custom';
+          }
+        }
+      }
     },
     attributes: {
       strength: { type: Number, default: 10 },
@@ -244,8 +266,22 @@ const characterSchema = new Schema<CharacterDocument>(
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
   },
-  { timestamps: true }
-);
+  { 
+    timestamps: true,
+    // Virtual getter for avatar URL
+    toJSON: {
+      virtuals: true,
+      transform: function(doc, ret) {
+        if (ret.basicInfo?.avatar?.type === 'custom') {
+          ret.basicInfo.avatarUrl = ret.basicInfo.avatar.data;
+        } else {
+          ret.basicInfo.avatarUrl = ret.basicInfo.avatar.data;
+        }
+        delete ret.basicInfo.avatar;
+        return ret;
+      }
+    }
+  });
 
 const Character = model<CharacterDocument>('Character', characterSchema);
 

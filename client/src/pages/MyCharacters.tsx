@@ -4,7 +4,7 @@ import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { useQuery } from '@apollo/client';
 import { GET_CHARACTERS } from '../utils/queries';
 import UserMenu from '../components/UserMenu';
-import DiceRoller from '../components/DiceRoller';
+import DiceRoller from '../components/DiceRoller/DiceRoller';
 
 interface Character {
   _id: string;

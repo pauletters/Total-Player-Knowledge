@@ -3,7 +3,7 @@ import { useQuery, gql } from '@apollo/client';
 import { Container, Card, Row, Col, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import UserMenu from '../components/UserMenu';
-import CreateCampaignModal from '../components/CreateCampaignModal';
+import CreateCampaignModal from '../components/Campaign/CreateCampaignModal';
 
 // GraphQL Query to Fetch Campaigns
 const GET_CAMPAIGNS = gql`

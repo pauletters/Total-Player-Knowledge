@@ -4,12 +4,12 @@ import App from './App.jsx'
 import About from './pages/about.js'
 import MyCharacters from './pages/MyCharacters.js'
 import MyCampaigns from './pages/MyCampaigns.js'
-import CharacterCreation from './components/CharacterCreation.js'
+import CharacterCreation from './components/CharacterCreation/CharacterCreation.js'
 import CharacterDetails from './components/CharacterDetails.js'
 import ProtectedRoute from './components/ProtectedRoute.js'
 import AuthService from './utils/auth.js'
-import DiceRoller from './components/DiceRoller.js'
-import CampaignDashboardWrapper from './components/CampaignDashboardWrapper.js'
+import DiceRoller from './components/DiceRoller/DiceRoller.js'
+import CampaignDashboardWrapper from './components/Campaign/CampaignDashboardWrapper.js'
 
 const router = createBrowserRouter([
   {

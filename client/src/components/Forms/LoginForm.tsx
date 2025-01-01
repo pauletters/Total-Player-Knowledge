@@ -1,48 +1,31 @@
+// see SignupForm.js for comments
 import { useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { Form, Button, Alert } from 'react-bootstrap';
 import { useMutation } from '@apollo/client';
-import { ADD_USER } from '../utils/mutations';
-import Auth from '../utils/auth';
+import { LOGIN_USER } from '../../utils/mutations';
+import Auth from '../../utils/auth';
 
-interface SignupFormProps {
+interface LoginFormProps {
   handleModalClose: () => void;
 }
 
-interface SignupFormData {
-  username: string;
+interface LoginFormData {
   email: string;
   password: string;
 }
 
 // biome-ignore lint/correctness/noEmptyPattern: <explanation>
-const SignupForm = ( { handleModalClose }: SignupFormProps) => {
-  // set initial form state
-  const [userFormData, setUserFormData] = useState<SignupFormData>({ username: '', email: '', password: '' });
-  // set state for form validation
+const LoginForm = ({ handleModalClose }: LoginFormProps) => {
+  const [userFormData, setUserFormData] = useState<LoginFormData>({ email: '', password: '' });
   const [validated, setValidated] = useState(false);
-  // set state for alert
   const [showAlert, setShowAlert] = useState(false);
-  const [alertMessage, setAlertMessage] = useState('');
 
-  const [addUser] = useMutation(ADD_USER, {
-    onError: (error) => {
-      console.log('Mutation error:', error);
-      const message = error.graphQLErrors?.[0]?.message || error.message || 'Something went wrong with your signup!';
-
-        setAlertMessage(message);
-        setShowAlert(true);
-    }
-  });
+  const [loginUser] = useMutation(LOGIN_USER);
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setUserFormData({ ...userFormData, [name]: value });
-
-    if (showAlert) {
-      setShowAlert(false);
-      setAlertMessage('');
-    }
   };
 
   const handleFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -51,62 +34,49 @@ const SignupForm = ( { handleModalClose }: SignupFormProps) => {
     // check if form has everything (as per react-bootstrap docs)
     const form = event.currentTarget;
     if (form.checkValidity() === false) {
+      event.preventDefault();
       event.stopPropagation();
       setValidated(true);
       return;
     }
 
     try {
-      const { data } = await addUser({
-        variables: {
-          username: userFormData.username,
+      const { data } = await loginUser({
+        variables: { 
           email: userFormData.email,
-          password: userFormData.password,
-        },
+          password: userFormData.password
+         },
       });
-
-      if (data?.addUser?.token) {
-        Auth.login(data.addUser.token);
+  
+      const token = data?.loginUser?.token;
+      if (token) {
+        Auth.login(token);
         handleModalClose();
+      } else {
+        throw new Error('Token not found!');
       }
     } catch (err) {
-      console.error('Form submission error:', err);
+      console.error(err);
+      setShowAlert(true);
     }
 
     setUserFormData({
-      username: '',
       email: '',
-      password: '',
+      password: ''
     });
   };
 
   return (
     <>
-      {/* This is needed for the validation functionality above */}
       <Form noValidate validated={validated} onSubmit={handleFormSubmit}>
-        {/* show alert if server response is bad */}
         <Alert dismissible onClose={() => setShowAlert(false)} show={showAlert} variant='danger'>
-          {alertMessage}
+          Something went wrong with your login credentials!
         </Alert>
-
-        <Form.Group className='mb-3'>
-          <Form.Label htmlFor='username'>Username</Form.Label>
-          <Form.Control
-            type='text'
-            placeholder='Your username'
-            name='username'
-            onChange={handleInputChange}
-            value={userFormData.username || ''}
-            required
-          />
-          <Form.Control.Feedback type='invalid'>Username is required!</Form.Control.Feedback>
-        </Form.Group>
-
         <Form.Group className='mb-3'>
           <Form.Label htmlFor='email'>Email</Form.Label>
           <Form.Control
-            type='email'
-            placeholder='Your email address'
+            type='text'
+            placeholder='Your email'
             name='email'
             onChange={handleInputChange}
             value={userFormData.email || ''}
@@ -128,7 +98,7 @@ const SignupForm = ( { handleModalClose }: SignupFormProps) => {
           <Form.Control.Feedback type='invalid'>Password is required!</Form.Control.Feedback>
         </Form.Group>
         <Button
-          disabled={!(userFormData.username && userFormData.email && userFormData.password)}
+          disabled={!(userFormData.email && userFormData.password)}
           type='submit'
           className="auth-submit-btn">
           Submit
@@ -138,4 +108,4 @@ const SignupForm = ( { handleModalClose }: SignupFormProps) => {
   );
 };
 
-export default SignupForm;
+export default LoginForm;

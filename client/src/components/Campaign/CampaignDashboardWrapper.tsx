@@ -1,8 +1,8 @@
 import React from 'react';
 import { useQuery, useMutation, gql } from '@apollo/client';
 import { useParams } from 'react-router-dom';
-import CampaignDashboard from '../pages/CampaignDashboard';
-import AuthService from '../utils/auth'; // Assuming this provides user information
+import CampaignDashboard from '../../pages/CampaignDashboard';
+import AuthService from '../../utils/auth'; // Assuming this provides user information
 
 // GraphQL Query to Fetch Campaign Data
 const GET_CAMPAIGN = gql`

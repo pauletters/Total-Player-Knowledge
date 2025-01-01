@@ -1,5 +1,5 @@
 import React from 'react';
-import { SectionProps } from '../types';
+import { SectionProps } from '../../types';
 
 export const CombatSection: React.FC<SectionProps> = ({ character, onInputChange }) => {
   return (

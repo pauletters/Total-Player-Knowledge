@@ -1,8 +1,8 @@
 import User from '../models/User.js';
 import Character from '../models/Character.js';
-import { ISpell } from '../models/Character.js';
 import Campaign from '../models/Campaign.js';
 import { signToken, AuthenticationError } from '../utils/auth.js';
+import { compressImage, validateImage } from '../utils/imageUtils.js';
 import { GraphQLError } from 'graphql';
 import mongoose from 'mongoose';
 
@@ -26,7 +26,7 @@ interface AddCharacterArgs {
     level: number;
     background?: string;
     alignment?: string;
-    avatar: string;
+    avatar: AvatarInput;
   };
   attributes: {
     strength: number;
@@ -53,6 +53,12 @@ interface AddCharacterArgs {
 
 interface UpdateCharacterArgs extends Partial<AddCharacterArgs> {
   id: string;
+}
+
+interface AvatarInput{
+  type: 'preset' | 'custom';
+  data: string;
+  contentType?: string;
 }
 
 interface AddCampaignArgs {
@@ -202,10 +208,43 @@ const resolvers = {
         throw new AuthenticationError('Not logged in');
       }
 
+      try {
+        // Handle avatar processing
+        const avatarInput = input.basicInfo.avatar;
+        let processedAvatar: AvatarInput = {
+          type: 'preset' as const,
+          data: '../assets/avatar1.png'
+        };
+        
+        if (avatarInput) {
+          if (avatarInput.type === 'custom' && avatarInput.data) {
+            const validation = validateImage(avatarInput.data);
+            if (!validation.isValid) {
+              throw new GraphQLError(validation.error || 'Invalid image');
+            }
+        
+            const compressedImage = await compressImage(avatarInput.data);
+            processedAvatar = {
+              type: 'custom' as const,
+              data: compressedImage,
+              contentType: validation.mimeType
+            } satisfies AvatarInput;
+          } else if (avatarInput.type === 'preset') {
+            processedAvatar = {
+              type: 'preset' as const,
+              data: avatarInput.data
+            } satisfies AvatarInput;
+          }
+        }
+
       const newCharacter = await Character.create({
         ...input,
         player: context.user._id,
         private: input.private ?? true, // Default to true if not provided
+        basicInfo: {
+          ...input.basicInfo,
+          avatar: processedAvatar
+        }
       });
 
       await User.findByIdAndUpdate(
@@ -215,6 +254,13 @@ const resolvers = {
       );
 
       return newCharacter;
+    } catch (error) {
+      console.error('Error creating character:', error);
+      throw new GraphQLError(
+        error instanceof Error ? error.message : 'Error creating character',
+        { extensions: { code: 'BAD_USER_INPUT' } }
+      );
+    }
     },
 
     updateCharacter: async (_parent: unknown, { input }: { input: UpdateCharacterArgs }, context: Context) => {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { AttributesSectionProps } from '../types';
+import { AttributesSectionProps } from '../../types';
 
 export const AttributesSection: React.FC<AttributesSectionProps> = ({ 
   character, 

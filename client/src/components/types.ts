@@ -7,7 +7,7 @@ export interface CharacterData {
     level: number;
     background: string;
     alignment: string;
-    avatar: string;
+    avatar: AvatarData;
   };
   attributes: {
     strength: number;
@@ -78,4 +78,10 @@ export interface Equipment {
   weight?: number;
   description?: string[];
   properties?: string[];
+}
+
+export interface AvatarData {
+  type: 'preset' | 'custom';
+  data: string;
+  contentType?: string;
 }

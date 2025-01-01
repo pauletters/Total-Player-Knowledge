@@ -1,5 +1,5 @@
 import React from 'react';
-import { CharacterData } from '../types';
+import { CharacterData } from '../../types';
 
 // D&D 5e Skills with their corresponding ability scores
 const skillOptions = [

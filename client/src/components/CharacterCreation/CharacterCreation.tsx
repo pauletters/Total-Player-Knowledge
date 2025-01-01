@@ -5,9 +5,9 @@ import { BasicInfoSection } from './CharacterCreationSections/BasicInfoSection';
 import { AttributesSection } from './CharacterCreationSections/AttributesSection';
 import { CombatSection } from './CharacterCreationSections/CombatSection';
 import { SkillsSection } from './CharacterCreationSections/SkillsSection';
-import { CharacterData } from './types';
-import { ADD_CHARACTER } from '../utils/mutations';
-import { GET_CHARACTERS } from '../utils/queries';
+import { CharacterData } from '../types';
+import { ADD_CHARACTER } from '../../utils/mutations';
+import { GET_CHARACTERS } from '../../utils/queries';
 
 const initialCharacterState: CharacterData = {
   basicInfo: {
@@ -17,7 +17,10 @@ const initialCharacterState: CharacterData = {
     level: 1,
     background: '',
     alignment: '',
-    avatar: '../assets/avatar1.png',
+    avatar: {
+      type: 'preset',
+      data: '../assets/avatar1.png'
+    },
   },
   attributes: {
     strength: 10,
@@ -134,16 +137,16 @@ const CharacterSheet: React.FC = () => {
         onInputChange={handleInputChange}
       />
 
-      <div className="flex justify-end mt-6 space-x-4">
+      <div className=" btn-group">
       <button 
           onClick={handleSaveCharacter}
-          className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+          className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors min-w-[140px]"
         >
           Save Character
         </button>
         <button 
           onClick={handleCancelCharacter}
-          className="display grid px-6 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+          className="btn-group"
         >
           Cancel
         </button>

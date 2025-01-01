@@ -1,5 +1,5 @@
 import React from 'react';
-import CharacterSheet from '../components/CharacterCreation';
+import CharacterSheet from '../components/CharacterCreation/CharacterCreation';
 
 const CharacterSheetPage: React.FC = () => {
   return (

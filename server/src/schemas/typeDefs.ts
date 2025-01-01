@@ -7,6 +7,12 @@ const typeDefs = `
         campaigns: [Campaign!]!
     }
 
+     type AvatarInfo {
+        type: String!
+        data: String!
+        contentType: String
+    }
+
     type BasicInfo {
         name: String!
         race: String!
@@ -14,7 +20,7 @@ const typeDefs = `
         level: Int!
         background: String
         alignment: String
-        avatar: String
+        avatar: AvatarInfo
     }
 
     type Attributes {
@@ -122,6 +128,12 @@ const typeDefs = `
         deleteCampaign(id: ID!): Campaign
     }
 
+    input AvatarInput {
+        type: String!
+        data: String!
+        contentType: String
+    }
+
     input BasicInfoInput {
         name: String!
         race: String!
@@ -129,7 +141,7 @@ const typeDefs = `
         level: Int!
         background: String
         alignment: String
-        avatar: String
+        avatar: AvatarInput
     }
 
     input AttributesInput {
