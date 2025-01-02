@@ -136,6 +136,11 @@ const CharacterDetails: React.FC = () => {
     return modifier >= 0 ? `+${modifier}` : `${modifier}`;
   };
 
+  const getProficiencyBonus = (level: number): number => {
+    const proficiencyBonus = Math.ceil(level / 4) + 1;
+    return proficiencyBonus;
+  };  
+
   if (isLoading) {
     return (
       <Container className="py-4">
@@ -161,6 +166,78 @@ const CharacterDetails: React.FC = () => {
 
   const character = data.character;
 
+  const proficiencyBonus = getProficiencyBonus(character.basicInfo.level);
+
+  const attributeMods = {
+    strengthMod: Number(getModifier(character.attributes.strength)),
+    dexterityMod: Number(getModifier(character.attributes.dexterity)),
+    constitutionMod: Number(getModifier(character.attributes.constitution)),
+    intelligenceMod: Number(getModifier(character.attributes.intelligence)),
+    wisdomMod: Number(getModifier(character.attributes.wisdom)),
+    charismaMod: Number(getModifier(character.attributes.charisma)),
+  }
+
+  const skillMods = {
+    athleticsMod: attributeMods.strengthMod + (
+      character.skills.proficiencies.includes('Athletics') ? proficiencyBonus : 0
+    ),
+    animalHandlingMod: attributeMods.wisdomMod + (
+      character.skills.proficiencies.includes('Animal Handling') ? proficiencyBonus : 0
+    ),
+    arcanaMod: attributeMods.intelligenceMod + (
+      character.skills.proficiencies.includes('Arcana') ? proficiencyBonus : 0
+    ),
+    acrobaticsMod: attributeMods.dexterityMod + (
+      character.skills.proficiencies.includes('Acrobatics') ? proficiencyBonus : 0
+    ),
+    deceptionMod: attributeMods.charismaMod + (
+      character.skills.proficiencies.includes('Deception') ? proficiencyBonus : 0
+    ),
+    historyMod: attributeMods.intelligenceMod + (
+      character.skills.proficiencies.includes('History') ? proficiencyBonus : 0
+    ),
+    insightMod: attributeMods.wisdomMod + (
+      character.skills.proficiencies.includes('Insight') ? proficiencyBonus : 0
+    ),
+    intimidationMod: attributeMods.charismaMod + (
+      character.skills.proficiencies.includes('Intimidation') ? proficiencyBonus : 0
+    ),
+    investigationMod: attributeMods.intelligenceMod + (
+      character.skills.proficiencies.includes('Investigation') ? proficiencyBonus : 0
+    ),
+    medicineMod: attributeMods.wisdomMod + (
+      character.skills.proficiencies.includes('Medicine') ? proficiencyBonus : 0
+    ),
+    natureMod: attributeMods.intelligenceMod + (
+      character.skills.proficiencies.includes('Nature') ? proficiencyBonus : 0
+    ),
+    perceptionMod: attributeMods.wisdomMod + (
+      character.skills.proficiencies.includes('Perception') ? proficiencyBonus : 0
+    ),
+    performanceMod: attributeMods.charismaMod + (
+      character.skills.proficiencies.includes('Performance') ? proficiencyBonus : 0
+    ),
+    persuasionMod: attributeMods.charismaMod + (
+      character.skills.proficiencies.includes('Persuasion') ? proficiencyBonus : 0
+    ),
+    religionMod: attributeMods.intelligenceMod + (
+      character.skills.proficiencies.includes('Religion') ? proficiencyBonus : 0
+    ),
+    sleightofHandMod: attributeMods.dexterityMod + (
+      character.skills.proficiencies.includes('Sleight of Hand') ? proficiencyBonus : 0
+    ),
+    stealthMod: attributeMods.dexterityMod + (
+      character.skills.proficiencies.includes('Stealth') ? proficiencyBonus : 0
+    ),
+    survivalMod: attributeMods.wisdomMod + (
+      character.skills.proficiencies.includes('Survival') ? proficiencyBonus : 0
+    ),
+  }
+  console.log(character.skills.proficiencies);
+  console.log(proficiencyBonus);
+  console.log(attributeMods);
+  console.log(skillMods);
+
   return (
     <Container className="py-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
@@ -183,7 +260,6 @@ const CharacterDetails: React.FC = () => {
                     <p><strong>Race:</strong> {character.basicInfo.race}</p>
                     <p><strong>Background:</strong> {character.basicInfo.background}</p>
                     <p><strong>Alignment:</strong> {character.basicInfo.alignment}</p>
-                    {/* <p><strong>Experience:</strong> {character.experience}</p> */}
                   </Card.Body>
                 </Card>
               </Col>
@@ -196,8 +272,7 @@ const CharacterDetails: React.FC = () => {
                     <p><strong>Initiative:</strong> +{character.combat.initiative}</p>
                     <p><strong>Speed:</strong> {character.combat.speed} ft.</p>
                     <p><strong>Hit Points:</strong> {character.combat.hitPoints}/{character.combat.hitPoints}</p>
-                    {/* <p><strong>Temporary HP:</strong> {character.hitPoints.temporary}</p>
-                    <p><strong>Proficiency Bonus:</strong> +{character.proficiencyBonus}</p> */}
+                    <p><strong>Proficiency Bonus:</strong> +{proficiencyBonus}</p>
                   </Card.Body>
                 </Card>
               </Col>
