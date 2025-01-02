@@ -4,6 +4,7 @@ import { ISpell } from '../models/Character.js';
 import Campaign from '../models/Campaign.js';
 import { signToken, AuthenticationError } from '../utils/auth.js';
 import { GraphQLError } from 'graphql';
+import mongoose from 'mongoose';
 
 // Interfaces
 interface AddUserArgs {
@@ -25,6 +26,7 @@ interface AddCharacterArgs {
     level: number;
     background?: string;
     alignment?: string;
+    avatar: string;
   };
   attributes: {
     strength: number;
@@ -63,7 +65,10 @@ interface UpdateCampaignArgs {
   id: string;
   name?: string;
   description?: string;
-  players?: string[];
+  addPlayers?: string[];
+  removePlayers?: string[];
+  addMilestones?: string[]; // Array of milestones to add
+  removeMilestoneIndex?: number; // Index of the milestone to remove
 }
 
 interface Context {
@@ -115,6 +120,8 @@ const resolvers = {
         throw new AuthenticationError('Not logged in');
       }
       const character = await Character.findOne({ _id: id, player: context.user._id });
+      console.log('Character from DB:', JSON.stringify(character, null, 2));
+      
       if (!character) {
         throw new GraphQLError('Character not found or unauthorized', {
           extensions: { code: 'NOT_FOUND' },
@@ -122,6 +129,7 @@ const resolvers = {
       }
       return character;
     },
+  
 
     campaigns: async (_parent: unknown, _args: unknown, context: Context) => {
       if (!context.user) {
@@ -150,7 +158,6 @@ const resolvers = {
       return Campaign.findById(id)
         .populate({
           path: 'players',
-          match: { private: false }, // Include only public characters
           populate: { path: 'player', select: 'username' },
         })
         .populate('createdBy', 'username')
@@ -170,6 +177,12 @@ const resolvers = {
 
       return users;
     },
+  },
+
+  Character: {
+    classFeatures: (parent: any) => {
+      return parent.classFeatures || [];
+    }
   },
 
   Mutation: {
@@ -197,7 +210,7 @@ const resolvers = {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-
+        
       const newCharacter = await Character.create({
         ...input,
         player: context.user._id,
@@ -230,6 +243,88 @@ const resolvers = {
       }
 
       return updatedCharacter;
+    },
+
+    updateCharacterSpells: async (
+      _parent: unknown,
+      { id, spells }: UpdateSpellsArgs,
+      context: Context
+    ) => {
+      console.log('Starting updateCharacterSpells with:', { id, spells });
+
+      if (!context.user) {
+        throw new AuthenticationError('Not logged in');
+      }
+
+      if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+        throw new GraphQLError('Invalid character ID', {
+          extensions: { code: 'BAD_USER_INPUT' },
+        });
+      }
+
+      // Clean and validate each spell
+      const cleanedSpells = spells.map(spell => {
+        if (!spell || typeof spell !== 'object') {
+          throw new GraphQLError('Invalid spell object', {
+            extensions: { code: 'BAD_USER_INPUT' },
+          });
+        }
+
+        if (!spell.name || typeof spell.name !== 'string') {
+          throw new GraphQLError('Spell name is required and must be a string', {
+            extensions: { code: 'BAD_USER_INPUT' },
+          });
+        }
+
+        if (typeof spell.level !== 'number' || spell.level < 0 || spell.level > 9) {
+          throw new GraphQLError('Spell level must be a number between 0 and 9', {
+            extensions: { code: 'BAD_USER_INPUT' },
+          });
+        }
+
+        return {
+          name: spell.name.trim(),
+          level: spell.level,
+          prepared: Boolean(spell.prepared)
+        };
+      });
+
+      try {
+        console.log('Looking for character:', { id, userId: context.user._id });
+
+        const character = await Character.findOneAndUpdate(
+          { _id: id, player: context.user._id },
+          { $set: { spells: cleanedSpells } },
+          { 
+            new: true, 
+            runValidators: true,
+            lean: false 
+          }
+        );
+
+        if (!character) {
+          throw new GraphQLError('Character not found or unauthorized', {
+            extensions: { code: 'NOT_FOUND' },
+          });
+        }
+
+        console.log('Updated character:', {
+          id: character._id,
+          spellCount: character.spells?.length || 0
+        });
+
+        return character;
+
+      } catch (error) {
+        console.error('Error in updateCharacterSpells:', error);
+        if (error instanceof GraphQLError) {
+          throw error;
+        }
+        throw new GraphQLError(
+          'Failed to update spells: ' + (error instanceof Error ? error.message : 'Unknown error'),
+          { extensions: { code: 'INTERNAL_SERVER_ERROR' } }
+        );
+      }
     },
 
     updateCharacterEquipment: async (
@@ -316,25 +411,89 @@ const resolvers = {
         .exec();
     },
 
-    updateCampaign: async (_parent: unknown, { id, name, description, players }: UpdateCampaignArgs, context: Context) => {
+    updateCampaign: async (
+      _parent: unknown,
+      { id, name, description, addPlayers, removePlayers, addMilestones, removeMilestoneIndex }: UpdateCampaignArgs,
+      context: Context
+    ) => {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-
-      const updatedCampaign = await Campaign.findOneAndUpdate(
-        { _id: id, createdBy: context.user._id },
-        { $set: { name, description, players } },
-        { new: true }
-      );
-
-      if (!updatedCampaign) {
+    
+      // Fetch campaign with validation
+      const campaign = await Campaign.findOne({ _id: id, createdBy: context.user._id });
+    
+      if (!campaign) {
         throw new GraphQLError('Campaign not found or unauthorized', {
           extensions: { code: 'NOT_FOUND' },
         });
       }
-
-      return updatedCampaign;
+    
+      // Add players if provided
+      if (addPlayers) {
+        const validAdditions = await Character.find({ _id: { $in: addPlayers } });
+        if (validAdditions.length !== addPlayers.length) {
+          throw new GraphQLError('Some character IDs in addPlayers are invalid', {
+            extensions: { code: 'BAD_USER_INPUT' },
+          });
+        }
+        // Ensure immutability by creating a new array
+        campaign.players = [
+          ...campaign.players.map((player) => player.toString()),
+          ...validAdditions.map((char) => char._id.toString()),
+        ];
+      }
+    
+      // Remove players if provided
+      if (removePlayers) {
+        // Ensure immutability by creating a new array
+        campaign.players = campaign.players
+          .map((player) => player.toString())
+          .filter((playerId) => !removePlayers.includes(playerId));
+      }
+    
+      // Add milestones if provided
+      if (addMilestones) {
+        campaign.milestones.push(...addMilestones);
+      }
+    
+      // Remove milestone by index if provided
+      if (typeof removeMilestoneIndex === 'number') {
+        if (
+          removeMilestoneIndex < 0 ||
+          removeMilestoneIndex >= campaign.milestones.length
+        ) {
+          throw new GraphQLError('Invalid milestone index', {
+            extensions: { code: 'BAD_USER_INPUT' },
+          });
+        }
+        campaign.milestones.splice(removeMilestoneIndex, 1);
+      }
+    
+      // Update name and description if provided
+      if (name) {
+        campaign.name = name;
+      }
+    
+      if (description) {
+        campaign.description = description;
+      }
+    
+      // Save campaign and populate required fields
+      const updatedCampaign = await campaign.save();
+    
+      return updatedCampaign.populate([
+        {
+          path: 'players',
+          populate: { path: 'player', select: 'username' },
+        },
+        {
+          path: 'createdBy',
+          select: '_id username',
+        },
+      ]);
     },
+    
 
     deleteCampaign: async (_parent: unknown, { id }: { id: string }, context: Context) => {
       if (!context.user) {

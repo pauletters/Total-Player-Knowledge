@@ -14,6 +14,7 @@ const typeDefs = `
         level: Int!
         background: String
         alignment: String
+        avatar: String
     }
 
     type Attributes {
@@ -57,6 +58,12 @@ const typeDefs = `
         properties: [String!]
     }
 
+    type ClassFeature {
+        name: String
+        description: String
+        levelRequired: Int
+    }
+
     type Character {
         _id: ID!
         player: User!
@@ -66,6 +73,7 @@ const typeDefs = `
         skills: Skills
         equipment: [Equipment!]
         spells: [Spell!]!
+        classFeatures: [ClassFeature]
         private: Boolean!
         createdAt: String!
         updatedAt: String!
@@ -109,11 +117,14 @@ const typeDefs = `
         ): Campaign
 
         updateCampaign(
-            id: ID!
-            name: String
-            description: String
-            players: [ID!]
-        ): Campaign
+    id: ID!
+    name: String
+    description: String
+    addPlayers: [ID!]
+    removePlayers: [ID!]
+    addMilestones: [String!]
+    removeMilestoneIndex: Int
+  ): Campaign
 
         deleteCampaign(id: ID!): Campaign
     }
@@ -125,6 +136,7 @@ const typeDefs = `
         level: Int!
         background: String
         alignment: String
+        avatar: String
     }
 
     input AttributesInput {

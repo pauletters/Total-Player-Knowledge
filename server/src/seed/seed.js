@@ -52,7 +52,10 @@ const seedDatabase = async () => {
         attributes: { strength: 15, dexterity: 12, constitution: 14, intelligence: 10, wisdom: 10, charisma: 8 },
         combat: { armorClass: 16, hitPoints: 50, initiative: 0, speed: 30 },
         skills: { proficiencies: ['Athletics', 'Perception'], savingThrows: ['Strength', 'Constitution'] },
-        equipment: ['Sword', 'Shield'],
+        equipment: [
+          { name: 'Sword', category: 'Weapon', weight: 3 },
+          { name: 'Shield', category: 'Armor', weight: 6 },
+        ],
         spells: [],
         private: i % 2 === 0, // Alternate private flag
       });
@@ -70,7 +73,10 @@ const seedDatabase = async () => {
         attributes: { strength: 8, dexterity: 14, constitution: 10, intelligence: 18, wisdom: 12, charisma: 10 },
         combat: { armorClass: 14, hitPoints: 30, initiative: 1, speed: 30 },
         skills: { proficiencies: ['Arcana', 'Investigation'], savingThrows: ['Intelligence', 'Wisdom'] },
-        equipment: ['Staff', 'Spellbook'],
+        equipment: [
+          { name: 'Staff', category: 'Weapon', weight: 4 },
+          { name: 'Spellbook', category: 'Misc', weight: 2 },
+        ],
         spells: [
           { name: 'Fireball', level: 3, prepared: true },
           { name: 'Magic Missile', level: 1, prepared: false },
