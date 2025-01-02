@@ -15,6 +15,7 @@ import SpellCard from './Spells/SpellCard';
 import SpellModal from './Spells/SpellSelection';
 import EquipmentModal from './Equipment/EquipmentSelection';
 import BackgroundTab from './BackgroundTab';
+import ClassFeaturesTab from './ClassFeaturesTab';
 
 interface CharacterParams {
   characterId: string;
@@ -39,10 +40,12 @@ interface APIEquipment {
   properties?: APIEquipmentProperty[];
 }
 
+
+
 const CharacterDetails: React.FC = () => {
   const { characterId } = useParams<keyof CharacterParams>() as CharacterParams;
   const navigate = useNavigate();
-  type TabKey = 'details' | 'spells' | 'equipment' | 'background' | 'diceRoller';
+  type TabKey = 'details' | 'spells' | 'equipment' | 'background' | 'classFeatures';
   const [activeTab, setActiveTab] = useState<TabKey>('details');
   const { loading: isLoading, error, data } = useQuery<{ character: CharacterData }>(GET_CHARACTER, {
     variables: { id: characterId },
@@ -532,24 +535,31 @@ const CharacterDetails: React.FC = () => {
               </Col>
 
               <Col md={6}>
-          <Card>
-            <Card.Header>Features & Traits</Card.Header>
-            <Card.Body>
-              {character.classFeatures && character.classFeatures.length > 0 ? (
-                <ul className="list-unstyled">
-                  {character.classFeatures.map((feature, index) => (
-                    <li key={index}>
-                      <strong>{feature.name}</strong> ({feature.levelRequired} Level)
-                      <div className="small text-muted">{feature.description}</div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-center">No class features available.</p>
-              )}
-            </Card.Body>
-          </Card>
-        </Col>
+                <Card>
+                  <Card.Header>Features & Traits</Card.Header>
+                    <Card.Body>
+                      {character.classFeatures && character.classFeatures.length > 0 ? (
+                        <ul className="list-unstyled">
+                          {character.classFeatures.map((feature, index) => (
+                            <li key={index} className="mb-3">
+                              <strong>{feature.name}</strong> ({feature.levelRequired} Level)
+                              <div className="small text-muted">{feature.description}</div>
+                              {feature.selections && feature.selections.length > 0 && (
+                                <div className="mt-1 small">
+                                  <span className="text-success">
+                                    Selected: {feature.selections.map(selection => selection.selectedOption).join(', ')}
+                                  </span>
+                                </div>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-center">No class features available.</p>
+                      )}
+                    </Card.Body>
+                  </Card>
+              </Col>
             </Row>
           )}
 
@@ -721,6 +731,16 @@ const CharacterDetails: React.FC = () => {
             </Card.Body>
           </Card>
           )}
+          {activeTab === 'classFeatures' && (
+            <Card>
+              <Card.Header>Class Features</Card.Header>
+              <ClassFeaturesTab 
+                characterClass={character.basicInfo.class}
+                characterLevel={character.basicInfo.level}
+                characterId={characterId}
+              />
+            </Card>
+          )}
         </div>
 
         <div className="character-tabs">
@@ -755,6 +775,14 @@ const CharacterDetails: React.FC = () => {
                 onClick={() => setActiveTab('background')}
               >
                 Background
+              </Nav.Link>
+            </Nav.Item>
+            <Nav.Item>
+              <Nav.Link 
+                active={activeTab === 'classFeatures'}
+                onClick={() => setActiveTab('classFeatures')}
+              >
+                Class Features
               </Nav.Link>
             </Nav.Item>
           </Nav>

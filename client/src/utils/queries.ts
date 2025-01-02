@@ -75,6 +75,27 @@ export const GET_CHARACTER = gql`
         name
         description
         levelRequired
+        selections {
+          featureName
+          selectedOption
+        }
+      }
+    }
+  }
+`;
+
+export const GET_CHARACTER_FEATURES = gql`
+  query GetCharacterFeatures($characterId: ID!) {
+    character(id: $characterId) {
+      _id
+      classFeatures {
+        name
+        description
+        levelRequired
+        selections {
+          featureName
+          selectedOption
+        }
       }
     }
   }

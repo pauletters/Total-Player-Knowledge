@@ -172,3 +172,43 @@ export const UPDATE_CAMPAIGN = gql`
     }
   }
 `;
+
+export const UPDATE_CHARACTER_FEATURES = gql`
+  mutation UpdateCharacterFeatures($characterId: ID!, $features: [FeatureSelectionInput!]!) {
+    updateCharacterFeatures(characterId: $characterId, features: $features) {
+      _id
+      basicInfo {
+        name
+        class
+        level
+      }
+      classFeatures {
+        name
+        description
+        levelRequired
+        selections {
+          featureName
+          selectedOption
+        }
+      }
+    }
+  }
+`;
+
+export const UPDATE_CHARACTER_PROFICIENCIES = gql`
+  mutation UpdateCharacterProficiencies($id: ID!, $proficiencies: [ProficiencySelectionInput!]!) {
+    updateCharacterProficiencies(id: $id, proficiencies: $proficiencies) {
+      _id
+      skills {
+        proficiencies
+      }
+      classFeatures {
+        name
+        selections {
+          featureName
+          selectedOption
+        }
+      }
+    }
+  }
+`;
