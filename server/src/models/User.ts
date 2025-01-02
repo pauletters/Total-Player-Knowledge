@@ -6,6 +6,11 @@ export interface UserDocument {
   username: string;
   email: string;
   password: string;
+  characters: string[]; // Array of Character IDs (reference)
+  campaigns: string[]; // Array of Campaign IDs (reference)
+  createdAt?: Date;
+  updatedAt?: Date;
+  lastLogin?: Date;
   isCorrectPassword(password: string): Promise<boolean>;
 }
 
@@ -27,14 +32,30 @@ const userSchema = new Schema<UserDocument>(
       type: String,
       required: true,
     },
+    characters: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Character', // Reference to the Character model
+      },
+    ],
+    campaigns: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Campaign', // Reference to the Campaign model
+      },
+    ],
+    lastLogin: {
+      type: Date,
+    },
   },
-  // set this to use virtual below
   {
+    timestamps: true, // Automatically add `createdAt` and `updatedAt`
     toJSON: {
       virtuals: true,
     },
   }
 );
+
 
 // hash user password
 userSchema.pre('save', async function (next) {
@@ -52,5 +73,6 @@ userSchema.methods.isCorrectPassword = async function (password: string) {
 };
 
 const User = model<UserDocument>('User', userSchema);
+
 
 export default User;

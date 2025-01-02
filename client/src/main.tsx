@@ -1,14 +1,15 @@
 import ReactDOM from 'react-dom/client'
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
-import 'bootstrap/dist/css/bootstrap.min.css'
-
 import App from './App.jsx'
 import About from './pages/about.js'
-import CreateCharacter from './pages/CreateCharacter.js'
 import MyCharacters from './pages/MyCharacters.js'
 import MyCampaigns from './pages/MyCampaigns.js'
+import CharacterCreation from './components/CharacterCreation.js'
+import CharacterDetails from './components/CharacterDetails.js'
 import ProtectedRoute from './components/ProtectedRoute.js'
 import AuthService from './utils/auth.js'
+import DiceRoller from './components/DiceRoller.js'
+import CampaignDashboardWrapper from './components/CampaignDashboardWrapper.js'
 
 const router = createBrowserRouter([
   {
@@ -18,25 +19,51 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: AuthService.loggedIn() ? <Navigate to="/create-character" replace /> : <About />
+        element: AuthService.loggedIn() ? <Navigate to="/my-characters" replace /> : <About />
       },
       {
         path: 'about',
         element: <About />
       },
       {
-        path: 'create-character',
-        element: (
-          <ProtectedRoute>
-            <CreateCharacter />
-          </ProtectedRoute>
-        )
-      },
-      {
         path: 'my-characters',
         element: (
           <ProtectedRoute>
             <MyCharacters />
+          </ProtectedRoute>
+        ),
+        children: [
+          {
+            path: 'character-creation',
+            element: (
+              <ProtectedRoute>
+                <CharacterCreation />
+              </ProtectedRoute>
+            )
+          },
+          {
+            path: ':characterId',
+            element: (
+              <ProtectedRoute>
+                <CharacterDetails />
+              </ProtectedRoute>
+            )
+          },
+          {
+            path: 'dice-roller',
+            element: (
+              <ProtectedRoute>
+                <DiceRoller />
+              </ProtectedRoute>
+            )
+          }
+        ]
+      },
+      {
+        path: 'character-sheet',
+        element: (
+          <ProtectedRoute>
+            <CharacterCreation />
           </ProtectedRoute>
         )
       },
@@ -47,7 +74,16 @@ const router = createBrowserRouter([
             <MyCampaigns />
           </ProtectedRoute>
         )
-      }
+      },
+      {
+        path: 'my-campaigns/:campaignId',
+        element: (
+          <ProtectedRoute>
+            <CampaignDashboardWrapper />
+          </ProtectedRoute>
+        ),
+      },
+      
     ]
   }
 ]);
