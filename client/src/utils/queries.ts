@@ -71,6 +71,11 @@ export const GET_CHARACTER = gql`
         level
         prepared
       }
+      classFeatures {
+        name
+        description
+        levelRequired
+      }
     }
   }
 `;

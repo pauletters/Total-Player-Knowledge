@@ -58,6 +58,12 @@ const typeDefs = `
         properties: [String!]
     }
 
+    type ClassFeature {
+        name: String
+        description: String
+        levelRequired: Int
+    }
+
     type Character {
         _id: ID!
         player: User!
@@ -67,6 +73,7 @@ const typeDefs = `
         skills: Skills
         equipment: [Equipment!]
         spells: [Spell!]!
+        classFeatures: [ClassFeature]
         private: Boolean!
         createdAt: String!
         updatedAt: String!

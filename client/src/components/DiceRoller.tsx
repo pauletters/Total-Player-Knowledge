@@ -125,7 +125,7 @@ const DiceRoller: React.FC = () => {
   };
 
   return (
-    <Card style={{ maxWidth: '48rem', margin: '0 auto' }}>
+    <Card style={{ maxWidth: '48rem', margin: '0 auto', backgroundColor: '#3a3a3a', color: '#fff' }}>
       <Card.Header>
         <Card.Title>3D Dice Roller</Card.Title>
       </Card.Header>
@@ -162,7 +162,7 @@ const DiceRoller: React.FC = () => {
             {isRolling ? 'Rolling...' : `Roll ${numberOfDice} ${selectedDie.name}`}
           </Button>
 
-          <Button
+          <Button  style={{color: 'white'}}
             variant="outline-secondary"
             onClick={clearHistory}
             disabled={rollHistory.length === 0 || isRolling}
@@ -183,7 +183,7 @@ const DiceRoller: React.FC = () => {
         )}
 
         <div>
-          <h3 className="mb-3">Roll History</h3>
+          <h3 className="mb-3" style={{color: 'white'}}>Roll History</h3>
           {rollHistory.length === 0 ? (
             <p className="text-secondary">No rolls yet</p>
           ) : (
@@ -193,13 +193,13 @@ const DiceRoller: React.FC = () => {
                   key={roll.id} 
                   className="d-flex justify-content-between align-items-center bg-light p-2 rounded"
                 >
-                  <div>
+                  <div style={{color: 'black'}}>
                     <span className="fw-medium">{roll.numberOfDice} {roll.die}</span>
                     <span className="ms-2 text-secondary">
                       Rolls: {roll.rolls.join(', ')}
                     </span>
                   </div>
-                  <div className="d-flex align-items-center gap-2">
+                  <div className="d-flex align-items-center gap-2" style={{color: 'black'}}>
                     <span className="fw-bold">Total: {roll.total}</span>
                     <span className="text-secondary small">{roll.timestamp}</span>
                   </div>

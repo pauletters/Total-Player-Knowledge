@@ -309,7 +309,7 @@ const CharacterDetails: React.FC = () => {
           )}
         </div>
         <h1>{character.basicInfo.name}</h1>
-        <Button variant="outline-secondary" onClick={() => navigate('/my-characters')}>
+        <Button variant="outline-secondary" onClick={() => navigate('/my-characters')} style={{ backgroundColor: '#0d6efd', color: 'white' }}>
           Back to Characters
         </Button>
       </div>
@@ -378,17 +378,24 @@ const CharacterDetails: React.FC = () => {
               </Col>
 
               <Col md={6}>
-                <Card>
-                  <Card.Header>Features & Traits</Card.Header>
-                  <Card.Body>
-                    {/* <ul className="list-unstyled">
-                      {character.features.map((feature, index) => (
-                        <li key={index}>{feature}</li>
-                      ))}
-                    </ul> */}
-                  </Card.Body>
-                </Card>
-              </Col>
+          <Card>
+            <Card.Header>Features & Traits</Card.Header>
+            <Card.Body>
+              {character.classFeatures && character.classFeatures.length > 0 ? (
+                <ul className="list-unstyled">
+                  {character.classFeatures.map((feature, index) => (
+                    <li key={index}>
+                      <strong>{feature.name}</strong> ({feature.levelRequired} Level)
+                      <div className="small text-muted">{feature.description}</div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-center">No class features available.</p>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
             </Row>
           )}
 

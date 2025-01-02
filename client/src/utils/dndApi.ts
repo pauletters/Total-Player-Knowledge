@@ -141,6 +141,17 @@ export const dndApi = {
       }
     },
 
+    async getClassFeatures(className: string) {
+      try {
+        const formattedClassName = className.toLowerCase();
+        const response = await fetchFromApi<ApiResponse<any>>(`/classes/${formattedClassName}/levels/1`);
+        return response;
+      } catch (error) {
+        console.error(`Error fetching features for class ${className}:`, error);
+        throw error;
+      }
+    },
+
   // Rules and mechanics
   getConditions: () => fetchFromApi('/conditions'),
   getRules: () => fetchFromApi('/rules'),
@@ -149,6 +160,7 @@ export const dndApi = {
   // Features and traits
   getFeatures: () => fetchFromApi('/features'),
   getTraits: () => fetchFromApi('/traits'),
+  getClassTraits: () => fetchFromApi('/classes'),
 
   // Abilities and skills
   getAbilityScores: () => fetchFromApi('/ability-scores'),

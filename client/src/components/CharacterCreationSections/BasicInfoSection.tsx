@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { SectionProps } from '../types';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import '../../styles/avatar.css';
+import '../../styles/main.css';
 
 const raceOptions = [
   'Dragonborn', 'Dwarf', 'Elf', 'Gnome', 'Half-Elf', 'Halfling', 
@@ -137,116 +138,117 @@ export const BasicInfoSection: React.FC<SectionProps> = ({ character, onInputCha
 
   return (
     <section className="mb-6">
-      <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
-      <div className="grid grid-cols-3 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Character Name
-          </label>
-          <input 
-            type="text"
-            value={character.basicInfo.name}
-            onChange={(e) => onInputChange('basicInfo', 'name', e.target.value)}
-            placeholder="Enter character name"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-          />
-        </div>
-        <div className="col-span-2 flex items-center justify-between">
-          <div className="flex gap-4 w-full">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Race
-              </label>
-              <select 
-                value={character.basicInfo.race}
-                onChange={(e) => onInputChange('basicInfo', 'race', e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-              >
-                <option value="">Select Race</option>
-                {raceOptions.map(race => (
-                  <option key={race.toLowerCase()} value={race.toLowerCase()}>
-                    {race}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-              <br/>
-                Background
-              </label>
-              <select 
-                value={character.basicInfo.background}
-                onChange={(e) => onInputChange('basicInfo', 'background', e.target.value)}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-              >
-                <option value="">Select Background</option>
-                {backgroundOptions.map(background => (
-                  <option key={background.toLowerCase()} value={background.toLowerCase()}>
-                    {background}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex-1">
-            </div>
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                <br/>
-                Alignment
-              </label>
-              <select 
-                value={character.basicInfo.alignment}
-                onChange={(e) => onInputChange('basicInfo', 'alignment', e.target.value)}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-              >
-                <option value="">Select Alignment</option>
-                {alignmentOptions.map(alignment => (
-                  <option key={alignment.toLowerCase()} value={alignment.toLowerCase()}>
-                    {alignment}
-                  </option>
-                ))}
-              </select>
-            </div>
+      <h2 className="text-xl mb-4" style={{color: 'white'}}>Basic Information</h2>
+      <div className="basic-info-grid">
+        {/* Left column with inputs - now with max width */}
+        <div className="basic-info-input">
+          <div>
+            <label className="block text-sm font-medium font-bold mb-2">
+              Character Name
+            </label>
+            <input 
+              type="text"
+              value={character.basicInfo.name}
+              onChange={(e) => onInputChange('basicInfo', 'name', e.target.value)}
+              placeholder="Enter character name"
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Race
+            </label>
+            <select 
+              value={character.basicInfo.race}
+              onChange={(e) => onInputChange('basicInfo', 'race', e.target.value)}
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            >
+              <option value="">Select Race</option>
+              {raceOptions.map(race => (
+                <option key={race.toLowerCase()} value={race.toLowerCase()}>
+                  {race}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Class
+            </label>
+            <select 
+              value={character.basicInfo.class}
+              onChange={(e) => onInputChange('basicInfo', 'class', e.target.value)}
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            >
+              <option value="">Select Class</option>
+              {classOptions.map(cls => (
+                <option key={cls.toLowerCase()} value={cls.toLowerCase()}>
+                  {cls}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Background
+            </label>
+            <select 
+              value={character.basicInfo.background}
+              onChange={(e) => onInputChange('basicInfo', 'background', e.target.value)}
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            >
+              <option value="">Select Background</option>
+              {backgroundOptions.map(background => (
+                <option key={background.toLowerCase()} value={background.toLowerCase()}>
+                  {background}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Alignment
+            </label>
+            <select 
+              value={character.basicInfo.alignment}
+              onChange={(e) => onInputChange('basicInfo', 'alignment', e.target.value)}
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            >
+              <option value="">Select Alignment</option>
+              {alignmentOptions.map(alignment => (
+                <option key={alignment.toLowerCase()} value={alignment.toLowerCase()}>
+                  {alignment}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
-        <div>
-          
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Class
+
+        {/* Right column with avatar selector */}
+        <div className="flex-1">
+          <label className="block text-sm font-medium text-gray-700 mb-4">
+            Character Avatar
           </label>
-          <select 
-            value={character.basicInfo.class}
-            onChange={(e) => onInputChange('basicInfo', 'class', e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-          >
-            <option value="">Select Class</option>
-            {classOptions.map(cls => (
-              <option key={cls.toLowerCase()} value={cls.toLowerCase()}>
-                {cls}
-              </option>
-            ))}
-          </select>
           <div className="avatar-container">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-          <br/>
-            Please Select an Avatar
-          </label>
-          <AvatarSelector
-            selectedAvatar={character.basicInfo.avatar}
-            onAvatarChange={(avatar: string) => onInputChange('basicInfo', 'avatar', avatar)}
-          />
-        </div>
+            <AvatarSelector
+              selectedAvatar={character.basicInfo.avatar}
+              onAvatarChange={(avatar: string) => onInputChange('basicInfo', 'avatar', avatar)}
+            />
+          </div>
         </div>
       </div>
 
-      {/* Skill Proficiencies section remains unchanged */}
+      {/* Skill Proficiencies section */}
       {(character.basicInfo.class || character.basicInfo.background) && (
-        <div className="mt-4">
-          <h5 className="text-xs font-medium text-gray-700 mb-1">Available Skill Proficiencies</h5>
-          <div className="grid grid-cols-2 gap-2">
+        <div className="mt-6">
+          <h5 className="text-sm font-medium text-gray-700 mb-2">Available Skill Proficiencies</h5>
+          <div className="grid grid-cols-2 gap-4">
             {character.basicInfo.class && (
-              <div className="border rounded p-2 text-xs">
+              <div className="border rounded p-3">
                 <span className="font-medium">{character.basicInfo.class.charAt(0).toUpperCase() + character.basicInfo.class.slice(1).toLowerCase()}:</span>{' '}
                 <span className="text-gray-600">
                   {availableSkills.classSkills.join(', ')}
@@ -254,7 +256,7 @@ export const BasicInfoSection: React.FC<SectionProps> = ({ character, onInputCha
               </div>
             )}
             {character.basicInfo.background && (
-              <div className="border rounded p-2 text-xs">
+              <div className="border rounded p-3">
                 <span className="font-medium">{character.basicInfo.background.charAt(0).toUpperCase() + character.basicInfo.background.slice(1).toLowerCase()}:</span>{' '}
                 <span className="text-gray-600">
                   {availableSkills.backgroundSkills.join(', ')}
