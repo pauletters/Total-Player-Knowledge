@@ -245,7 +245,7 @@ export const BasicInfoSection: React.FC<SectionProps> = ({ character, onInputCha
       {/* Skill Proficiencies section */}
       {(character.basicInfo.class || character.basicInfo.background) && (
         <div className="mt-6">
-          <h5 className="text-sm font-medium text-gray-700 mb-2">Available Skill Proficiencies</h5>
+          <h5 className="text-sm font-medium text-gray-700 mb-2" style={{color: 'white'}}>Available Skill Proficiencies</h5>
           <div className="grid grid-cols-2 gap-4">
             {character.basicInfo.class && (
               <div className="border rounded p-3">
