@@ -1,3 +1,12 @@
+import allClassFeatures from "./ClassFeatures";
+
+
+export type ValidClassName = keyof typeof allClassFeatures;
+
+export function isValidClassName(className: string): className is ValidClassName {
+  return className.toLowerCase() in allClassFeatures;
+}
+
 export interface CharacterData {
   _id?: string;
   basicInfo: {
@@ -7,6 +16,7 @@ export interface CharacterData {
     level: number;
     background: string;
     alignment: string;
+    avatar: string;
   };
   attributes: {
     strength: number;
@@ -28,6 +38,31 @@ export interface CharacterData {
   };
   equipment: Equipment[];
   spells: CharacterSpell[];
+  classFeatures: ClassFeature[];
+  
+}
+
+export interface ClassFeature {
+  name: string;
+  description: string;
+  levelRequired?: number; // Make this optional
+  selections?: FeatureSelection[];
+  choices?: string[];
+}
+
+// Add these new interfaces
+export interface FeatureSelection {
+  featureName: string;
+  selectedOption: string;
+}
+
+export interface ClassFeatures {
+  features: ClassFeature[];
+  proficiencyChoices?: {
+    name: string;
+    choose: number;
+    options: string[];
+  }[];
 }
 
 /*

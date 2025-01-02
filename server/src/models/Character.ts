@@ -50,15 +50,13 @@ interface BasicInfo {
   level: number;
   background: string;
   alignment: string;
+  avatar: string;
 }
 
 // Spells Interface
 export interface ISpell {
   name: string;
-  desc?: string[];
   level: number;
-  damage?: any;
-  range?: string;
   prepared: boolean;
 }
 
@@ -119,22 +117,34 @@ interface CharacterDocument {
   currency?: Currency;
   biography?: Biography;
   private: boolean; // New property
+  classFeatures?: {
+    name: string;
+    description: string;
+    levelRequired: number;
+    selections?: FeatureSelection[];
+  }[];
   createdAt?: Date;
   updatedAt?: Date;
+}
+
+interface FeatureSelection {
+  featureName: string;
+  selectedOption: string;
 }
 
 // Spell Schema
 const spellSchema = new Schema(
   {
-    name: { type: String, required: true },
-    level: { type: Number, required: true },
+    name: { type: String, required: true, trim: true },
+    level: { type: Number, required: true, min: 0, max: 20 },
     prepared: { type: Boolean, required: true, default: false },
-    desc: [String], // Using `desc` field from GitHub
+    desc: [String],
     damage: Schema.Types.Mixed,
     range: String,
   },
   {
     _id: false, // Disable _id for subdocuments
+    strict: true
   }
 );
 
@@ -153,6 +163,18 @@ const equipmentSchema = new Schema(
   }
 );
 
+const featureSelectionSchema = new Schema({
+  featureName: String,
+  selectedOption: String
+}, { _id: false });
+
+const classFeatureSchema = new Schema({
+  name: String,
+  description: String,
+  levelRequired: Number,
+  selections: [featureSelectionSchema]
+}, { _id: false });
+
 // Character Schema
 const characterSchema = new Schema<CharacterDocument>(
   {
@@ -164,6 +186,7 @@ const characterSchema = new Schema<CharacterDocument>(
       level: { type: Number, required: true, min: 1, max: 20 },
       background: { type: String },
       alignment: { type: String },
+      avatar: { type: String, required: false },
     },
     attributes: {
       strength: { type: Number, default: 10 },
@@ -202,7 +225,11 @@ const characterSchema = new Schema<CharacterDocument>(
       savingThrows: [String],
     },
     equipment: [equipmentSchema],
-    spells: [spellSchema],
+    spells: {
+      type: [spellSchema],
+      default: [],
+      required: true,
+    },
     weapons: [
       {
         name: String,
@@ -239,6 +266,8 @@ const characterSchema = new Schema<CharacterDocument>(
     private: { type: Boolean, default: true },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
+    // Add the classFeatures field
+    classFeatures: [classFeatureSchema]
   },
   { timestamps: true }
 );

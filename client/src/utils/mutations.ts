@@ -37,6 +37,7 @@ export const ADD_CHARACTER = gql`
         level
         background
         alignment
+        avatar
       }
       attributes {
         strength
@@ -76,10 +77,21 @@ export const ADD_CHARACTER = gql`
   }
 `;
 
+export const DELETE_CHARACTER = gql`
+  mutation DeleteCharacter($id: ID!) {
+    deleteCharacter(id: $id) {
+      _id
+    }
+  }
+`;
+
 export const UPDATE_CHARACTER_SPELLS = gql`
-  mutation UpdateCharacterSpells($id: ID!, $spells: [SpellInput]!) {
+  mutation UpdateCharacterSpells($id: ID!, $spells: [SpellInput!]!) {
     updateCharacterSpells(id: $id, spells: $spells) {
       _id
+      basicInfo {
+        name
+      }
       spells {
         name
         level
@@ -116,6 +128,86 @@ export const UPDATE_CHARACTER_EQUIPMENT = gql`
         weight
         description
         properties
+      }
+    }
+  }
+`;
+
+export const UPDATE_CAMPAIGN = gql`
+  mutation UpdateCampaign(
+    $id: ID!
+    $name: String
+    $description: String
+    $addPlayers: [ID!]
+    $removePlayers: [ID!]
+    $addMilestones: [String!]
+    $removeMilestoneIndex: Int
+  ) {
+    updateCampaign(
+      id: $id
+      name: $name
+      description: $description
+      addPlayers: $addPlayers
+      removePlayers: $removePlayers
+      addMilestones: $addMilestones
+      removeMilestoneIndex: $removeMilestoneIndex
+    ) {
+      _id
+      name
+      description
+      milestones
+      players {
+        _id
+        basicInfo {
+          name
+        }
+        player {
+          username
+        }
+      }
+      createdBy {
+        _id
+        username
+      }
+    }
+  }
+`;
+
+export const UPDATE_CHARACTER_FEATURES = gql`
+  mutation UpdateCharacterFeatures($characterId: ID!, $features: [FeatureSelectionInput!]!) {
+    updateCharacterFeatures(characterId: $characterId, features: $features) {
+      _id
+      basicInfo {
+        name
+        class
+        level
+      }
+      classFeatures {
+        name
+        description
+        levelRequired
+        selections {
+          featureName
+          selectedOption
+        }
+      }
+    }
+  }
+`;
+
+export const UPDATE_CHARACTER_PROFICIENCIES = gql`
+  mutation UpdateCharacterProficiencies($id: ID!, $proficiencies: [ProficiencySelectionInput!]!) {
+    updateCharacterProficiencies(id: $id, proficiencies: $proficiencies) {
+      _id
+      skills {
+        proficiencies
+      }
+      classFeatures {
+        name
+        selections {
+          featureName
+          selectedOption
+        }
       }
     }
   }

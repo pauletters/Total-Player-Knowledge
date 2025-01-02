@@ -40,17 +40,18 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({ character, onInput
   };
 
   return (
-    <section className="mb-6">
-      <h2 className="text-xl font-semibold mb-4">Skills</h2>
-      <div className="grid grid-cols-3 gap-4">
+    <section className="skills-container">
+      <h2 className="text-xl font-semibold mb-4" style={{color: 'white'}}>Skills</h2>
+      <div className="skills-section">
         {skillOptions.map((skill) => (
-          <div key={skill.name} className="flex items-center">
+          <div key={skill.name} className="flex items-center mb-2">
             <input 
               type="checkbox"
               id={skill.name.toLowerCase().replace(/\s+/g, '-')}
               checked={(character.skills.proficiencies || []).includes(skill.name)}
               onChange={() => handleSkillToggle(skill.name)}
-              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mr-2"
+              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+              style={{ marginRight: '8px' }}
             />
             <label 
               htmlFor={skill.name.toLowerCase().replace(/\s+/g, '-')}

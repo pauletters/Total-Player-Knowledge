@@ -81,7 +81,9 @@ function App() {
   return (
     <ApolloProvider client={client}>
       <Navbar />
-      <Outlet />
+      <div className="main-content"> {/* Scrollable container */}
+        <Outlet />
+      </div>
       {AuthService.loggedIn() && <PersistentDiceRoller DiceRoller={DiceRoller} />}
     </ApolloProvider>
   );

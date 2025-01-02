@@ -14,6 +14,7 @@ const typeDefs = `
         level: Int!
         background: String
         alignment: String
+        avatar: String
     }
 
     type Attributes {
@@ -57,6 +58,23 @@ const typeDefs = `
         properties: [String!]
     }
 
+    type FeatureSelection {
+        featureName: String!
+        selectedOption: String!
+    }
+
+    type ClassFeature {
+        name: String!
+        description: String!
+        levelRequired: Int!
+        selections: [FeatureSelection]
+    }
+    
+    input FeatureSelectionInput {
+        featureName: String!
+        selectedOption: String!
+    }
+
     type Character {
         _id: ID!
         player: User!
@@ -66,6 +84,7 @@ const typeDefs = `
         skills: Skills
         equipment: [Equipment!]
         spells: [Spell!]!
+        classFeatures: [ClassFeature]!
         private: Boolean!
         createdAt: String!
         updatedAt: String!
@@ -99,6 +118,7 @@ const typeDefs = `
         updateCharacter(input: UpdateCharacterInput!): Character
         updateCharacterSpells(id: ID!, spells: [SpellInput]!): Character!
         updateCharacterEquipment(id: ID!, equipment: [EquipmentInput!]!): Character!
+        updateCharacterFeatures(characterId: ID!, features: [FeatureSelectionInput!]!): Character!
         toggleSpellPrepared(id: ID!, spellName: String!): Character!
         deleteCharacter(id: ID!): Character
 
@@ -112,11 +132,16 @@ const typeDefs = `
             id: ID!
             name: String
             description: String
-            players: [ID!]
+            addPlayers: [ID!]
+            removePlayers: [ID!]
+            addMilestones: [String!]
+            removeMilestoneIndex: Int
         ): Campaign
 
         deleteCampaign(id: ID!): Campaign
     }
+
+    
 
     input BasicInfoInput {
         name: String!
@@ -125,6 +150,7 @@ const typeDefs = `
         level: Int!
         background: String
         alignment: String
+        avatar: String
     }
 
     input AttributesInput {
@@ -153,6 +179,7 @@ const typeDefs = `
         attributes: AttributesInput!
         combat: CombatInput
         skills: SkillsInput
+        classFeatures: [String!]
         equipment: [EquipmentInput!]!
         spells: [SpellInput!]
         private: Boolean

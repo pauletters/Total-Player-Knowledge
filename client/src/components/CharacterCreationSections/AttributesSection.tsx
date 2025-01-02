@@ -8,8 +8,8 @@ export const AttributesSection: React.FC<AttributesSectionProps> = ({
 }) => {
   return (
     <section className="mb-6">
-      <h2 className="text-xl font-semibold mb-4">Attributes</h2>
-      <div className="grid grid-cols-6 gap-4">
+      <h2 className="text-xl font-semibold mb-4" style={{color: 'white'}}>Attributes</h2>
+      <div className="attributes-section">
         {Object.entries(character.attributes).map(([attr, score]) => (
           <div key={attr} className="text-center">
             <label className="block text-sm font-medium text-gray-700 mb-2 capitalize">

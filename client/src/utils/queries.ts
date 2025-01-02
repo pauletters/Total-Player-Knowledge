@@ -18,6 +18,7 @@ export const GET_CHARACTERS = gql`
         name
         class
         level
+        avatar
       }
     }
   }
@@ -34,6 +35,7 @@ export const GET_CHARACTER = gql`
         level
         background
         alignment
+        avatar
       }
       attributes {
         strength
@@ -68,6 +70,47 @@ export const GET_CHARACTER = gql`
         name
         level
         prepared
+      }
+      classFeatures {
+        name
+        description
+        levelRequired
+        selections {
+          featureName
+          selectedOption
+        }
+      }
+    }
+  }
+`;
+
+export const GET_CHARACTER_FEATURES = gql`
+  query GetCharacterFeatures($characterId: ID!) {
+    character(id: $characterId) {
+      _id
+      classFeatures {
+        name
+        description
+        levelRequired
+        selections {
+          featureName
+          selectedOption
+        }
+      }
+    }
+  }
+`;
+
+export const SEARCH_USERS = gql`
+  query SearchUsers($term: String!) {
+    searchUsers(term: $term) {
+      _id
+      username
+      characters {
+        _id
+        basicInfo {
+          name
+        }
       }
     }
   }

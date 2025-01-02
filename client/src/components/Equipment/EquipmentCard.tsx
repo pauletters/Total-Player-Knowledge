@@ -1,64 +1,87 @@
 import React from 'react';
 import { Card, Button } from 'react-bootstrap';
+import { CharacterData } from '../types';
 
-interface EquipmentCardProps {
-  name: string;
-  category: string;
-  cost?: {
-    quantity: number;
-    unit: string;
-  };
-  weight?: number;
-  description?: string[];
-  properties?: string[];
-  onRemove: () => void;
+interface EquipmentListProps {
+  equipment: CharacterData['equipment'];
+  onRemoveEquipment: (name: string) => void;
+  setShowEquipmentModal: (show: boolean) => void;
 }
 
-const EquipmentCard: React.FC<EquipmentCardProps> = ({
-  name,
-  category,
-  cost,
-  weight,
-  description,
-  properties,
-  onRemove
+const EquipmentList: React.FC<EquipmentListProps> = ({ 
+  equipment, 
+  onRemoveEquipment,
+  setShowEquipmentModal 
 }) => {
   return (
-    <Card className="h-100">
-      <Card.Body>
-        <div className="d-flex justify-content-between align-items-start">
-          <div className="equipment-name-container">
-            <h5 className="mb-1">{name}</h5>
-            <p className="text-muted mb-2">
-              {category}
-              {cost && ` • ${cost.quantity} ${cost.unit}`}
-              {weight && ` • ${weight} lb`}
-            </p>
+    <Card>
+    <Card.Header>
+      <div className="d-flex justify-content-between align-items-center">
+        <span>Equipment</span>
+        <Button 
+          variant="primary" 
+          size="sm"
+          onClick={() => setShowEquipmentModal(true)}
+        >
+          Add Equipment
+        </Button>
+      </div>
+    </Card.Header>
+    <Card.Body className="p-0">
+      <div className="equipment-list">
+        {equipment && equipment.length > 0 ? (
+          <div className="list-group list-group-flush">
+            {equipment.map((item) => (
+              <div 
+                key={item.name} 
+                className="list-group-item"
+              >
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="ms-2 me-auto" style={{ flex: 1 }}>
+                    <div className="d-flex justify-content-between">
+                      <div>
+                        <div className="fw-bold">{item.name}</div>
+                        <div className="text-muted small">{item.category}</div>
+                      </div>
+                      <div className="text-end">
+                        {item.cost && (
+                          <div className="small">{item.cost.quantity} {item.cost.unit}</div>
+                        )}
+                        {item.weight && (
+                          <div className="text-muted small">{item.weight} lb</div>
+                        )}
+                      </div>
+                    </div>
+                    {item.description && item.description.length > 0 && (
+                      <div className="small text-muted mt-1">
+                        {item.description[0]}
+                      </div>
+                    )}
+                    {item.properties && item.properties.length > 0 && (
+                      <div className="small mt-1">
+                        <strong>Properties:</strong> {item.properties.join(', ')}
+                      </div>
+                    )}
+                  </div>
+                  <Button 
+                    variant="outline-danger"
+                    size="sm"
+                    className="ms-3"
+                    onClick={() => onRemoveEquipment(item.name)}
+                  >
+                    ×
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
-          <Button 
-            variant="outline-danger" 
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemove();
-            }}
-          >
-            ×
-          </Button>
-        </div>
-        
-        {description && description.length > 0 && (
-          <p className="small text-muted mb-2">{description[0]}</p>
+        ) : (
+          <p className="text-center my-4">No equipment added yet.</p>
         )}
-        
-        {properties && properties.length > 0 && (
-          <p className="small mb-0">
-            <strong>Properties:</strong> {properties.join(', ')}
-          </p>
-        )}
-      </Card.Body>
-    </Card>
-  );
+      </div>
+    </Card.Body>
+  </Card>
+);
 };
 
-export default EquipmentCard;
+export default EquipmentList;

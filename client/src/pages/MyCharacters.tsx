@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Container, Button, Card, Row, Col, Modal } from 'react-bootstrap';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
-import { useQuery } from '@apollo/client';
+import { useQuery, useMutation } from '@apollo/client';
 import { GET_CHARACTERS } from '../utils/queries';
-import UserMenu from '../components/UserMenu';
+import { DELETE_CHARACTER } from '../utils/mutations';
 import DiceRoller from '../components/DiceRoller';
 
 interface Character {
@@ -12,6 +12,7 @@ interface Character {
     name: string;
     class: string;
     level: number;
+    avatar: string; // Ensure avatar is correctly placed within basicInfo
   };
 }
 
@@ -21,15 +22,15 @@ const MyCharacters = () => {
   const [showDiceRoller, setShowDiceRoller] = useState(false);
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
 
-  const { data } = useQuery<{ characters: Character[] }>(GET_CHARACTERS);
+  const { data, refetch } = useQuery<{ characters: Character[] }>(GET_CHARACTERS);
   
   const handleCreateCharacter = () => {
     navigate('/my-characters/character-creation');
   };
 
   const handleViewCharacter = (character: Character) => {
+    navigate(`/my-characters/${character._id}`);
     setSelectedCharacter(character);
-    setShowDiceRoller(true);
   };
 
   const isCreatingCharacter = location.pathname.includes('/character-creation');
@@ -37,9 +38,32 @@ const MyCharacters = () => {
 
   const characters = data?.characters || [];
 
+  const [deleteCharacter] = useMutation(DELETE_CHARACTER, {
+    onCompleted: () => {
+        alert('Character deleted successfully.');
+    },
+    onError: (error) => {
+        console.error(error);
+        alert('Failed to delete the character.');
+    },
+});
+
+const handleDeleteCharacter = async (id: string, name: string) => {
+  const confirmDelete = window.confirm(`Are you sure you want to delete ${name}?`);
+  if (confirmDelete) {
+      try {
+          await deleteCharacter({ variables: { id } });
+          await refetch();
+      } catch (error) {
+          console.error('Error deleting character:', error);
+      }
+  }
+};
+
+
   return (
     <>
-      <UserMenu />
+    <div className='hero-section'>
       <Container>
         {!isCreatingCharacter && !isViewingCharacter && (
           <>
@@ -62,7 +86,21 @@ const MyCharacters = () => {
                 {characters.map((character) => (
                   <Col key={character._id}>
                     <Card>
-                      <Card.Body>
+                      <Card.Body style={{ backgroundColor: '#3a3a3a', color: 'white', borderRadius: '10px', borderStyle: 'solid', borderColor: 'red' }}>
+                        {/* Avatar Image */}
+                        <div className="d-flex justify-content-between align-items-center mb-4">
+                          <div className="me-3">
+                            {character.basicInfo.avatar && (
+                              <img
+                                src={character.basicInfo.avatar}
+                                alt={`${character.basicInfo.name}'s Avatar`}
+                                style={{ width: '100px', height: '100px', borderRadius: '50%' }}
+                              />
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Character Details */}
                         <Card.Title>{character.basicInfo.name}</Card.Title>
                         <Card.Text>
                           Level {character.basicInfo.level} {character.basicInfo.class}
@@ -71,9 +109,16 @@ const MyCharacters = () => {
                           <Button 
                             variant="outline-primary" 
                             size="sm"
-                            onClick={() => navigate(`/my-characters/${character._id}`)}
+                            onClick={() => handleViewCharacter(character)}
                           >
                             View Character
+                          </Button>
+                          <Button 
+                              variant="outline-danger" 
+                              size="sm"
+                              onClick={() => handleDeleteCharacter(character._id, character.basicInfo.name)}
+                          >
+                              Delete
                           </Button>
                         </div>
                       </Card.Body>
@@ -103,6 +148,7 @@ const MyCharacters = () => {
 
         <Outlet />
       </Container>
+    </div>
     </>
   );
 };

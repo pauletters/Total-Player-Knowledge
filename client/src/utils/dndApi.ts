@@ -32,6 +32,17 @@ async function fetchFromApi<T>(endpoint: string): Promise<T> {
   }
 }
 
+function formatSpellIndex(spellName: string): string {
+  return spellName.toLowerCase()
+    .replace(/'/g, '') // Remove apostrophes
+    .replace(/'/g, '') // Remove smart quotes
+    .replace(/[()]/g, '') // Remove parentheses
+    .replace(/,/g, '') // Remove commas
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+    .trim();
+}
+
 export const dndApi = {
   // Character-related endpoints
   getRaces: () => fetchFromApi('/races'),
@@ -61,17 +72,63 @@ export const dndApi = {
     }
   },
   
-  async getSpell(index: string) {
-    console.log('getSpell called with index:', index);
+  async getSpell(spellName: string) {
+    console.log('getSpell called with name:', spellName);
     try {
-      const data = await fetchFromApi<any>(`/spells/${index}`);
+      const formattedIndex = formatSpellIndex(spellName);
+      console.log('Trying formatted spell index:', formattedIndex);
+    
+    try {  
+      const data = await fetchFromApi<any>(`/spells/${formattedIndex}`);
       console.log('Individual spell data:', data);
       return data;
     } catch (error) {
-      console.error('Error in getSpell:', error);
+      if (error instanceof Error && error.message.includes('404')) {
+        console.log('First attempt failed, trying alternative format...');
+        const altIndex = spellName.toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, '') // Remove all special characters
+          .replace(/\s+/g, '-') // Replace spaces with hyphens
+          .trim();
+        
+        console.log('Trying alternative spell index:', altIndex);
+        try {
+          const data = await fetchFromApi<any>(`/spells/${altIndex}`);
+          console.log('Spell data found with alternative format:', data);
+          return data;
+        } catch (altError) {
+          console.log('Both attempts failed, returning placeholder data');
+          // Return placeholder data if both attempts fail
+          return {
+            name: spellName,
+            desc: ['Spell details currently unavailable'],
+            school: { name: 'Unknown' },
+            level: 0,
+            classes: [{ name: 'Unknown' }],
+            range: 'Unknown',
+            casting_time: 'Unknown',
+            duration: 'Unknown',
+            components: ['Unknown']
+          };
+        }
+      }
       throw error;
     }
-  },
+  } catch (error) {
+    console.error('Error in getSpell:', error);
+    // Return placeholder data for any other errors
+    return {
+      name: spellName,
+      desc: ['Spell details currently unavailable'],
+      school: { name: 'Unknown' },
+      level: 0,
+      classes: [{ name: 'Unknown' }],
+      range: 'Unknown',
+      casting_time: 'Unknown',
+      duration: 'Unknown',
+      components: ['Unknown']
+    };
+  }
+},
 
     async getSpellsByClass(className: string) {
       try {
@@ -84,6 +141,17 @@ export const dndApi = {
       }
     },
 
+    async getClassFeatures(className: string) {
+      try {
+        const formattedClassName = className.toLowerCase();
+        const response = await fetchFromApi<ApiResponse<any>>(`/classes/${formattedClassName}/levels/1`);
+        return response;
+      } catch (error) {
+        console.error(`Error fetching features for class ${className}:`, error);
+        throw error;
+      }
+    },
+
   // Rules and mechanics
   getConditions: () => fetchFromApi('/conditions'),
   getRules: () => fetchFromApi('/rules'),
@@ -92,6 +160,7 @@ export const dndApi = {
   // Features and traits
   getFeatures: () => fetchFromApi('/features'),
   getTraits: () => fetchFromApi('/traits'),
+  getClassTraits: () => fetchFromApi('/classes'),
 
   // Abilities and skills
   getAbilityScores: () => fetchFromApi('/ability-scores'),

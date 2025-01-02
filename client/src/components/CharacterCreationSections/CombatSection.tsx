@@ -4,8 +4,8 @@ import { SectionProps } from '../types';
 export const CombatSection: React.FC<SectionProps> = ({ character, onInputChange }) => {
   return (
     <section className="mb-6">
-      <h2 className="text-xl font-semibold mb-4">Combat</h2>
-      <div className="grid grid-cols-4 gap-4">
+      <h2 className="text-xl font-semibold mb-4" style={{color: 'white'}}>Combat</h2>
+      <div className="combat-section">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Armor Class

@@ -1,0 +1,76 @@
+.basic-info-section {
+    margin: 20px;
+  }
+  
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Four columns */
+    gap: 16px;
+  }
+  
+  .avatar-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    margin-top: 16px; /* Add spacing above the avatar container */
+  }
+  
+  .avatar-selector-container {
+    position: relative;
+    width: 250px; /* Adjust the size */
+    height: 250px; /* Adjust the size */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .avatar-nav-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 50px; /* Larger size */
+    height: 50px; /* Larger size */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.7);
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    z-index: 1;
+  }
+  
+  .avatar-nav-button:hover {
+    background-color: rgba(255, 255, 255, 0.9);
+  }
+  
+  .avatar-nav-button.left {
+    left: -30px; /* Move further outside */
+  }
+  
+  .avatar-nav-button.right {
+    right: -30px; /* Move further outside */
+  }
+  
+  .avatar-nav-icon {
+    width: 24px;
+    height: 24px;
+    color: #888;
+  }
+  
+  .avatar-image-container {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .avatar-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
