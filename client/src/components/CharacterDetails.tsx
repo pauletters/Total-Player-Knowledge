@@ -270,6 +270,11 @@ const CharacterDetails: React.FC = () => {
     return modifier >= 0 ? `+${modifier}` : `${modifier}`;
   };
 
+  const getProficiencyBonus = (level: number): number => {
+    const proficiencyBonus = Math.ceil(level / 4) + 1;
+    return proficiencyBonus;
+  };  
+
   if (isLoading) {
     return (
       <Container className="py-4">
@@ -294,6 +299,78 @@ const CharacterDetails: React.FC = () => {
   }
 
   const character = data.character;
+
+  const proficiencyBonus = getProficiencyBonus(character.basicInfo.level);
+
+  const attributeMods = {
+    strengthMod: Number(getModifier(character.attributes.strength)),
+    dexterityMod: Number(getModifier(character.attributes.dexterity)),
+    constitutionMod: Number(getModifier(character.attributes.constitution)),
+    intelligenceMod: Number(getModifier(character.attributes.intelligence)),
+    wisdomMod: Number(getModifier(character.attributes.wisdom)),
+    charismaMod: Number(getModifier(character.attributes.charisma)),
+  }
+
+  const skillMods = {
+    acrobaticsMod: attributeMods.dexterityMod + (
+      character.skills.proficiencies.includes('Acrobatics') ? proficiencyBonus : 0
+    ),
+    animalHandlingMod: attributeMods.wisdomMod + (
+      character.skills.proficiencies.includes('Animal Handling') ? proficiencyBonus : 0
+    ),
+    arcanaMod: attributeMods.intelligenceMod + (
+      character.skills.proficiencies.includes('Arcana') ? proficiencyBonus : 0
+    ),
+    athleticsMod: attributeMods.strengthMod + (
+      character.skills.proficiencies.includes('Athletics') ? proficiencyBonus : 0
+    ),
+    deceptionMod: attributeMods.charismaMod + (
+      character.skills.proficiencies.includes('Deception') ? proficiencyBonus : 0
+    ),
+    historyMod: attributeMods.intelligenceMod + (
+      character.skills.proficiencies.includes('History') ? proficiencyBonus : 0
+    ),
+    insightMod: attributeMods.wisdomMod + (
+      character.skills.proficiencies.includes('Insight') ? proficiencyBonus : 0
+    ),
+    intimidationMod: attributeMods.charismaMod + (
+      character.skills.proficiencies.includes('Intimidation') ? proficiencyBonus : 0
+    ),
+    investigationMod: attributeMods.intelligenceMod + (
+      character.skills.proficiencies.includes('Investigation') ? proficiencyBonus : 0
+    ),
+    medicineMod: attributeMods.wisdomMod + (
+      character.skills.proficiencies.includes('Medicine') ? proficiencyBonus : 0
+    ),
+    natureMod: attributeMods.intelligenceMod + (
+      character.skills.proficiencies.includes('Nature') ? proficiencyBonus : 0
+    ),
+    perceptionMod: attributeMods.wisdomMod + (
+      character.skills.proficiencies.includes('Perception') ? proficiencyBonus : 0
+    ),
+    performanceMod: attributeMods.charismaMod + (
+      character.skills.proficiencies.includes('Performance') ? proficiencyBonus : 0
+    ),
+    persuasionMod: attributeMods.charismaMod + (
+      character.skills.proficiencies.includes('Persuasion') ? proficiencyBonus : 0
+    ),
+    religionMod: attributeMods.intelligenceMod + (
+      character.skills.proficiencies.includes('Religion') ? proficiencyBonus : 0
+    ),
+    sleightOfHandMod: attributeMods.dexterityMod + (
+      character.skills.proficiencies.includes('Sleight of Hand') ? proficiencyBonus : 0
+    ),
+    stealthMod: attributeMods.dexterityMod + (
+      character.skills.proficiencies.includes('Stealth') ? proficiencyBonus : 0
+    ),
+    survivalMod: attributeMods.wisdomMod + (
+      character.skills.proficiencies.includes('Survival') ? proficiencyBonus : 0
+    ),
+  }
+  console.log(character.skills.proficiencies);
+  console.log(proficiencyBonus);
+  console.log(attributeMods);
+  console.log(skillMods);
 
   return (
     <Container className="py-4">
@@ -327,7 +404,6 @@ const CharacterDetails: React.FC = () => {
                     <p><strong>Race:</strong> {character.basicInfo.race}</p>
                     <p><strong>Background:</strong> {character.basicInfo.background}</p>
                     <p><strong>Alignment:</strong> {character.basicInfo.alignment}</p>
-                    {/* <p><strong>Experience:</strong> {character.experience}</p> */}
                   </Card.Body>
                 </Card>
               </Col>
@@ -340,8 +416,7 @@ const CharacterDetails: React.FC = () => {
                     <p><strong>Initiative:</strong> +{character.combat.initiative}</p>
                     <p><strong>Speed:</strong> {character.combat.speed} ft.</p>
                     <p><strong>Hit Points:</strong> {character.combat.hitPoints}/{character.combat.hitPoints}</p>
-                    {/* <p><strong>Temporary HP:</strong> {character.hitPoints.temporary}</p>
-                    <p><strong>Proficiency Bonus:</strong> +{character.proficiencyBonus}</p> */}
+                    <p><strong>Proficiency Bonus:</strong> +{proficiencyBonus}</p>
                   </Card.Body>
                 </Card>
               </Col>
@@ -365,13 +440,96 @@ const CharacterDetails: React.FC = () => {
                   <Card.Header>Skills</Card.Header>
                   <Card.Body>
                     <Row>
-                      {character.skills.proficiencies.map((skill, index) => (
-                        <Col key={index} xs={6}>
-                          <p>
-                            <strong>{skill}:</strong>
-                          </p>
-                        </Col>
-                      ))}
+                      <Col xs={6}>
+                        <p>
+                          <strong>Acrobatics (Dex):</strong> {skillMods.acrobaticsMod >= 0 ? `+${skillMods.acrobaticsMod}` : skillMods.acrobaticsMod} {character.skills.proficiencies.includes("Acrobatics") && "(Proficient)"}
+                        </p>
+                      </Col>
+                      <Col xs={6}>
+                        <p>
+                          <strong>Animal Handling (Wis):</strong> {skillMods.animalHandlingMod >= 0 ? `+${skillMods.animalHandlingMod}` : skillMods.animalHandlingMod} {character.skills.proficiencies.includes("Animal Handling") && "(Proficient)"}
+                        </p>
+                      </Col>
+                      <Col xs={6}>
+                        <p>
+                          <strong>Arcana (Int):</strong> {skillMods.arcanaMod >= 0 ? `+${skillMods.arcanaMod}` : skillMods.arcanaMod} {character.skills.proficiencies.includes("Arcana") && "(Proficient)"}
+                        </p>
+                      </Col>
+                      <Col xs={6}>
+                        <p>
+                          <strong>Athletics (Str):</strong> {skillMods.athleticsMod >= 0 ? `+${skillMods.athleticsMod}` : skillMods.athleticsMod} {character.skills.proficiencies.includes("Athletics") && "(Proficient)"}
+                        </p>
+                      </Col>
+                      <Col xs={6}>
+                        <p>
+                          <strong>Deception (Cha):</strong> {skillMods.deceptionMod >= 0 ? `+${skillMods.deceptionMod}` : skillMods.deceptionMod} {character.skills.proficiencies.includes("Deception") && "(Proficient)"}
+                        </p>
+                      </Col>
+                      <Col xs={6}>
+                        <p>
+                          <strong>History (Int):</strong> {skillMods.historyMod >= 0 ? `+${skillMods.historyMod}` : skillMods.historyMod} {character.skills.proficiencies.includes("History") && "(Proficient)"}
+                        </p>
+                      </Col>
+                      <Col xs={6}>
+                        <p>
+                          <strong>Insight (Wis):</strong> {skillMods.insightMod >= 0 ? `+${skillMods.insightMod}` : skillMods.insightMod} {character.skills.proficiencies.includes("Insight") && "(Proficient)"}
+                        </p>
+                      </Col>
+                      <Col xs={6}>
+                        <p>
+                          <strong>Intimidation (Cha):</strong> {skillMods.intimidationMod >= 0 ? `+${skillMods.intimidationMod}` : skillMods.intimidationMod} {character.skills.proficiencies.includes("Intimidation") && "(Proficient)"}
+                        </p>
+                      </Col>
+                      <Col xs={6}>
+                        <p>
+                          <strong>Investigation (Int):</strong> {skillMods.investigationMod >= 0 ? `+${skillMods.investigationMod}` : skillMods.investigationMod} {character.skills.proficiencies.includes("Investigation") && "(Proficient)"}
+                        </p>
+                      </Col>
+                      <Col xs={6}>
+                        <p>
+                          <strong>Medicine (Wis):</strong> {skillMods.medicineMod >= 0 ? `+${skillMods.medicineMod}` : skillMods.medicineMod} {character.skills.proficiencies.includes("Medicine") && "(Proficient)"}
+                        </p>
+                      </Col>
+                      <Col xs={6}>
+                        <p>
+                          <strong>Nature (Int):</strong> {skillMods.natureMod >= 0 ? `+${skillMods.natureMod}` : skillMods.natureMod} {character.skills.proficiencies.includes("Nature") && "(Proficient)"}
+                        </p>
+                      </Col>
+                      <Col xs={6}>
+                        <p>
+                          <strong>Perception (Wis):</strong> {skillMods.perceptionMod >= 0 ? `+${skillMods.perceptionMod}` : skillMods.perceptionMod} {character.skills.proficiencies.includes("Perception") && "(Proficient)"}
+                        </p>
+                      </Col>
+                      <Col xs={6}>
+                        <p>
+                          <strong>Performance (Cha):</strong> {skillMods.performanceMod >= 0 ? `+${skillMods.performanceMod}` : skillMods.performanceMod} {character.skills.proficiencies.includes("Performance") && "(Proficient)"}
+                        </p>
+                      </Col>
+                      <Col xs={6}>
+                        <p>
+                          <strong>Persuasion (Cha):</strong> {skillMods.persuasionMod >= 0 ? `+${skillMods.persuasionMod}` : skillMods.persuasionMod} {character.skills.proficiencies.includes("Persuasion") && "(Proficient)"}
+                        </p>
+                      </Col>
+                      <Col xs={6}>
+                        <p>
+                          <strong>Religion (Int):</strong> {skillMods.religionMod >= 0 ? `+${skillMods.religionMod}` : skillMods.religionMod} {character.skills.proficiencies.includes("Religion") && "(Proficient)"}
+                        </p>
+                      </Col>
+                      <Col xs={6}>
+                        <p>
+                          <strong>Sleight of Hand (Dex):</strong> {skillMods.sleightOfHandMod >= 0 ? `+${skillMods.sleightOfHandMod}` : skillMods.sleightOfHandMod} {character.skills.proficiencies.includes("Sleight of Hand") && "(Proficient)"}
+                        </p>
+                      </Col>
+                      <Col xs={6}>
+                        <p>
+                          <strong>Stealth (Dex):</strong> {skillMods.stealthMod >= 0 ? `+${skillMods.stealthMod}` : skillMods.stealthMod} {character.skills.proficiencies.includes("Stealth") && "(Proficient)"}
+                        </p>
+                      </Col>
+                      <Col xs={6}>
+                        <p>
+                          <strong>Survival (Wis):</strong> {skillMods.survivalMod >= 0 ? `+${skillMods.survivalMod}` : skillMods.survivalMod} {character.skills.proficiencies.includes("Survival") && "(Proficient)"}
+                        </p>
+                      </Col>
                     </Row>
                   </Card.Body>
                 </Card>
