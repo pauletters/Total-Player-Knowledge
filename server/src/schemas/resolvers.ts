@@ -120,6 +120,8 @@ const resolvers = {
         throw new AuthenticationError('Not logged in');
       }
       const character = await Character.findOne({ _id: id, player: context.user._id });
+      console.log('Character from DB:', JSON.stringify(character, null, 2));
+      
       if (!character) {
         throw new GraphQLError('Character not found or unauthorized', {
           extensions: { code: 'NOT_FOUND' },
@@ -127,6 +129,7 @@ const resolvers = {
       }
       return character;
     },
+  
 
     campaigns: async (_parent: unknown, _args: unknown, context: Context) => {
       if (!context.user) {
@@ -176,6 +179,12 @@ const resolvers = {
     },
   },
 
+  Character: {
+    classFeatures: (parent: any) => {
+      return parent.classFeatures || [];
+    }
+  },
+
   Mutation: {
     loginUser: async (_parent: unknown, { email, password }: LoginArgs) => {
       const user = await User.findOne({ email });
@@ -201,7 +210,7 @@ const resolvers = {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-
+        
       const newCharacter = await Character.create({
         ...input,
         player: context.user._id,

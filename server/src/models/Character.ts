@@ -117,6 +117,11 @@ interface CharacterDocument {
   currency?: Currency;
   biography?: Biography;
   private: boolean; // New property
+  classFeatures?: {
+    name: string;
+    description: string;
+    levelRequired: number;
+  }[]; // Class features as an optional array of objects
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -243,6 +248,14 @@ const characterSchema = new Schema<CharacterDocument>(
     private: { type: Boolean, default: true },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
+    // Add the classFeatures field
+    classFeatures: [
+      {
+        name: String,
+        description: String,
+        levelRequired: { type: Number },
+      },
+    ], // Class features as an optional array of objects
   },
   { timestamps: true }
 );

@@ -29,6 +29,15 @@ export interface CharacterData {
   };
   equipment: Equipment[];
   spells: CharacterSpell[];
+  classFeatures: ClassFeature[];
+  
+}
+
+
+export interface ClassFeature {
+  name: string;
+  description: string;
+  levelRequired: number; // Optional, depending on the structure of your data
 }
 
 /*

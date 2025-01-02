@@ -8,6 +8,7 @@ import { SkillsSection } from './CharacterCreationSections/SkillsSection';
 import { CharacterData } from './types';
 import { ADD_CHARACTER } from '../utils/mutations';
 import { GET_CHARACTERS } from '../utils/queries';
+import '../styles/main.css';
 
 const initialCharacterState: CharacterData = {
   basicInfo: {
@@ -37,6 +38,7 @@ const initialCharacterState: CharacterData = {
     proficiencies: [],
     savingThrows: [],
   },
+  classFeatures: [],
   equipment: [],
   spells: [],
 };
@@ -110,45 +112,45 @@ const CharacterSheet: React.FC = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg">
-      <h1 className="text-2xl font-bold mb-6">Character Sheet</h1>
-      
-      <BasicInfoSection 
-        character={character} 
-        onInputChange={handleInputChange} 
-      />
-      
-      <AttributesSection 
-        character={character} 
-        onInputChange={handleInputChange}
-        calculateModifier={calculateModifier}
-      />
-      
-      <CombatSection 
-        character={character} 
-        onInputChange={handleInputChange} 
-      />
+      <div className="character-sheet">
+        <h1 className="text-2xl font-bold mb-6" style={{color: 'white'}}>Character Sheet</h1>
+        
+        <BasicInfoSection 
+          character={character} 
+          onInputChange={handleInputChange} 
+        />
+        
+        <AttributesSection 
+          character={character} 
+          onInputChange={handleInputChange}
+          calculateModifier={calculateModifier}
+        />
+        
+        <CombatSection 
+          character={character} 
+          onInputChange={handleInputChange} 
+        />
 
-      <SkillsSection 
-        character={character} 
-        onInputChange={handleInputChange}
-      />
+        <SkillsSection 
+          character={character} 
+          onInputChange={handleInputChange}
+        />
 
-      <div className="flex justify-end mt-6 space-x-4">
-      <button 
-          onClick={handleSaveCharacter}
-          className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-        >
-          Save Character
-        </button>
+        <div id="character-creation-buttons">
         <button 
-          onClick={handleCancelCharacter}
-          className="display grid px-6 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
-        >
-          Cancel
-        </button>
+            onClick={handleSaveCharacter}
+            id="save-character-button"
+          >
+            Save Character
+          </button>
+          <button 
+            onClick={handleCancelCharacter}
+            id="cancel-character-button"
+          >
+            Cancel
+          </button>
+        </div>
       </div>
-    </div>
   );
 };
 
