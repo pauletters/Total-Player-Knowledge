@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Container, Button, Card, Row, Col, Modal } from 'react-bootstrap';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
-import { useQuery } from '@apollo/client';
+import { useQuery, useMutation } from '@apollo/client';
 import { GET_CHARACTERS } from '../utils/queries';
+import { DELETE_CHARACTER } from '../utils/mutations';
 import UserMenu from '../components/UserMenu';
 import DiceRoller from '../components/DiceRoller';
 
@@ -22,7 +23,7 @@ const MyCharacters = () => {
   const [showDiceRoller, setShowDiceRoller] = useState(false);
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
 
-  const { data } = useQuery<{ characters: Character[] }>(GET_CHARACTERS);
+  const { data, refetch } = useQuery<{ characters: Character[] }>(GET_CHARACTERS);
   
   const handleCreateCharacter = () => {
     navigate('/my-characters/character-creation');
@@ -37,6 +38,29 @@ const MyCharacters = () => {
   const isViewingCharacter = location.pathname.split('/').length > 2 && !isCreatingCharacter;
 
   const characters = data?.characters || [];
+
+  const [deleteCharacter] = useMutation(DELETE_CHARACTER, {
+    onCompleted: () => {
+        alert('Character deleted successfully.');
+    },
+    onError: (error) => {
+        console.error(error);
+        alert('Failed to delete the character.');
+    },
+});
+
+const handleDeleteCharacter = async (id: string, name: string) => {
+  const confirmDelete = window.confirm(`Are you sure you want to delete ${name}?`);
+  if (confirmDelete) {
+      try {
+          await deleteCharacter({ variables: { id } });
+          await refetch();
+      } catch (error) {
+          console.error('Error deleting character:', error);
+      }
+  }
+};
+
 
   return (
     <>
@@ -89,6 +113,13 @@ const MyCharacters = () => {
                             onClick={() => handleViewCharacter(character)}
                           >
                             View Character
+                          </Button>
+                          <Button 
+                              variant="outline-danger" 
+                              size="sm"
+                              onClick={() => handleDeleteCharacter(character._id, character.basicInfo.name)}
+                          >
+                              Delete
                           </Button>
                         </div>
                       </Card.Body>
