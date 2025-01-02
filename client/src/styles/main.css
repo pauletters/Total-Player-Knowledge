@@ -83,7 +83,12 @@
   #save-character-button {
     background-color: #0d6efd;
     color: 'white';
+  }
 
+  .no-bullets {
+    list-style-type: none;
+    padding-left: 0; /* Remove left padding */
+    margin: 0; /* Remove any default margin */
   }
 
   #cancel-character-button {

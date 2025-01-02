@@ -121,9 +121,15 @@ interface CharacterDocument {
     name: string;
     description: string;
     levelRequired: number;
-  }[]; // Class features as an optional array of objects
+    selections?: FeatureSelection[];
+  }[];
   createdAt?: Date;
   updatedAt?: Date;
+}
+
+interface FeatureSelection {
+  featureName: string;
+  selectedOption: string;
 }
 
 // Spell Schema
@@ -156,6 +162,18 @@ const equipmentSchema = new Schema(
     properties: [String],
   }
 );
+
+const featureSelectionSchema = new Schema({
+  featureName: String,
+  selectedOption: String
+}, { _id: false });
+
+const classFeatureSchema = new Schema({
+  name: String,
+  description: String,
+  levelRequired: Number,
+  selections: [featureSelectionSchema]
+}, { _id: false });
 
 // Character Schema
 const characterSchema = new Schema<CharacterDocument>(
@@ -249,13 +267,7 @@ const characterSchema = new Schema<CharacterDocument>(
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
     // Add the classFeatures field
-    classFeatures: [
-      {
-        name: String,
-        description: String,
-        levelRequired: { type: Number },
-      },
-    ], // Class features as an optional array of objects
+    classFeatures: [classFeatureSchema]
   },
   { timestamps: true }
 );

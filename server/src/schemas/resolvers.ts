@@ -362,6 +362,68 @@ const resolvers = {
       return character;
     },
 
+    updateCharacterFeatures: async (
+      _parent: unknown,
+      { characterId, features }: { characterId: string; features: { featureName: string; selectedOption: string }[] },
+      context: Context
+    ) => {
+      console.log('Starting updateCharacterFeatures:', { characterId, features });
+      
+      if (!context.user) {
+        throw new AuthenticationError('Not logged in');
+      }
+  
+      try {
+        // Find the character
+        const character = await Character.findOne({
+          _id: characterId,
+          player: context.user._id
+        });
+  
+        if (!character) {
+          throw new GraphQLError('Character not found');
+        }
+  
+        // Create the new features array
+        const newFeatures = features.map((feature: { featureName: string; selectedOption: string }) => ({
+          name: feature.featureName,
+          description: "", // You might want to get this from your allClassFeatures data
+          levelRequired: 1, // You might want to get this from your allClassFeatures data
+          selections: [{
+            featureName: feature.featureName,
+            selectedOption: feature.selectedOption
+          }]
+        }));
+  
+        // Update character with new features
+        const updatedCharacter = await Character.findOneAndUpdate(
+          { _id: characterId },
+          { 
+            $set: { 
+              classFeatures: newFeatures,
+              updatedAt: new Date()
+            }
+          },
+          { 
+            new: true,
+            runValidators: true
+          }
+        );
+  
+        if (!updatedCharacter) {
+          throw new GraphQLError('Failed to update character');
+        }
+  
+        console.log('Successfully updated character:', updatedCharacter._id);
+        return updatedCharacter;
+  
+      } catch (error) {
+        console.error('Error in updateCharacterFeatures:', error);
+        throw error;
+      }
+    },
+
+
     deleteCharacter: async (_parent: unknown, { id }: { id: string }, context: Context) => {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
