@@ -4,7 +4,6 @@ import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { useQuery, useMutation } from '@apollo/client';
 import { GET_CHARACTERS } from '../utils/queries';
 import { DELETE_CHARACTER } from '../utils/mutations';
-import UserMenu from '../components/UserMenu';
 import DiceRoller from '../components/DiceRoller';
 
 interface Character {
@@ -64,7 +63,7 @@ const handleDeleteCharacter = async (id: string, name: string) => {
 
   return (
     <>
-      <UserMenu />
+    <div className='hero-section'>
       <Container>
         {!isCreatingCharacter && !isViewingCharacter && (
           <>
@@ -149,6 +148,7 @@ const handleDeleteCharacter = async (id: string, name: string) => {
 
         <Outlet />
       </Container>
+    </div>
     </>
   );
 };
