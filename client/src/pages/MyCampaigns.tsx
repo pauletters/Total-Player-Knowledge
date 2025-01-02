@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useQuery, gql } from '@apollo/client';
 import { Container, Card, Row, Col, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import UserMenu from '../components/UserMenu';
 import CreateCampaignModal from '../components/CreateCampaignModal';
 
 // GraphQL Query to Fetch Campaigns
@@ -59,7 +58,7 @@ const MyCampaigns: React.FC = () => {
 
   return (
     <>
-      <UserMenu />
+    <div className='hero-section'>
       <Container>
         <h1 className="mb-4">My Campaigns</h1>
 
@@ -112,6 +111,7 @@ const MyCampaigns: React.FC = () => {
           ))}
         </Row>
       </Container>
+      </div>
 
       {/* Create Campaign Modal */}
       <CreateCampaignModal

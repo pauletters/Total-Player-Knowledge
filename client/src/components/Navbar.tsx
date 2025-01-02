@@ -36,6 +36,9 @@ const AppNavbar = () => {
                 <Nav.Link as={Link} to='/my-characters' className='nav-link'>
                   My Characters
                 </Nav.Link>
+                <Nav.Link as={Link} to='/my-campaigns' className='nav-link'>
+                    My Campaigns
+                  </Nav.Link>
                 <Nav.Link onClick={AuthService.logout} className='nav-link nav-logout'>
                   Logout
                 </Nav.Link>
