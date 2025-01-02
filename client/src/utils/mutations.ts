@@ -77,6 +77,14 @@ export const ADD_CHARACTER = gql`
   }
 `;
 
+export const DELETE_CHARACTER = gql`
+  mutation DeleteCharacter($id: ID!) {
+    deleteCharacter(id: $id) {
+      _id
+    }
+  }
+`;
+
 export const UPDATE_CHARACTER_SPELLS = gql`
   mutation UpdateCharacterSpells($id: ID!, $spells: [SpellInput!]!) {
     updateCharacterSpells(id: $id, spells: $spells) {

@@ -367,10 +367,6 @@ const CharacterDetails: React.FC = () => {
       character.skills.proficiencies.includes('Survival') ? proficiencyBonus : 0
     ),
   }
-  console.log(character.skills.proficiencies);
-  console.log(proficiencyBonus);
-  console.log(attributeMods);
-  console.log(skillMods);
 
   return (
     <Container className="py-4">
