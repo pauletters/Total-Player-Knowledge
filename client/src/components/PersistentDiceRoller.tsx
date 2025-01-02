@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card } from 'react-bootstrap';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import AuthService from '../utils/auth';
-import '../styles/DiceBox.css';
+import '../styles/diceBox.css';
 
 
 interface PersistentDiceRollerProps {
