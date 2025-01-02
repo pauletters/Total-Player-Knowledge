@@ -18,6 +18,7 @@ export const GET_CHARACTERS = gql`
         name
         class
         level
+        avatar
       }
     }
   }
@@ -34,6 +35,7 @@ export const GET_CHARACTER = gql`
         level
         background
         alignment
+        avatar
       }
       attributes {
         strength
@@ -53,11 +55,36 @@ export const GET_CHARACTER = gql`
         proficiencies
         savingThrows
       }
-      equipment
+      equipment {
+        name
+        category
+        cost {
+          quantity
+          unit
+        }
+        weight
+        description
+        properties
+      }
       spells {
         name
         level
         prepared
+      }
+    }
+  }
+`;
+
+export const SEARCH_USERS = gql`
+  query SearchUsers($term: String!) {
+    searchUsers(term: $term) {
+      _id
+      username
+      characters {
+        _id
+        basicInfo {
+          name
+        }
       }
     }
   }

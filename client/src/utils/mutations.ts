@@ -37,6 +37,7 @@ export const ADD_CHARACTER = gql`
         level
         background
         alignment
+        avatar
       }
       attributes {
         strength
@@ -56,7 +57,17 @@ export const ADD_CHARACTER = gql`
         proficiencies
         savingThrows
       }
-      equipment
+      equipment {
+        name
+        category
+        cost {
+          quantity
+          unit
+        }
+        weight
+        description
+        properties
+      }
       spells {
         name
         level
@@ -67,9 +78,12 @@ export const ADD_CHARACTER = gql`
 `;
 
 export const UPDATE_CHARACTER_SPELLS = gql`
-  mutation UpdateCharacterSpells($id: ID!, $spells: [SpellInput]!) {
+  mutation UpdateCharacterSpells($id: ID!, $spells: [SpellInput!]!) {
     updateCharacterSpells(id: $id, spells: $spells) {
       _id
+      basicInfo {
+        name
+      }
       spells {
         name
         level
@@ -87,6 +101,65 @@ export const TOGGLE_SPELL_PREPARED = gql`
         name
         level
         prepared
+      }
+    }
+  }
+`;
+
+export const UPDATE_CHARACTER_EQUIPMENT = gql`
+  mutation UpdateCharacterEquipment($id: ID!, $equipment: [EquipmentInput!]!) {
+    updateCharacterEquipment(id: $id, equipment: $equipment) {
+      _id
+      equipment {
+        name
+        category
+        cost {
+          quantity
+          unit
+        }
+        weight
+        description
+        properties
+      }
+    }
+  }
+`;
+
+export const UPDATE_CAMPAIGN = gql`
+  mutation UpdateCampaign(
+    $id: ID!
+    $name: String
+    $description: String
+    $addPlayers: [ID!]
+    $removePlayers: [ID!]
+    $addMilestones: [String!]
+    $removeMilestoneIndex: Int
+  ) {
+    updateCampaign(
+      id: $id
+      name: $name
+      description: $description
+      addPlayers: $addPlayers
+      removePlayers: $removePlayers
+      addMilestones: $addMilestones
+      removeMilestoneIndex: $removeMilestoneIndex
+    ) {
+      _id
+      name
+      description
+      milestones
+      players {
+        _id
+        basicInfo {
+          name
+        }
+        player {
+          username
+        }
+      }
+      createdBy {
+        _id
+        username
       }
     }
   }

@@ -4,15 +4,39 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Card, Row, Col, Button, Nav} from 'react-bootstrap';
 import { useQuery, useMutation } from '@apollo/client';
 import { GET_CHARACTER } from '../utils/queries';
-import { UPDATE_CHARACTER_SPELLS, TOGGLE_SPELL_PREPARED } from '../utils/mutations';
+import { 
+  UPDATE_CHARACTER_SPELLS, 
+  TOGGLE_SPELL_PREPARED, 
+  UPDATE_CHARACTER_EQUIPMENT 
+} from '../utils/mutations';
+import { dndApi } from '../utils/dndApi';
 import { CharacterData, ApiSpell } from './types';
 import SpellCard from './Spells/SpellCard';
 import SpellModal from './Spells/SpellSelection';
-import { spellCache } from '../utils/spellCache';
-import DiceRoller from './DiceRoller';
+import EquipmentModal from './Equipment/EquipmentSelection';
+import BackgroundTab from './BackgroundTab';
 
 interface CharacterParams {
   characterId: string;
+}
+
+interface APIEquipmentProperty {
+  name: string;
+}
+
+interface APIEquipment {
+  index: string;
+  name: string;
+  equipment_category: {
+    name: string;
+  };
+  cost?: {
+    quantity: number;
+    unit: string;
+  };
+  weight?: number;
+  desc?: string[];
+  properties?: APIEquipmentProperty[];
 }
 
 const CharacterDetails: React.FC = () => {
@@ -29,56 +53,89 @@ const CharacterDetails: React.FC = () => {
   const [updateCharacterSpells] = useMutation(UPDATE_CHARACTER_SPELLS);
   const [toggleSpellPrepared] = useMutation(TOGGLE_SPELL_PREPARED);
 
-  // Load spell details from cache when spells change
+  const [showEquipmentModal, setShowEquipmentModal] = useState(false);
+  const [updateCharacterEquipment] = useMutation(UPDATE_CHARACTER_EQUIPMENT);
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+
   useEffect(() => {
     const loadSpellDetails = async () => {
       if (data?.character?.spells) {
         const spellsToLoad = data.character.spells.filter(
           spell => !spellDetails[spell.name]
         );
-
-        for (const spell of spellsToLoad) {
-          const cachedSpell = await spellCache.getSpell(spell.name);
-          if (cachedSpell) {
-            setSpellDetails(prev => ({
-              ...prev,
-              [spell.name]: cachedSpell
-            }));
+  
+        // Load all spells in parallel
+        const spellPromises = spellsToLoad.map(async (spell) => {
+          try {
+            const spellIndex = spell.name.toLowerCase().replace(/\s+/g, '-');
+            const fetchedSpell = await dndApi.getSpell(spellIndex);
+            return { name: spell.name, details: fetchedSpell };
+          } catch (error) {
+            console.error(`Error loading spell ${spell.name}:`, error);
+            return null;
           }
-        }
+        });
+  
+        const loadedSpells = await Promise.all(spellPromises);
+        
+        // Add all successfully loaded spells to the state
+        const newSpellDetails = { ...spellDetails };
+        loadedSpells.forEach(spell => {
+          if (spell && spell.details) {
+            newSpellDetails[spell.name] = spell.details;
+          }
+        });
+        
+        setSpellDetails(newSpellDetails);
       }
     };
 
     loadSpellDetails();
   }, [data?.character?.spells]);
 
-  const handleAddSpells = async (newSpells: ApiSpell[]) => {
-    if (!data?.character) return;
+  const handleAddSpells = async (newSpellList: { name: string; level: number; prepared: boolean; }[]) => {
+    if (!data?.character) {
+      console.error('No character data available');
+      return;
+    }
     
     try {
-       // Add spells to cache before updating character
-       for (const spell of newSpells) {
-        if (!spellDetails[spell.name]) {
-          setSpellDetails(prev => ({
-            ...prev,
-            [spell.name]: spell
-          }));
+      // Ensure all required fields are present and properly formatted
+      const cleanSpells = newSpellList.map(spell => {
+        if (!spell.name || typeof spell.level !== 'number') {
+          throw new Error('Invalid spell data');
         }
-      }
+        return {
+          name: spell.name.trim(),
+          level: spell.level,
+          prepared: Boolean(spell.prepared)
+        };
+      });
 
-      await updateCharacterSpells({
+      console.log('Sending spell update:', {
+        characterId,
+        spells: cleanSpells
+      });
+  
+      const { data: updateData } = await updateCharacterSpells({
         variables: {
           id: characterId,
-          spells: newSpells.map(spell => ({
-            name: spell.name,
-            level: spell.level,
-            prepared: false
-          }))
+          spells: cleanSpells
         },
-        refetchQueries: [{ query: GET_CHARACTER, variables: { id: characterId } }]
+        refetchQueries: [{ query: GET_CHARACTER, variables: { id: characterId } }],
+        errorPolicy: 'all'
       });
+
+      if (!updateData?.updateCharacterSpells) {
+        console.error('No data returned from updateCharacterSpells mutation');
+        throw new Error('Failed to update character spells');
+      }
+
+      console.log('Spells updated successfully:', updateData.updateCharacterSpells);
+
     } catch (error) {
       console.error('Error updating spells:', error);
+      alert('Failed to update spells. Please try again.');
     }
   };
 
@@ -128,6 +185,83 @@ const CharacterDetails: React.FC = () => {
       }
     } catch (error) {
       console.error('Error toggling spell prepared status:', error);
+    }
+  };
+
+  // Handler for adding equipment
+  const handleAddEquipment = async (newEquipment: APIEquipment[]) => {
+    if (!data?.character) return;
+
+    try {
+      // First, clean up the new equipment data
+      const cleanNewEquipment = newEquipment.map(item => ({
+        name: item.name,
+        category: item.equipment_category.name,
+        cost: item.cost ? {
+          quantity: item.cost.quantity,
+          unit: item.cost.unit
+        } : undefined,
+        weight: item.weight || null,
+        description: item.desc || [],
+        properties: item.properties?.map(p => p.name) || []
+      }));
+  
+      // Then, clean up the existing equipment data
+      const cleanExistingEquipment = data.character.equipment.map(item => ({
+        name: item.name,
+        category: item.category,
+        cost: item.cost ? {
+          quantity: item.cost.quantity,
+          unit: item.cost.unit
+        } : undefined,
+        weight: item.weight || null,
+        description: item.description || [],
+        properties: item.properties || []
+      }));
+  
+      // Combine the cleaned equipment arrays
+      const combinedEquipment = [...cleanExistingEquipment, ...cleanNewEquipment];
+
+      await updateCharacterEquipment({
+        variables: {
+          id: characterId,
+          equipment: combinedEquipment
+        },
+        refetchQueries: [{ query: GET_CHARACTER, variables: { id: characterId } }]
+      });
+    } catch (error) {
+      console.error('Error updating equipment:', error);
+    }
+  };
+
+  // Handler for removing equipment
+  const handleRemoveEquipment = async (equipmentName: string) => {
+    if (!data?.character) return;
+
+    try {
+      const updatedEquipment = data.character.equipment
+        .filter(item => item.name !== equipmentName)
+        .map(item => ({
+          name: item.name,
+          category: item.category,
+          cost: item.cost ? {
+            quantity: item.cost.quantity,
+            unit: item.cost.unit
+          } : undefined,
+          weight: item.weight || null,
+          description: item.description || [],
+          properties: item.properties || []
+        }));
+
+      await updateCharacterEquipment({
+        variables: {
+          id: characterId,
+          equipment: updatedEquipment
+        },
+        refetchQueries: [{ query: GET_CHARACTER, variables: { id: characterId } }]
+      });
+    } catch (error) {
+      console.error('Error removing equipment:', error);
     }
   };
 
@@ -241,6 +375,16 @@ const CharacterDetails: React.FC = () => {
   return (
     <Container className="py-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
+           {/* Avatar Image */}
+           <div className="me-3">
+          {character.basicInfo.avatar && (
+            <img
+              src={character.basicInfo.avatar}
+              alt={`${character.basicInfo.name}'s Avatar`}
+              style={{ width: '100px', height: '100px', borderRadius: '50%' }}
+            />
+          )}
+        </div>
         <h1>{character.basicInfo.name}</h1>
         <Button variant="outline-secondary" onClick={() => navigate('/my-characters')}>
           Back to Characters
@@ -369,47 +513,129 @@ const CharacterDetails: React.FC = () => {
               <Card.Header>
                 <div className="d-flex justify-content-between align-items-center">
                   <span>Equipment</span>
-                  <Button variant="primary" size="sm">Add Equipment</Button>
+                  <Button 
+                  variant="primary" 
+                  size="sm"
+                  onClick={() => setShowEquipmentModal(true)}
+                  >
+                    Add Equipment
+                  </Button>
                 </div>
               </Card.Header>
-              <Card.Body>
-                <ul className="list-unstyled">
+              <Card.Body className="p-0">
+                <div className="equipment-list">
+              {character.equipment && character.equipment.length > 0 ? (
+                  <div className="list-group list-group-flush">
                   {character.equipment.map((item) => (
-                    <li key={item}>{item}</li>
+                    <div 
+                      key={item.name} 
+                      className="list-group-item"
+                      style={{ 
+                        cursor: 'pointer', 
+                        transition: 'all 0.2s ease',
+                        position: 'relative',
+                        backgroundColor: expandedItems.has(item.name) ? '#f8f9fa' : 'inherit'
+                      }}
+                      onClick={() => {
+                        setExpandedItems(prev => {
+                          const newExpanded = new Set(prev);
+                          if (newExpanded.has(item.name)) {
+                            newExpanded.delete(item.name);
+                          } else {
+                            newExpanded.add(item.name);
+                          }
+                          return newExpanded;
+                        });
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+                        e.currentTarget.style.backgroundColor = '#f8f9fa';
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.transform = 'none';
+                        e.currentTarget.style.boxShadow = 'none';
+                        e.currentTarget.style.backgroundColor = expandedItems.has(item.name) ? '#f8f9fa' : 'inherit';
+                      }}
+                    >
+                      <div className="d-flex justify-content-between align-items-start">
+                        <div className="ms-2 me-auto" style={{ flex: 1 }}>
+                          <div className="d-flex justify-content-between">
+                            <div>
+                              <div className="fw-bold">{item.name}</div>
+                              <div className="text-muted small">{item.category}</div>
+                            </div>
+                            <div className="text-end">
+                              {item.cost && (
+                                <div className="small">{item.cost.quantity} {item.cost.unit}</div>
+                              )}
+                              {item.weight && (
+                                <div className="text-muted small">{item.weight} lb</div>
+                              )}
+                            </div>
+                          </div>
+                          {expandedItems.has(item.name) && (
+                            <>
+                              {item.description && item.description.length > 0 && (
+                                <div className="small text-muted mt-1">
+                                  {item.description[0]}
+                                </div>
+                              )}
+                              {item.properties && item.properties.length > 0 && (
+                                <div className="small mt-1">
+                                  <strong>Properties:</strong> {item.properties.join(', ')}
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                        <Button 
+                          variant="outline-danger"
+                          size="sm"
+                          className="ms-3"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveEquipment(item.name);
+                          }}
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    </div>
                   ))}
-                </ul>
-              </Card.Body>
-            </Card>
-          )}
+                </div>
+              ) : (
+                <p className="text-center my-4">No equipment added yet.</p>
+              )}
+            </div>
+          </Card.Body>
+        </Card>
+      )}
         
-
         {activeTab === 'background' && (
             <Card>
               <Card.Header>
                 <div className="d-flex justify-content-between align-items-center">
                   <span>Background</span>
-                  <Button variant="primary" size="sm">Add Background</Button>
                 </div>
               </Card.Header>
               <Card.Body>
-                  <p className="text-center">No background added yet.</p>
-              </Card.Body>
-            </Card>
+                <BackgroundTab 
+                    character={character}
+                    characterBackground={character.basicInfo.background}
+                    onBackstoryChange={(newBackstory) => {
+                    // Handle backstory update here with your mutation
+                    console.log('Backstory updated:', newBackstory);
+                }}
+                    onInputChange={(field, value) => {
+                    // Handle input change here
+                    console.log(`Field ${field} changed to ${value}`);
+                }}
+              />
+            </Card.Body>
+          </Card>
           )}
-
-        {activeTab === 'diceRoller' && (
-            <Card>
-              <Card.Header>
-                <div className="d-flex justify-content-between align-items-center">
-                  <span>Dice Roller</span>
-                </div>
-              </Card.Header>
-              <Card.Body>
-                <DiceRoller />
-              </Card.Body>
-            </Card>
-          )}
-          </div>
+        </div>
 
         <div className="character-tabs">
           <Nav variant="pills" className="flex-column">
@@ -445,14 +671,6 @@ const CharacterDetails: React.FC = () => {
                 Background
               </Nav.Link>
             </Nav.Item>
-            <Nav.Item>
-              <Nav.Link 
-                active={activeTab === 'diceRoller'}
-                onClick={() => setActiveTab('diceRoller')}
-              >
-                Dice Roller
-              </Nav.Link>
-            </Nav.Item>
           </Nav>
 
         </div>
@@ -463,8 +681,19 @@ const CharacterDetails: React.FC = () => {
       onClose={() => setShowSpellModal(false)}
       onAddSpells={handleAddSpells}
       characterClass={character.basicInfo.class}
+      existingSpells={data.character.spells || []}
     />
   )}
+
+{character && (
+  <>
+    <EquipmentModal
+      show={showEquipmentModal}
+      onClose={() => setShowEquipmentModal(false)}
+      onAddEquipment={(equipment: APIEquipment[]) => handleAddEquipment(equipment)}
+    />
+  </>
+)}
     </Container>
   );
 };

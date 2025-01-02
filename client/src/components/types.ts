@@ -7,6 +7,7 @@ export interface CharacterData {
     level: number;
     background: string;
     alignment: string;
+    avatar: string;
   };
   attributes: {
     strength: number;
@@ -26,7 +27,7 @@ export interface CharacterData {
     proficiencies: string[];
     savingThrows: string[];
   };
-  equipment: string[];
+  equipment: Equipment[];
   spells: CharacterSpell[];
 }
 
@@ -65,4 +66,16 @@ export interface CharacterSpell {
   name: string;
   level: number;
   prepared: boolean;
+}
+
+export interface Equipment {
+  name: string;
+  category: string;
+  cost?: {
+    quantity: number;
+    unit: string;
+  };
+  weight?: number;
+  description?: string[];
+  properties?: string[];
 }
