@@ -100,8 +100,8 @@ const handleDeleteCharacter = async (id: string, name: string) => {
                         </div>
 
                         {/* Character Details */}
-                        <Card.Title>{character.basicInfo.name}</Card.Title>
-                        <Card.Text>
+                        <Card.Title className="character-card-content">{character.basicInfo.name}</Card.Title>
+                        <Card.Text className="character-card-content">
                           Level {character.basicInfo.level} {character.basicInfo.class}
                         </Card.Text>
                         <div className="d-flex justify-content-between gap-2">
