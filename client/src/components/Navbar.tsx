@@ -16,6 +16,7 @@ const AppNavbar = () => {
 
   return (
     <>
+    <div className='hero-section'>
       <Navbar bg='dark' variant='dark' expand='lg'>
         <Container fluid>
           <Navbar.Brand as={Link} to='/about' className='navbar-brand'>
@@ -52,6 +53,7 @@ const AppNavbar = () => {
           </Navbar.Collapse>
         </Container>
       </Navbar>
+    </div>
 
       {/* set modal data up */}
       <Modal

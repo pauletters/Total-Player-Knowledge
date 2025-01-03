@@ -118,11 +118,10 @@
   /* Hero section styling for the about page */
   .hero-section {
     color: Black;
-    padding: .5rem;
     text-align: center;
     position: relative;
     z-index: 1;
-    border-top: 3px solid var(--primary-red);
+    border-bottom: 3px solid var(--primary-red);
   }
 
   .hero-section::after {
