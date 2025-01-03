@@ -439,95 +439,98 @@ const CharacterDetails: React.FC = () => {
                 <Card>
                   <Card.Header>Skills</Card.Header>
                   <Card.Body>
+                  <p>
+                  ★ = Proficient
+                  </p>
                     <Row>
                       <Col xs={6}>
                         <p>
-                          <strong>Acrobatics (Dex):</strong> {skillMods.acrobaticsMod >= 0 ? `+${skillMods.acrobaticsMod}` : skillMods.acrobaticsMod} {character.skills.proficiencies.includes("Acrobatics") && "(Proficient)"}
+                          <strong>Acrobatics (Dex):</strong> {skillMods.acrobaticsMod >= 0 ? `+${skillMods.acrobaticsMod}` : skillMods.acrobaticsMod} {character.skills.proficiencies.includes("Acrobatics") && "★"}
                         </p>
                       </Col>
                       <Col xs={6}>
                         <p>
-                          <strong>Animal Handling (Wis):</strong> {skillMods.animalHandlingMod >= 0 ? `+${skillMods.animalHandlingMod}` : skillMods.animalHandlingMod} {character.skills.proficiencies.includes("Animal Handling") && "(Proficient)"}
+                          <strong>Animal Handling (Wis):</strong> {skillMods.animalHandlingMod >= 0 ? `+${skillMods.animalHandlingMod}` : skillMods.animalHandlingMod} {character.skills.proficiencies.includes("Animal Handling") && "★"}
                         </p>
                       </Col>
                       <Col xs={6}>
                         <p>
-                          <strong>Arcana (Int):</strong> {skillMods.arcanaMod >= 0 ? `+${skillMods.arcanaMod}` : skillMods.arcanaMod} {character.skills.proficiencies.includes("Arcana") && "(Proficient)"}
+                          <strong>Arcana (Int):</strong> {skillMods.arcanaMod >= 0 ? `+${skillMods.arcanaMod}` : skillMods.arcanaMod} {character.skills.proficiencies.includes("Arcana") && "★"}
                         </p>
                       </Col>
                       <Col xs={6}>
                         <p>
-                          <strong>Athletics (Str):</strong> {skillMods.athleticsMod >= 0 ? `+${skillMods.athleticsMod}` : skillMods.athleticsMod} {character.skills.proficiencies.includes("Athletics") && "(Proficient)"}
+                          <strong>Athletics (Str):</strong> {skillMods.athleticsMod >= 0 ? `+${skillMods.athleticsMod}` : skillMods.athleticsMod} {character.skills.proficiencies.includes("Athletics") && "★"}
                         </p>
                       </Col>
                       <Col xs={6}>
                         <p>
-                          <strong>Deception (Cha):</strong> {skillMods.deceptionMod >= 0 ? `+${skillMods.deceptionMod}` : skillMods.deceptionMod} {character.skills.proficiencies.includes("Deception") && "(Proficient)"}
+                          <strong>Deception (Cha):</strong> {skillMods.deceptionMod >= 0 ? `+${skillMods.deceptionMod}` : skillMods.deceptionMod} {character.skills.proficiencies.includes("Deception") && "★"}
                         </p>
                       </Col>
                       <Col xs={6}>
                         <p>
-                          <strong>History (Int):</strong> {skillMods.historyMod >= 0 ? `+${skillMods.historyMod}` : skillMods.historyMod} {character.skills.proficiencies.includes("History") && "(Proficient)"}
+                          <strong>History (Int):</strong> {skillMods.historyMod >= 0 ? `+${skillMods.historyMod}` : skillMods.historyMod} {character.skills.proficiencies.includes("History") && "★"}
                         </p>
                       </Col>
                       <Col xs={6}>
                         <p>
-                          <strong>Insight (Wis):</strong> {skillMods.insightMod >= 0 ? `+${skillMods.insightMod}` : skillMods.insightMod} {character.skills.proficiencies.includes("Insight") && "(Proficient)"}
+                          <strong>Insight (Wis):</strong> {skillMods.insightMod >= 0 ? `+${skillMods.insightMod}` : skillMods.insightMod} {character.skills.proficiencies.includes("Insight") && "★"}
                         </p>
                       </Col>
                       <Col xs={6}>
                         <p>
-                          <strong>Intimidation (Cha):</strong> {skillMods.intimidationMod >= 0 ? `+${skillMods.intimidationMod}` : skillMods.intimidationMod} {character.skills.proficiencies.includes("Intimidation") && "(Proficient)"}
+                          <strong>Intimidation (Cha):</strong> {skillMods.intimidationMod >= 0 ? `+${skillMods.intimidationMod}` : skillMods.intimidationMod} {character.skills.proficiencies.includes("Intimidation") && "★"}
                         </p>
                       </Col>
                       <Col xs={6}>
                         <p>
-                          <strong>Investigation (Int):</strong> {skillMods.investigationMod >= 0 ? `+${skillMods.investigationMod}` : skillMods.investigationMod} {character.skills.proficiencies.includes("Investigation") && "(Proficient)"}
+                          <strong>Investigation (Int):</strong> {skillMods.investigationMod >= 0 ? `+${skillMods.investigationMod}` : skillMods.investigationMod} {character.skills.proficiencies.includes("Investigation") && "★"}
                         </p>
                       </Col>
                       <Col xs={6}>
                         <p>
-                          <strong>Medicine (Wis):</strong> {skillMods.medicineMod >= 0 ? `+${skillMods.medicineMod}` : skillMods.medicineMod} {character.skills.proficiencies.includes("Medicine") && "(Proficient)"}
+                          <strong>Medicine (Wis):</strong> {skillMods.medicineMod >= 0 ? `+${skillMods.medicineMod}` : skillMods.medicineMod} {character.skills.proficiencies.includes("Medicine") && "★"}
                         </p>
                       </Col>
                       <Col xs={6}>
                         <p>
-                          <strong>Nature (Int):</strong> {skillMods.natureMod >= 0 ? `+${skillMods.natureMod}` : skillMods.natureMod} {character.skills.proficiencies.includes("Nature") && "(Proficient)"}
+                          <strong>Nature (Int):</strong> {skillMods.natureMod >= 0 ? `+${skillMods.natureMod}` : skillMods.natureMod} {character.skills.proficiencies.includes("Nature") && "★"}
                         </p>
                       </Col>
                       <Col xs={6}>
                         <p>
-                          <strong>Perception (Wis):</strong> {skillMods.perceptionMod >= 0 ? `+${skillMods.perceptionMod}` : skillMods.perceptionMod} {character.skills.proficiencies.includes("Perception") && "(Proficient)"}
+                          <strong>Perception (Wis):</strong> {skillMods.perceptionMod >= 0 ? `+${skillMods.perceptionMod}` : skillMods.perceptionMod} {character.skills.proficiencies.includes("Perception") && "★"}
                         </p>
                       </Col>
                       <Col xs={6}>
                         <p>
-                          <strong>Performance (Cha):</strong> {skillMods.performanceMod >= 0 ? `+${skillMods.performanceMod}` : skillMods.performanceMod} {character.skills.proficiencies.includes("Performance") && "(Proficient)"}
+                          <strong>Performance (Cha):</strong> {skillMods.performanceMod >= 0 ? `+${skillMods.performanceMod}` : skillMods.performanceMod} {character.skills.proficiencies.includes("Performance") && "★"}
                         </p>
                       </Col>
                       <Col xs={6}>
                         <p>
-                          <strong>Persuasion (Cha):</strong> {skillMods.persuasionMod >= 0 ? `+${skillMods.persuasionMod}` : skillMods.persuasionMod} {character.skills.proficiencies.includes("Persuasion") && "(Proficient)"}
+                          <strong>Persuasion (Cha):</strong> {skillMods.persuasionMod >= 0 ? `+${skillMods.persuasionMod}` : skillMods.persuasionMod} {character.skills.proficiencies.includes("Persuasion") && "★"}
                         </p>
                       </Col>
                       <Col xs={6}>
                         <p>
-                          <strong>Religion (Int):</strong> {skillMods.religionMod >= 0 ? `+${skillMods.religionMod}` : skillMods.religionMod} {character.skills.proficiencies.includes("Religion") && "(Proficient)"}
+                          <strong>Religion (Int):</strong> {skillMods.religionMod >= 0 ? `+${skillMods.religionMod}` : skillMods.religionMod} {character.skills.proficiencies.includes("Religion") && "★"}
                         </p>
                       </Col>
                       <Col xs={6}>
                         <p>
-                          <strong>Sleight of Hand (Dex):</strong> {skillMods.sleightOfHandMod >= 0 ? `+${skillMods.sleightOfHandMod}` : skillMods.sleightOfHandMod} {character.skills.proficiencies.includes("Sleight of Hand") && "(Proficient)"}
+                          <strong>Sleight of Hand (Dex):</strong> {skillMods.sleightOfHandMod >= 0 ? `+${skillMods.sleightOfHandMod}` : skillMods.sleightOfHandMod} {character.skills.proficiencies.includes("Sleight of Hand") && "★"}
                         </p>
                       </Col>
                       <Col xs={6}>
                         <p>
-                          <strong>Stealth (Dex):</strong> {skillMods.stealthMod >= 0 ? `+${skillMods.stealthMod}` : skillMods.stealthMod} {character.skills.proficiencies.includes("Stealth") && "(Proficient)"}
+                          <strong>Stealth (Dex):</strong> {skillMods.stealthMod >= 0 ? `+${skillMods.stealthMod}` : skillMods.stealthMod} {character.skills.proficiencies.includes("Stealth") && "★"}
                         </p>
                       </Col>
                       <Col xs={6}>
                         <p>
-                          <strong>Survival (Wis):</strong> {skillMods.survivalMod >= 0 ? `+${skillMods.survivalMod}` : skillMods.survivalMod} {character.skills.proficiencies.includes("Survival") && "(Proficient)"}
+                          <strong>Survival (Wis):</strong> {skillMods.survivalMod >= 0 ? `+${skillMods.survivalMod}` : skillMods.survivalMod} {character.skills.proficiencies.includes("Survival") && "★"}
                         </p>
                       </Col>
                     </Row>
