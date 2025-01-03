@@ -96,6 +96,15 @@
     color: 'white';
   }
 
+  .character-cards {
+    background-color: #3a3a3a;
+    color: white;
+    border-radius: 10px;
+    border-style: solid;
+    border-width: 3px;
+    border-color: var(--primary-red);
+  }
+
   label{
     font-weight: 1000;
   }
@@ -118,11 +127,10 @@
   /* Hero section styling for the about page */
   .hero-section {
     color: Black;
-    padding: .5rem;
     text-align: center;
     position: relative;
     z-index: 1;
-    border-top: 3px solid var(--primary-red);
+    border-bottom: 3px solid var(--primary-red);
   }
 
   .hero-section::after {

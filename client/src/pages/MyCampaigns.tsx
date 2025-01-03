@@ -58,7 +58,6 @@ const MyCampaigns: React.FC = () => {
 
   return (
     <>
-    <div className='hero-section'>
       <Container>
         <h1 className="mb-4">My Campaigns</h1>
 
@@ -111,7 +110,6 @@ const MyCampaigns: React.FC = () => {
           ))}
         </Row>
       </Container>
-      </div>
 
       {/* Create Campaign Modal */}
       <CreateCampaignModal
