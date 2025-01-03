@@ -63,7 +63,6 @@ const handleDeleteCharacter = async (id: string, name: string) => {
 
   return (
     <>
-    <div className='hero-section'>
       <Container>
         {!isCreatingCharacter && !isViewingCharacter && (
           <>
@@ -148,7 +147,6 @@ const handleDeleteCharacter = async (id: string, name: string) => {
 
         <Outlet />
       </Container>
-    </div>
     </>
   );
 };
