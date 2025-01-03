@@ -106,7 +106,8 @@ const handleDeleteCharacter = async (id: string, name: string) => {
                         </Card.Text>
                         <div className="d-flex justify-content-between gap-2">
                           <Button 
-                            variant="outline-primary" 
+                            className='view-character-button'
+                            variant="danger" 
                             size="sm"
                             onClick={() => handleViewCharacter(character)}
                           >

@@ -16,7 +16,6 @@
     color: white;
   }
   
-  /* Add some padding and margins for better spacing */
   .nav-pills {
     padding: 1rem;
     border-radius: 0.25rem;
@@ -190,4 +189,18 @@
 .content-container .btn:focus {
     box-shadow: none;
     outline: none;
+}
+
+.edit-button {
+    padding-left: 1.9rem;
+}
+
+.privacy-toggle {
+    padding-left: 1.9rem;
+    padding-top: 2rem;
+    text-align: center;
+}
+
+#private-toggle {
+    margin-left: .05rem;
 }

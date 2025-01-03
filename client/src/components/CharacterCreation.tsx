@@ -11,6 +11,8 @@ import { GET_CHARACTERS } from '../utils/queries';
 import '../styles/main.css';
 
 const initialCharacterState: CharacterData = {
+  _id: '',
+  private: false,
   basicInfo: {
     name: '',
     race: '',
@@ -27,6 +29,9 @@ const initialCharacterState: CharacterData = {
     intelligence: 10,
     wisdom: 10,
     charisma: 10,
+  },
+  biography: {
+    backstory:'',
   },
   combat: {
     armorClass: 10,

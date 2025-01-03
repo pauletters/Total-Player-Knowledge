@@ -971,20 +971,21 @@ const CharacterDetails: React.FC = () => {
           </Nav>
 
           {activeTab === 'details' && (
-            <div className="mt-4">
+            <div className="edit-button">
               {/* Only show Edit button when not editing */}
               {isEditing ? (
                 <Button variant="success" onClick={handleSubmitChanges}>Submit Changes</Button>
               ) : (
-                <Button variant="primary" onClick={() => setIsEditing(true)}>Edit</Button>
+                <Button variant="primary" onClick={() => setIsEditing(true)}>Edit Character</Button>
               )}
             </div>
           )}
 
           {/* Show Private/Public toggle only when editing */}
           {isEditing && activeTab === 'details' && (
-            <div className="mt-4">
-              <h4>Private/Public</h4>
+            <div className="privacy-toggle">
+              <h4>Privacy Setting</h4>
+              <p>Set the ability for your character to be viewed by others</p>
               <Form.Check
                 type="switch"
                 id="private-toggle"
