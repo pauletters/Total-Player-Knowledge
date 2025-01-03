@@ -8,7 +8,8 @@ export function isValidClassName(className: string): className is ValidClassName
 }
 
 export interface CharacterData {
-  _id?: string;
+  private:any
+  _id: string;
   basicInfo: {
     name: string;
     race: string;
@@ -39,6 +40,9 @@ export interface CharacterData {
   equipment: Equipment[];
   spells: CharacterSpell[];
   classFeatures: ClassFeature[];
+  biography: {
+    backstory: string;
+  };
   
 }
 

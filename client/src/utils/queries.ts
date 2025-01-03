@@ -37,6 +37,9 @@ export const GET_CHARACTER = gql`
         alignment
         avatar
       }
+      biography {
+        backstory
+      }
       attributes {
         strength
         dexterity
