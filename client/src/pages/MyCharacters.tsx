@@ -84,11 +84,11 @@ const handleDeleteCharacter = async (id: string, name: string) => {
               <Row xs={1} md={2} lg={3} className="g-4">
                 {characters.map((character) => (
                   <Col key={character._id}>
-                    <Card>
-                      <Card.Body style={{ backgroundColor: '#3a3a3a', color: 'white', borderRadius: '10px', borderStyle: 'solid', borderColor: 'red' }}>
+                    <Card className='character-cards'>
+                      <Card.Body>
                         {/* Avatar Image */}
-                        <div className="d-flex justify-content-between align-items-center mb-4">
-                          <div className="me-3">
+                        <div className="d-flex justify-content-center align-items-center mb-4">
+                          <div>
                             {character.basicInfo.avatar && (
                               <img
                                 src={character.basicInfo.avatar}

@@ -79,14 +79,15 @@ const PersistentDiceRoller: React.FC<PersistentDiceRollerProps> = ({ DiceRoller 
             maxHeight: '1000px',
             overflowY: 'auto', // Enables vertical scrolling
             overflowX: 'hidden', // Prevents horizontal scrolling
-            borderRadius: '5px',
-            borderStyle: 'solid',
-            borderColor: 'red',
+            borderRadius: '10px',
+            boxShadow: '0 0 10px rgba(0,0,0,0.5)',
+            
           }}
         >
           <Card 
-            className="border-start-0 rounded-0"
-            style={{ maxWidth: '500px'}}  // Increased to match
+            className="border-start-0 rounded-0 dice-roller-card"
+            style={{ maxWidth: '500px', borderRadius: '5px'
+              }}  // Increased to match
           >
             <DiceRoller />
           </Card>

@@ -125,7 +125,9 @@ const DiceRoller: React.FC = () => {
   };
 
   return (
-    <Card style={{ maxWidth: '48rem', margin: '0 auto', backgroundColor: '#3a3a3a', color: '#fff' }}>
+    <Card style={{ maxWidth: '48rem', margin: '0 auto', backgroundColor: '#3a3a3a', color: '#fff' }}
+    className="dice-roller-card"
+    >
       <Card.Header>
         <Card.Title>3D Dice Roller</Card.Title>
       </Card.Header>
