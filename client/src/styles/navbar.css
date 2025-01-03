@@ -1,7 +1,10 @@
 .navbar {
-    background: linear-gradient(to right, #1a1a1a, #2c2c2c) !important;
-    padding: 0.75rem 1.5rem;
-  }
+  background: linear-gradient(45deg, #161616, #282727, #1a1a1a),
+  url("data:image/svg+xml,%3Csvg width='84' height='72' viewBox='0 0 84 72' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M84 57h-8V15h8v42zM76 57h-8V15h8v42zM68 57h-8V15h8v42zM60 57h-8V15h8v42zM52 57h-8V15h8v42zM44 57h-8V15h8v42zM36 57h-8V15h8v42zM28 57h-8V15h8v42zM20 57h-8V15h8v42zM12 57H4V15h8v42zM0 57h84v4H0v-4z' fill='%239C92AC' fill-opacity='0.4' fill-rule='evenodd'/%3E%3C/svg%3E") repeat;
+  background-size: 10px 10px;
+  background-repeat: repeat;
+  padding: 0.75rem 1.5rem;
+}
   
   .navbar-brand img {
     height: 110px;
