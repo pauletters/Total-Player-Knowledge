@@ -369,39 +369,66 @@ const resolvers = {
       }
     },
 
-    updateCharacterEquipment: async (
-      _parent: unknown,
-      { id, equipment }: { id: string; equipment: any[] },
-      context: Context
-    ) => {
+    toggleSpellPrepared: async (_parent: unknown, { id, spellName }: { id: string; spellName: string }, context: Context) => {
+      console.log('Starting toggleSpellPrepared with:', { id, spellName });
+      
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-
-      const character = await Character.findOneAndUpdate(
-        { _id: id, player: context.user._id },
-        {
-          $set: {
-            equipment: equipment.map((item) => ({
-              name: item.name,
-              category: item.category,
-              cost: item.cost,
-              weight: item.weight,
-              desc: item.desc || [],
-              properties: item.properties || [],
-            })),
-          },
-        },
-        { new: true, runValidators: true }
-      ).populate('player', 'username email');
-
-      if (!character) {
-        throw new GraphQLError('Character not found or unauthorized', {
-          extensions: { code: 'NOT_FOUND' },
+    
+      try {
+        // First find the current spell state
+        const currentCharacter = await Character.findOne({
+          _id: id,
+          player: context.user._id,
+          'spells.name': spellName
         });
+    
+        if (!currentCharacter || !currentCharacter.spells) {
+          throw new GraphQLError('Character or spells not found');
+        }
+    
+        const spell = currentCharacter.spells.find(s => s.name === spellName);
+        if (!spell) {
+          throw new GraphQLError('Spell not found');
+        }
+    
+        // Now update with the opposite of the current prepared state
+        const updatedCharacter = await Character.findOneAndUpdate(
+          {
+            _id: id,
+            player: context.user._id,
+            'spells.name': spellName
+          },
+          {
+            $set: {
+              'spells.$.prepared': !spell.prepared
+            }
+          },
+          {
+            new: true, // Return the updated document
+            runValidators: true
+          }
+        ).exec();
+    
+        if (!updatedCharacter) {
+          throw new GraphQLError('Failed to update character');
+        }
+    
+        // Log the result before returning
+        console.log('Successfully updated character:', {
+          id: updatedCharacter._id,
+          spellName,
+          newPreparedState: updatedCharacter.spells?.find(s => s.name === spellName)?.prepared
+        });
+    
+        return updatedCharacter;
+      } catch (error) {
+        console.error('Error in toggleSpellPrepared:', error);
+        throw error instanceof GraphQLError ? error : new GraphQLError(
+          'Failed to toggle spell prepared status'
+        );
       }
-
-      return character;
     },
 
     updateCharacterFeatures: async (

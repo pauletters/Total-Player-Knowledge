@@ -8,6 +8,9 @@ import { typeDefs, resolvers } from './schemas/index.js';
 import { authenticateToken } from './utils/auth.js';
 import cors from 'cors';
 import { fileURLToPath } from 'node:url';
+import mongoose from 'mongoose';
+console.log('Registered Mongoose models:', Object.keys(mongoose.models));
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const startApolloServer = async () => {

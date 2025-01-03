@@ -200,18 +200,28 @@ const CharacterDetails: React.FC = () => {
           id: characterId,
           spellName
         },
-        refetchQueries: [{ query: GET_CHARACTER, variables: { id: characterId } }]
+        refetchQueries: [{ query: GET_CHARACTER, variables: { id: characterId } }],
+        onCompleted: (data) => {
+          console.log('Mutation completed:', data);
+        },
+        onError: (error) => {
+          console.error('Mutation error:', error);
+        }
       });
-      console.log('Toggle spell result:', JSON.stringify(mutationData, null, 2));
-      if (mutationData?.toggleSpellPrepared?.spells) {
-        console.log('Updated spells:', mutationData.toggleSpellPrepared.spells);
-      } else {
-        console.log('No spells data in mutation response');
-      }
-    } catch (error) {
-      console.error('Error toggling spell prepared status:', error);
+      
+          // Check if we got valid data back
+    if (!mutationData?.toggleSpellPrepared) {
+      throw new Error('No data returned from toggleSpellPrepared mutation');
     }
-  };
+
+    // Log the result
+    console.log('Toggle spell successful:', mutationData.toggleSpellPrepared);
+  } catch (error) {
+    console.error('Error toggling spell prepared status:', error);
+    // Optionally show error to user
+    alert('Failed to toggle spell prepared status. Please try again.');
+  }
+};
 
   // Handler for adding equipment
   const handleAddEquipment = async (newEquipment: APIEquipment[]) => {
