@@ -16,6 +16,7 @@ import SpellModal from './Spells/SpellSelection';
 import EquipmentModal from './Equipment/EquipmentSelection';
 import BackgroundTab from './BackgroundTab';
 import ClassFeaturesTab from './ClassFeaturesTab';
+import CombinedFeatures from './CombinedFeatures';
 
 interface CharacterParams {
   characterId: string;
@@ -412,7 +413,7 @@ const CharacterDetails: React.FC = () => {
                   <Card.Header>Combat Stats</Card.Header>
                   <Card.Body>
                     <p><strong>Armor Class:</strong> {character.combat.armorClass}</p>
-                    <p><strong>Initiative:</strong> +{character.combat.initiative}</p>
+                    <p><strong>Initiative:</strong> {getModifier(character.attributes.dexterity)}</p>
                     <p><strong>Speed:</strong> {character.combat.speed} ft.</p>
                     <p><strong>Hit Points:</strong> {character.combat.hitPoints}/{character.combat.hitPoints}</p>
                     <p><strong>Proficiency Bonus:</strong> +{proficiencyBonus}</p>
@@ -535,30 +536,19 @@ const CharacterDetails: React.FC = () => {
               </Col>
 
               <Col md={6}>
-                <Card>
-                  <Card.Header>Features & Traits</Card.Header>
-                    <Card.Body>
-                      {character.classFeatures && character.classFeatures.length > 0 ? (
-                        <ul className="list-unstyled">
-                          {character.classFeatures.map((feature, index) => (
-                            <li key={index} className="mb-3">
-                              <strong>{feature.name}</strong> ({feature.levelRequired} Level)
-                              <div className="small text-muted">{feature.description}</div>
-                              {feature.selections && feature.selections.length > 0 && (
-                                <div className="mt-1 small">
-                                  <span className="text-success">
-                                    Selected: {feature.selections.map(selection => selection.selectedOption).join(', ')}
-                                  </span>
-                                </div>
-                              )}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="text-center">No class features available.</p>
-                      )}
-                    </Card.Body>
-                  </Card>
+              <Card>
+                <Card.Header>Features & Traits</Card.Header>
+                <Card.Body>
+                  <CombinedFeatures
+                    characterClass={character.basicInfo.class}
+                    characterLevel={character.basicInfo.level}
+                    classFeatures={character.classFeatures.map(feature => ({
+                      ...feature,
+                      levelRequired: feature.levelRequired ?? 0 // Ensure levelRequired is a number
+                    }))}
+                  />
+                </Card.Body>
+              </Card>
               </Col>
             </Row>
           )}

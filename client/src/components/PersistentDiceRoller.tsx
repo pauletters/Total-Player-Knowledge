@@ -76,9 +76,10 @@ const PersistentDiceRoller: React.FC<PersistentDiceRollerProps> = ({ DiceRoller 
         <div 
           style={{
             width: '500px',  // Width of the dice roller container
+            maxHeight: '1000px',
             overflowY: 'auto', // Enables vertical scrolling
             overflowX: 'hidden', // Prevents horizontal scrolling
-            borderRadius: '15px',
+            borderRadius: '5px',
             borderStyle: 'solid',
             borderColor: 'red',
           }}

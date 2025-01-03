@@ -32,17 +32,6 @@ export const CombatSection: React.FC<SectionProps> = ({ character, onInputChange
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Initiative
-          </label>
-          <input 
-            type="number"
-            value={character.combat.initiative}
-            onChange={(e) => onInputChange('combat', 'initiative', parseInt(e.target.value))}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
             Speed
           </label>
           <input 
