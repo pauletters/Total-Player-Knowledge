@@ -73,7 +73,20 @@ const CharacterDetails: React.FC = () => {
     }
   }, [data]);
   
-
+  useEffect(() => {
+    if (data?.character) {
+      const dexModifier = Math.floor((data.character.attributes.dexterity - 10) / 2);
+      setUpdatedCharacter({
+        ...data.character,
+        combat: {
+          ...data.character.combat,
+          initiative: data.character.combat.initiative || dexModifier  // Use existing initiative or dex mod
+        }
+      });
+      setIsPrivate(data.character.private);
+    }
+  }, [data]);
+  
   useEffect(() => {
     const loadSpellDetails = async () => {
       if (data?.character?.spells) {
@@ -521,7 +534,7 @@ const CharacterDetails: React.FC = () => {
                 <Card>
                   <Card.Header>Basic Information</Card.Header>
                   <Card.Body>
-                    <p><strong>Class:</strong> {character.basicInfo.class}</p>
+                  <p><strong>Class:</strong> {character.basicInfo.class.charAt(0).toUpperCase() + character.basicInfo.class.slice(1)}</p>
                     {isEditing ? (
                       <div className="d-flex align-items-center">
                         <strong>Level:</strong>
@@ -535,9 +548,9 @@ const CharacterDetails: React.FC = () => {
                     ) : (
                       <p><strong>Level:</strong> {character.basicInfo.level}</p>
                     )}
-                    <p><strong>Race:</strong> {character.basicInfo.race}</p>
-                    <p><strong>Background:</strong> {character.basicInfo.background}</p>
-                    <p><strong>Alignment:</strong> {character.basicInfo.alignment}</p>
+                    <p><strong>Race:</strong> {character.basicInfo.race.charAt(0).toUpperCase() + character.basicInfo.race.slice(1)}</p>
+                    <p><strong>Background:</strong> {character.basicInfo.background.charAt(0).toUpperCase() + character.basicInfo.background.slice(1)}</p>
+                    <p><strong>Alignment:</strong> {character.basicInfo.alignment.charAt(0).toUpperCase() + character.basicInfo.alignment.slice(1)}</p>
                   </Card.Body>
                 </Card>
               </Col>
@@ -558,11 +571,11 @@ const CharacterDetails: React.FC = () => {
                           />
                         </div>
                         <div className="d-flex align-items-center mb-2">
-                          <strong>Initiative:</strong>
+                        <strong>Initiative:</strong>
                           <input
                             type="number"
                             className="form-control form-control-sm ms-2 w-auto"
-                            value={updatedCharacter?.combat.initiative || ''}
+                            value={Math.floor(((updatedCharacter?.attributes.dexterity ?? 10) - 10) / 2)}
                             onChange={(e) => handleInputChange('initiative', parseInt(e.target.value))}
                           />
                         </div>
@@ -588,7 +601,9 @@ const CharacterDetails: React.FC = () => {
                     ) : (
                       <>
                         <p><strong>Armor Class:</strong> {character.combat.armorClass}</p>
-                        <p><strong>Initiative:</strong> +{character.combat.initiative}</p>
+                        <p><strong>Initiative:</strong> {character.attributes ? Math.floor((character.attributes.dexterity - 10) / 2) >= 0 ? 
+                            `+${Math.floor((character.attributes.dexterity - 10) / 2)}` : 
+                            Math.floor((character.attributes.dexterity - 10) / 2) : ''}</p>
                         <p><strong>Speed:</strong> {character.combat.speed} ft.</p>
                         <p><strong>Hit Points:</strong> {character.combat.hitPoints}/{character.combat.hitPoints}</p>
                       </>

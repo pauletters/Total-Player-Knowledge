@@ -48,7 +48,7 @@ const ClassFeaturesTab: React.FC<ClassFeatureProps> = ({
   useEffect(() => {
     if (characterData?.character?.classFeatures) {
       const existingSelections: { [key: string]: string } = {};
-      characterData.character.classFeatures.forEach(feature => {
+      characterData.character.classFeatures.forEach((feature: ClassFeature) => {
         if (feature.selections && feature.selections.length > 0) {
           feature.selections.forEach(selection => {
             existingSelections[selection.featureName] = selection.selectedOption;
