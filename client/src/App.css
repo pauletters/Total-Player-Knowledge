@@ -128,4 +128,5 @@ button:hover {
 .main-content {
   height: calc(100vh - 155px); /* Adjust height to account for the dice roller */
   overflow-y: auto; /* Enables vertical scrolling */
+  padding-top: 3rem; /* Add padding to the top of the content */
 }
