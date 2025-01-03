@@ -212,3 +212,60 @@ export const UPDATE_CHARACTER_PROFICIENCIES = gql`
     }
   }
 `;
+
+export const UPDATE_CHARACTER = gql`
+ mutation UpdateCharacter($input: UpdateCharacterInput!) {
+  updateCharacter(input: $input) {
+    _id
+    basicInfo {
+      name
+      race
+      class
+      level
+      background
+      alignment
+      avatar
+    }
+    attributes {
+      strength
+      dexterity
+      constitution
+      intelligence
+      wisdom
+      charisma
+    }
+    combat {
+      armorClass
+      hitPoints
+      initiative
+      speed
+    }
+    skills {
+      proficiencies
+      savingThrows
+    }
+    equipment {
+      name
+      category
+      cost {
+        quantity
+        unit
+      }
+      weight
+      description
+      properties
+    }
+    spells {
+      name
+      level
+      prepared
+    }
+    biography {
+      alignment
+      background
+      languages
+      backstory
+    }
+  }
+}
+`;

@@ -70,6 +70,13 @@ const typeDefs = `
         selections: [FeatureSelection]
     }
     
+    type Biography {
+        alignment: String
+        background: String
+        languages: [String]
+        backstory: String
+    }   
+
     input FeatureSelectionInput {
         featureName: String!
         selectedOption: String!
@@ -88,6 +95,7 @@ const typeDefs = `
         private: Boolean!
         createdAt: String!
         updatedAt: String!
+        biography: Biography!
     }
 
     type Campaign {
@@ -141,7 +149,12 @@ const typeDefs = `
         deleteCampaign(id: ID!): Campaign
     }
 
-    
+    input BiographyInput {
+        alignment: String
+        background: String
+        languages: [String]
+        backstory: String!
+    }
 
     input BasicInfoInput {
         name: String!
@@ -191,9 +204,10 @@ const typeDefs = `
         attributes: AttributesInput
         combat: CombatInput
         skills: SkillsInput
-        equipment: [EquipmentInput!]!
+        equipment: [EquipmentInput!]
         spells: [SpellInput!]
         private: Boolean
+        biography: BiographyInput
     }
 
     input SpellInput {

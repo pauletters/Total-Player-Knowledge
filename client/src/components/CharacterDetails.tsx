@@ -1,13 +1,14 @@
 // CharacterDetails.tsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Card, Row, Col, Button, Nav} from 'react-bootstrap';
+import { Container, Card, Row, Col, Button, Nav, Form} from 'react-bootstrap';
 import { useQuery, useMutation } from '@apollo/client';
 import { GET_CHARACTER } from '../utils/queries';
 import { 
   UPDATE_CHARACTER_SPELLS, 
   TOGGLE_SPELL_PREPARED, 
-  UPDATE_CHARACTER_EQUIPMENT 
+  UPDATE_CHARACTER_EQUIPMENT,
+  UPDATE_CHARACTER
 } from '../utils/mutations';
 import { dndApi } from '../utils/dndApi';
 import { CharacterData, ApiSpell } from './types';
@@ -51,7 +52,9 @@ const CharacterDetails: React.FC = () => {
   const { loading: isLoading, error, data } = useQuery<{ character: CharacterData }>(GET_CHARACTER, {
     variables: { id: characterId },
   });
-
+  const [isEditing, setIsEditing] = useState(false); // Track editing state
+  const [updatedCharacter, setUpdatedCharacter] = useState<CharacterData | null>(null);
+  const [isPrivate, setIsPrivate] = useState<boolean>(true); // Track private/public state
   const [spellDetails, setSpellDetails] = useState<Record<string, ApiSpell>>({}); // Cache spell details
   const [showSpellModal, setShowSpellModal] = useState(false);
   const [updateCharacterSpells] = useMutation(UPDATE_CHARACTER_SPELLS);
@@ -60,6 +63,16 @@ const CharacterDetails: React.FC = () => {
   const [showEquipmentModal, setShowEquipmentModal] = useState(false);
   const [updateCharacterEquipment] = useMutation(UPDATE_CHARACTER_EQUIPMENT);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+
+  const [updateCharacter] = useMutation(UPDATE_CHARACTER); // Mutation to update character
+  
+  useEffect(() => {
+    if (data?.character) {
+      setUpdatedCharacter(data.character); // Initialize with character data
+      setIsPrivate(data.character.private);
+    }
+  }, [data]);
+  
 
   useEffect(() => {
     const loadSpellDetails = async () => {
@@ -96,6 +109,14 @@ const CharacterDetails: React.FC = () => {
 
     loadSpellDetails();
   }, [data?.character?.spells]);
+
+  const handleTogglePrivate = () => {
+    setIsPrivate(prev => {
+      const newPrivateValue = !prev; // Toggle the value
+      return newPrivateValue; // Set the updated value
+    });
+  };
+  
 
   const handleAddSpells = async (newSpellList: { name: string; level: number; prepared: boolean; }[]) => {
     if (!data?.character) {
@@ -279,6 +300,96 @@ const CharacterDetails: React.FC = () => {
     return proficiencyBonus;
   };  
 
+  const handleInputChange = (field: string, value: string | number) => {
+    if (updatedCharacter) {
+      // Ensure that each nested field exists before updating
+      setUpdatedCharacter(prevState => {
+        if (!prevState) return prevState; // Handle case if prevState is null
+  
+        // Spread the previous state and update only the modified field
+        return {
+          ...prevState,
+          basicInfo: {
+            ...prevState.basicInfo,
+            [field]: value,
+          },
+          attributes: {
+            ...prevState.attributes,
+            [field]: value,
+          },
+          combat: {
+            ...prevState.combat,
+            [field]: value,
+          },
+          skills: {
+            ...prevState.skills,
+            [field]: value,
+          },
+        };
+      });
+    }
+  };
+  
+  
+  const handleSubmitChanges = async () => {
+    try {
+      if (updatedCharacter) {
+        // Make sure the updatedCharacter has all required fields before submission
+        const cleanedCharacter = {
+          id: updatedCharacter._id, // Ensure that the ID is included
+          basicInfo: {
+            name: updatedCharacter.basicInfo?.name ?? '',
+            class: updatedCharacter.basicInfo?.class ?? '',
+            race: updatedCharacter.basicInfo?.race ?? '',
+            level: updatedCharacter.basicInfo?.level ?? 1,
+            background: updatedCharacter.basicInfo?.background ?? '',
+            alignment: updatedCharacter.basicInfo?.alignment ?? '',
+            avatar: updatedCharacter.basicInfo?.avatar ?? '',
+          },
+          attributes: {
+            strength: updatedCharacter.attributes?.strength ?? 10,
+            dexterity: updatedCharacter.attributes?.dexterity ?? 10,
+            constitution: updatedCharacter.attributes?.constitution ?? 10,
+            intelligence: updatedCharacter.attributes?.intelligence ?? 10,
+            wisdom: updatedCharacter.attributes?.wisdom ?? 10,
+            charisma: updatedCharacter.attributes?.charisma ?? 10,
+          },
+          combat: {
+            armorClass: updatedCharacter.combat?.armorClass ?? 10,
+            initiative: updatedCharacter.combat?.initiative ?? 0,
+            speed: updatedCharacter.combat?.speed ?? 30,
+            hitPoints: updatedCharacter.combat?.hitPoints ?? 10,
+          },
+          skills: {
+            proficiencies: updatedCharacter.skills?.proficiencies ?? [],
+            savingThrows: updatedCharacter.skills?.savingThrows ?? [],
+          },
+          equipment: updatedCharacter.equipment ?? [],
+          spells: updatedCharacter.spells ?? [],
+          private: isPrivate,
+          // Remove any unnecessary or incorrect fields here
+        };
+  
+        // Log the cleaned character for debugging
+        console.log('Submitting cleaned character:', cleanedCharacter);
+  
+        // Submit the cleaned character data to the server
+        await updateCharacter({
+          variables: { input: cleanedCharacter },
+          refetchQueries: [{ query: GET_CHARACTER, variables: { id: characterId } }],
+        });
+  
+        setIsEditing(false); // Exit edit mode after saving
+      } else {
+        console.error('No character data available for update');
+      }
+    } catch (error) {
+      console.error('Error submitting changes:', error);
+      alert('Failed to submit changes. Please try again.');
+    }
+  };
+  
+  
   if (isLoading) {
     return (
       <Container className="py-4">
@@ -288,7 +399,7 @@ const CharacterDetails: React.FC = () => {
       </Container>
     );
   }
-
+  
   if (error || !data?.character) {
     return (
       <Container className="py-4">
@@ -301,6 +412,7 @@ const CharacterDetails: React.FC = () => {
       </Container>
     );
   }
+  
 
   const character = data.character;
 
@@ -400,7 +512,19 @@ const CharacterDetails: React.FC = () => {
                   <Card.Header>Basic Information</Card.Header>
                   <Card.Body>
                     <p><strong>Class:</strong> {character.basicInfo.class}</p>
-                    <p><strong>Level:</strong> {character.basicInfo.level}</p>
+                    {isEditing ? (
+                      <div className="d-flex align-items-center">
+                        <strong>Level:</strong>
+                        <input
+                          type="number"
+                          className="form-control form-control-sm ms-2 w-auto"
+                          value={updatedCharacter?.basicInfo.level || ''}
+                          onChange={(e) => handleInputChange('level', parseInt(e.target.value))}
+                        />
+                      </div>
+                    ) : (
+                      <p><strong>Level:</strong> {character.basicInfo.level}</p>
+                    )}
                     <p><strong>Race:</strong> {character.basicInfo.race}</p>
                     <p><strong>Background:</strong> {character.basicInfo.background}</p>
                     <p><strong>Alignment:</strong> {character.basicInfo.alignment}</p>
@@ -412,11 +536,53 @@ const CharacterDetails: React.FC = () => {
                 <Card>
                   <Card.Header>Combat Stats</Card.Header>
                   <Card.Body>
-                    <p><strong>Armor Class:</strong> {character.combat.armorClass}</p>
-                    <p><strong>Initiative:</strong> {getModifier(character.attributes.dexterity)}</p>
-                    <p><strong>Speed:</strong> {character.combat.speed} ft.</p>
-                    <p><strong>Hit Points:</strong> {character.combat.hitPoints}/{character.combat.hitPoints}</p>
-                    <p><strong>Proficiency Bonus:</strong> +{proficiencyBonus}</p>
+                    {isEditing ? (
+                      <div>
+                        <div className="d-flex align-items-center mb-2">
+                          <strong>Armor Class:</strong>
+                          <input
+                            type="number"
+                            className="form-control form-control-sm ms-2 w-auto"
+                            value={updatedCharacter?.combat.armorClass || ''}
+                            onChange={(e) => handleInputChange('armorClass', parseInt(e.target.value))}
+                          />
+                        </div>
+                        <div className="d-flex align-items-center mb-2">
+                          <strong>Initiative:</strong>
+                          <input
+                            type="number"
+                            className="form-control form-control-sm ms-2 w-auto"
+                            value={updatedCharacter?.combat.initiative || ''}
+                            onChange={(e) => handleInputChange('initiative', parseInt(e.target.value))}
+                          />
+                        </div>
+                        <div className="d-flex align-items-center mb-2">
+                          <strong>Speed:</strong>
+                          <input
+                            type="number"
+                            className="form-control form-control-sm ms-2 w-auto"
+                            value={updatedCharacter?.combat.speed || ''}
+                            onChange={(e) => handleInputChange('speed', parseInt(e.target.value))}
+                          />
+                        </div>
+                        <div className="d-flex align-items-center mb-2">
+                          <strong>Hit Points:</strong>
+                          <input
+                            type="number"
+                            className="form-control form-control-sm ms-2 w-auto"
+                            value={updatedCharacter?.combat.hitPoints || ''}
+                            onChange={(e) => handleInputChange('hitPoints', parseInt(e.target.value))}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <p><strong>Armor Class:</strong> {character.combat.armorClass}</p>
+                        <p><strong>Initiative:</strong> +{character.combat.initiative}</p>
+                        <p><strong>Speed:</strong> {character.combat.speed} ft.</p>
+                        <p><strong>Hit Points:</strong> {character.combat.hitPoints}/{character.combat.hitPoints}</p>
+                      </>
+                    )}
                   </Card.Body>
                 </Card>
               </Col>
@@ -425,15 +591,29 @@ const CharacterDetails: React.FC = () => {
                 <Card>
                   <Card.Header>Attributes</Card.Header>
                   <Card.Body>
-                    {Object.entries(character.attributes).filter(([attr]) => attr !== '__typename').map(([attr, value]) => (
-                      <p key={attr}>
-                        <strong>{attr.charAt(0).toUpperCase() + attr.slice(1)}:</strong>{' '}
-                        {value} ({getModifier(value)})
-                      </p>
-                    ))}
+                    {Object.entries(character.attributes).filter(([attr]) => attr !== '__typename').map(([attr, value]) => {
+                      const attributeKey = attr as keyof typeof character.attributes;
+                      return (
+                        <div key={attr} className="d-flex align-items-center mb-2">
+                          <strong>{attr.charAt(0).toUpperCase() + attr.slice(1)}:</strong>
+                          {isEditing ? (
+                            <input
+                              type="number"
+                              className="form-control form-control-sm ms-2 w-auto"
+                              value={updatedCharacter?.attributes[attributeKey] || ''}
+                              onChange={(e) => handleInputChange(attr, parseInt(e.target.value))}
+                            />
+                          ) : (
+                            <span>{value} ({getModifier(value)})</span>
+                          )}
+                        </div>
+                      );
+                    })}
                   </Card.Body>
                 </Card>
               </Col>
+
+
 
               <Col md={6}>
                 <Card>
@@ -780,8 +960,33 @@ const CharacterDetails: React.FC = () => {
             </Nav.Item>
           </Nav>
 
-        </div>
-      </div>
+          {activeTab === 'details' && (
+            <div className="mt-4">
+              {/* Only show Edit button when not editing */}
+              {isEditing ? (
+                <Button variant="success" onClick={handleSubmitChanges}>Submit Changes</Button>
+              ) : (
+                <Button variant="primary" onClick={() => setIsEditing(true)}>Edit</Button>
+              )}
+            </div>
+          )}
+
+          {/* Show Private/Public toggle only when editing */}
+          {isEditing && activeTab === 'details' && (
+            <div className="mt-4">
+              <h4>Private/Public</h4>
+              <Form.Check
+                type="switch"
+                id="private-toggle"
+                label={isPrivate ? 'Private' : 'Public'}
+                checked={isPrivate}
+                onChange={handleTogglePrivate}
+              />
+            </div>
+          )}
+</div>
+</div>
+
       {character && (
     <SpellModal
       show={showSpellModal}

@@ -52,6 +52,7 @@ interface AddCharacterArgs {
 }
 
 interface UpdateCharacterArgs extends Partial<AddCharacterArgs> {
+  biography: any;
   id: string;
 }
 
@@ -230,21 +231,62 @@ const resolvers = {
       if (!context.user) {
         throw new AuthenticationError('Not logged in');
       }
-      const updatedCharacter = await Character.findOneAndUpdate(
-        { _id: input.id, player: context.user._id },
-        { $set: input },
-        { new: true }
-      ).exec();
-
-      if (!updatedCharacter) {
+    
+      // Validate the character ID
+      if (!mongoose.Types.ObjectId.isValid(input.id)) {
+        throw new GraphQLError('Invalid character ID', {
+          extensions: { code: 'BAD_USER_INPUT' },
+        });
+      }
+    
+      // Find the character and check ownership
+      const character = await Character.findOne({ _id: input.id, player: context.user._id });
+      if (!character) {
         throw new GraphQLError('Character not found or unauthorized', {
           extensions: { code: 'NOT_FOUND' },
         });
       }
-
-      return updatedCharacter;
+    
+      // Log the current character for debugging
+      console.log('Character before update:', character);
+    
+      // Prepare the update object
+      const updateFields: any = {};
+    
+      if (input.basicInfo) {
+        updateFields.basicInfo = input.basicInfo;
+      }
+      if (input.attributes) {
+        updateFields.attributes = input.attributes;
+      }
+      if (input.combat) {
+        updateFields.combat = input.combat;
+      }
+      if (input.skills) {
+        updateFields.skills = input.skills;
+      }
+      if (input.equipment) {
+        updateFields.equipment = input.equipment;
+      }
+      if (input.spells) {
+        updateFields.spells = input.spells;
+      }
+      if (input.biography && input.biography.backstory) {
+        updateFields['biography.backstory'] = input.biography.backstory; // Ensure backstory is updated
+      }
+      if (input.private !== undefined) {
+        updateFields.private = input.private;
+      }
+    
+      // Update character and save it
+      character.set(updateFields);
+      await character.save();  // This should save the updated character, including backstory
+    
+      return character;  // Return the updated character
     },
-
+    
+    
+      
     updateCharacterSpells: async (
       _parent: unknown,
       { id, spells }: UpdateSpellsArgs,

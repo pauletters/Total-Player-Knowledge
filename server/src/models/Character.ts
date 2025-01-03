@@ -255,6 +255,7 @@ const characterSchema = new Schema<CharacterDocument>(
       alignment: String,
       background: String,
       languages: [String],
+      backstory: { type: String, default: '' },
     },
     currency: {
       copperPieces: { type: Number, default: 0 },
