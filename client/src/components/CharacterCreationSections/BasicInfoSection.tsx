@@ -42,6 +42,64 @@ const classSkillProficiencies = {
   barbarian: ['Animal Handling', 'Athletics', 'Intimidation', 'Nature', 'Perception', 'Survival']
 };
 
+// Mapping of classes to their skill proficiency selection rules
+const skillList = {
+  'Acrobatics': 'Acrobatics',
+  'Animal Handling': 'Animal Handling',
+  'Arcana': 'Arcana',
+  'Athletics': 'Athletics',
+  'Deception': 'Deception',
+  'History': 'History',
+  'Insight': 'Insight',
+  'Intimidation': 'Intimidation',
+  'Investigation': 'Investigation',
+  'Medicine': 'Medicine',
+  'Nature': 'Nature',
+  'Perception': 'Perception',
+  'Performance': 'Performance',
+  'Persuasion': 'Persuasion',
+  'Religion': 'Religion',
+  'Sleight of Hand': 'Sleight of Hand',
+  'Stealth': 'Stealth',
+  'Survival': 'Survival'
+};
+
+const classSkillProficiencyRules = {
+  barbarian: { count: 2, skills: ['Animal Handling', 'Athletics', 'Intimidation', 'Nature', 'Perception', 'Survival'] },
+  bard: { count: 3, skills: Object.keys(skillList).filter(skill => skill !== 'Stealth') }, // All skills except Stealth
+  cleric: { count: 2, skills: ['History', 'Insight', 'Medicine', 'Persuasion', 'Religion'] },
+  druid: { count: 2, skills: ['Arcana', 'Animal Handling', 'Insight', 'Medicine', 'Nature', 'Perception', 'Religion', 'Survival'] },
+  fighter: { count: 2, skills: ['Acrobatics', 'Animal Handling', 'Athletics', 'History', 'Insight', 'Intimidation', 'Perception', 'Survival'] },
+  monk: { count: 2, skills: ['Acrobatics', 'Athletics', 'History', 'Insight', 'Religion', 'Stealth'] },
+  paladin: { count: 2, skills: ['Athletics', 'Insight', 'Intimidation', 'Medicine', 'Persuasion', 'Religion'] },
+  ranger: { count: 3, skills: ['Animal Handling', 'Athletics', 'Insight', 'Investigation', 'Nature', 'Perception', 'Stealth', 'Survival'] },
+  rogue: { count: 4, skills: ['Acrobatics', 'Athletics', 'Deception', 'Insight', 'Intimidation', 'Investigation', 'Perception', 'Performance', 'Persuasion', 'Sleight of Hand', 'Stealth'] },
+  sorcerer: { count: 2, skills: ['Arcana', 'Deception', 'Insight', 'Intimidation', 'Persuasion', 'Religion'] },
+  warlock: { count: 2, skills: ['Arcana', 'Deception', 'History', 'Intimidation', 'Investigation', 'Nature', 'Religion'] },
+  wizard: { count: 2, skills: ['Arcana', 'History', 'Investigation', 'Medicine', 'Religion'] }
+};
+
+// Function to get skill proficiency details for a given class
+export const getClassSkillProficiencies = (characterClass: string) => {
+  const normalizedClass = characterClass.toLowerCase();
+  const classRules = classSkillProficiencyRules[normalizedClass as ClassType];
+  
+  if (!classRules) {
+    console.warn(`No skill proficiency rules found for class ${characterClass}`);
+    return { 
+      count: 0, 
+      skills: [],
+      message: `No skill proficiency information available for ${characterClass}`
+    };
+  }
+
+  return {
+    count: classRules.count,
+    skills: classRules.skills,
+    message: `Select ${classRules.count} skill${classRules.count !== 1 ? 's' : ''} from the following list`
+  };
+};
+
 type ClassType = 'fighter' | 'wizard' | 'rogue' | 'cleric' | 'bard' | 'ranger' | 'paladin' | 'sorcerer' | 'monk' | 'druid' | 'warlock' | 'barbarian';
 type BackgroundType = 'acolyte' | 'charlatan' | 'criminal' | 'entertainer' | 'folk hero' | 'guild artisan' | 'hermit' | 'noble' | 'outlander' | 'sage' | 'sailor' | 'soldier' | 'urchin';
 
@@ -244,27 +302,45 @@ export const BasicInfoSection: React.FC<SectionProps> = ({ character, onInputCha
 
       {/* Skill Proficiencies section */}
       {(character.basicInfo.class || character.basicInfo.background) && (
-        <div className="mt-6">
-          <h5 className="text-sm font-medium text-gray-700 mb-2" style={{color: 'white'}}>Available Skill Proficiencies</h5>
-          <div className="grid grid-cols-2 gap-4">
-            {character.basicInfo.class && (
+         <div className="mt-6">
+         <br/>
+         <h5 className="text-sm font-medium text-gray-700 mb-2" style={{color: 'white'}}>Available Skill Proficiencies</h5>
+         <div className="grid grid-cols-2 gap-4" style={{display: 'flex', justifyContent: 'center'}}>
+           {character.basicInfo.class && (
+             <div className="border rounded p-3">
+               <span className="font-medium">{character.basicInfo.class.charAt(0).toUpperCase() + character.basicInfo.class.slice(1).toLowerCase()}:</span>{' '}
+               <div>
+                 {(() => {
+                   const classSkills = getClassSkillProficiencies(character.basicInfo.class);
+                   return (
+                     <>
+                       <p className="text-gray-600 mb-2">{classSkills.message}</p>
+                       <span className="text-gray-600">
+                         {classSkills.skills.join(', ')}
+                       </span>
+                     </>
+                   );
+                 })()}
+               </div>
+             </div>
+           )}
+           {character.basicInfo.background && (
               <div className="border rounded p-3">
-                <span className="font-medium">{character.basicInfo.class.charAt(0).toUpperCase() + character.basicInfo.class.slice(1).toLowerCase()}:</span>{' '}
-                <span className="text-gray-600">
-                  {availableSkills.classSkills.join(', ')}
-                </span>
-              </div>
-            )}
-            {character.basicInfo.background && (
-              <div className="border rounded p-3">
-                <span className="font-medium">{character.basicInfo.background.charAt(0).toUpperCase() + character.basicInfo.background.slice(1).toLowerCase()}:</span>{' '}
+              <span className="font-medium">
+                {character.basicInfo.background.charAt(0).toUpperCase() + character.basicInfo.background.slice(1).toLowerCase()}:
+              </span>{' '}
+              <div>
+                <p className="text-gray-600 mb-2">
+                  Optional proficiencies from your background
+                </p>
                 <span className="text-gray-600">
                   {availableSkills.backgroundSkills.join(', ')}
                 </span>
               </div>
-            )}
-          </div>
-        </div>
+            </div>
+           )}
+         </div>
+       </div>
       )}
     </section>
   );
